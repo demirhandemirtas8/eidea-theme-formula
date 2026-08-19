@@ -1080,6 +1080,140 @@ export const FORMULA_TEXT_BLOCK = `<section class="formula-text-block formula-te
 }
 {% endschema %}`;
 
+/** 2026-08-19 devamı — kullanıcı: `FORMULA_TEXT_BLOCK` (tek varyant) yetersiz
+ * bulundu, "birden fazla farklı/özel tasarımlı yazı section'ı" istendi (bkz.
+ * [[feedback-theme-section-variants-shopify-style]]). Bu üçü, mevcut Yazı
+ * Bloğu'na eklenen 3 farklı yerleşim: iki kolonlu metin, alıntı/referans
+ * kartları, numaralı adım listesi — dördü birlikte "yazı ailesi"nin 3-4
+ * varyant kuralını karşılıyor. */
+export const FORMULA_TEXT_COLUMNS = `<section class="formula-text-columns${revealAnimationClass()}">
+  <div class="formula-text-columns__col formula-text-columns__col--heading">
+    {% if section.settings.eyebrow != blank %}<p class="formula-text-columns__eyebrow">{{ section.settings.eyebrow | escape }}</p>{% endif %}
+    {% if section.settings.title != blank %}<h2 class="formula-text-columns__title">{{ section.settings.title | escape }}</h2>{% endif %}
+    {% if section.settings.cta_label != blank %}<a class="formula-btn formula-btn--ghost" href="{{ section.settings.cta_url | default: '/' | escape }}">{{ section.settings.cta_label | escape }}</a>{% endif %}
+  </div>
+  <div class="formula-text-columns__col formula-text-columns__col--body">
+    {% if section.settings.body != blank %}<div class="formula-text-columns__body">{{ section.settings.body }}</div>{% endif %}
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Formula İki Kolonlu Metin",
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Üst Etiket (ops.)", "default": "" },
+    { "type": "text", "id": "title", "label": "Başlık", "default": "Az bileşen. Kanıtlanmış aktifler." },
+    { "type": "richtext", "id": "body", "label": "Gövde Metni (sağ kolon)", "default": "Formüllerimizde gereksiz hiçbir şey yok — sadece etkinliği kanıtlanmış aktif bileşenler, şeffaf oranlarda." },
+    { "type": "text", "id": "cta_label", "label": "Buton Metni (ops.)", "default": "" },
+    { "type": "url", "id": "cta_url", "label": "Buton Bağlantısı (ops.)", "default": "" },${revealAnimationSchemaField()}
+  ],
+  "presets": [{ "name": "Formula İki Kolonlu Metin" }]
+}
+{% endschema %}`;
+
+export const FORMULA_TESTIMONIAL = `<section class="formula-testimonial${revealAnimationClass()}">
+  {% if section.settings.title != blank %}<div class="formula-section-head"><h2>{{ section.settings.title | escape }}</h2></div>{% endif %}
+  <div class="formula-testimonial__grid">
+    {% for block in section.blocks %}
+      {% if block.type == "quote" %}
+        <div class="formula-testimonial__card">
+          {% if block.settings.quote != blank %}<p class="formula-testimonial__quote">"{{ block.settings.quote | escape }}"</p>{% endif %}
+          {% if block.settings.name != blank or block.settings.avatar != blank %}
+            <div class="formula-testimonial__author">
+              {% if block.settings.avatar != blank %}<img class="formula-testimonial__avatar" src="{{ block.settings.avatar | img_url: '80x80' }}" alt="{{ block.settings.name | escape }}" loading="lazy" />{% endif %}
+              <div>
+                {% if block.settings.name != blank %}<p class="formula-testimonial__name">{{ block.settings.name | escape }}</p>{% endif %}
+                {% if block.settings.role != blank %}<p class="formula-testimonial__role">{{ block.settings.role | escape }}</p>{% endif %}
+              </div>
+            </div>
+          {% endif %}
+        </div>
+      {% endif %}
+    {% endfor %}
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Formula Alıntı / Referans",
+  "settings": [
+    { "type": "text", "id": "title", "label": "Başlık (ops.)", "default": "Müşterilerimiz Ne Diyor" },${revealAnimationSchemaField()}
+  ],
+  "blocks": [
+    {
+      "type": "quote",
+      "name": "Alıntı",
+      "settings": [
+        { "type": "textarea", "id": "quote", "label": "Alıntı Metni", "default": "Cildim hiç bu kadar dengeli olmamıştı, 4 haftada fark ettim." },
+        { "type": "image_picker", "id": "avatar", "label": "Fotoğraf (ops.)" },
+        { "type": "text", "id": "name", "label": "İsim", "default": "Elif Y." },
+        { "type": "text", "id": "role", "label": "Unvan/Not (ops.)", "default": "Doğrulanmış Müşteri" }
+      ]
+    }
+  ],
+  "max_blocks": 6,
+  "presets": [{
+    "name": "Formula Alıntı / Referans",
+    "blocks": [
+      { "type": "quote", "settings": { "quote": "Cildim hiç bu kadar dengeli olmamıştı, 4 haftada fark ettim.", "name": "Elif Y.", "role": "Doğrulanmış Müşteri" } },
+      { "type": "quote", "settings": { "quote": "Az bileşen, net etki. Etikette ne yazıyorsa cilt onu hissediyor.", "name": "Deniz K.", "role": "Doğrulanmış Müşteri" } },
+      { "type": "quote", "settings": { "quote": "Artık başka marka denemiyorum, rutinim tamamen Formula.", "name": "Aslı T.", "role": "Doğrulanmış Müşteri" } }
+    ]
+  }]
+}
+{% endschema %}`;
+
+/** Numara `forloop.index`'ten OTOMATİK türetilmiyor — bilinçli tercih.
+ * `reference-ei-engine-liquid-scoping-gotchas` motorun range literal
+ * (`(1..N)`) desteklemediğini belgeliyor, `forloop`/filtre zincirleme
+ * (`prepend`/`slice`) desteğinin de doğrulanmamış olması riskini taşımamak
+ * için `FORMULA_STATS`'ın "number" alanı deseni izlendi — her adımın
+ * numarası kendi block ayarında serbest metin (kullanıcı "01" yerine "A"
+ * ya da bir emoji de yazabilir). */
+export const FORMULA_NUMBERED_LIST = `<section class="formula-steps${revealAnimationClass()}">
+  {% if section.settings.title != blank %}<div class="formula-section-head"><h2>{{ section.settings.title | escape }}</h2></div>{% endif %}
+  <div class="formula-steps__list">
+    {% for block in section.blocks %}
+      {% if block.type == "step" %}
+        <div class="formula-step">
+          {% if block.settings.number != blank %}<p class="formula-step__number">{{ block.settings.number | escape }}</p>{% endif %}
+          {% if block.settings.title != blank %}<h3 class="formula-step__title">{{ block.settings.title | escape }}</h3>{% endif %}
+          {% if block.settings.description != blank %}<p class="formula-step__desc">{{ block.settings.description | escape }}</p>{% endif %}
+        </div>
+      {% endif %}
+    {% endfor %}
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Formula Numaralı Liste",
+  "settings": [
+    { "type": "text", "id": "title", "label": "Başlık (ops.)", "default": "Nasıl Çalışır" },${revealAnimationSchemaField()}
+  ],
+  "blocks": [
+    {
+      "type": "step",
+      "name": "Adım",
+      "settings": [
+        { "type": "text", "id": "number", "label": "Numara/Simge", "default": "01" },
+        { "type": "text", "id": "title", "label": "Başlık", "default": "Cildini analiz et" },
+        { "type": "textarea", "id": "description", "label": "Açıklama", "default": "3 dakikalık kısa testle cilt tipini ve önceliklerini belirle." }
+      ]
+    }
+  ],
+  "max_blocks": 6,
+  "presets": [{
+    "name": "Formula Numaralı Liste",
+    "blocks": [
+      { "type": "step", "settings": { "number": "01", "title": "Cildini analiz et", "description": "3 dakikalık kısa testle cilt tipini ve önceliklerini belirle." } },
+      { "type": "step", "settings": { "number": "02", "title": "Formülünü seç", "description": "Sana özel önerilen aktifler arasından formülünü oluştur." } },
+      { "type": "step", "settings": { "number": "03", "title": "Rutinini uygula", "description": "Günlük rutine ekle, 4 haftada farkı gör." } }
+    ]
+  }]
+}
+{% endschema %}`;
+
 /**
  * 2026-08-19 — kullanıcı raporu: "404 sayfası hâlâ yok". `isMandatoryPage`
  * (`commandGovernance.ts`) `template: "404"` sayfasını zaten korumuyordu ama
@@ -1128,6 +1262,9 @@ export const FORMULA_LIBRARY_SECTIONS: { type: string; content: string }[] = [
   { type: "story-row", content: FORMULA_STORY_ROW },
   { type: "slider", content: FORMULA_SLIDER },
   { type: "text-block", content: FORMULA_TEXT_BLOCK },
+  { type: "text-columns", content: FORMULA_TEXT_COLUMNS },
+  { type: "testimonial", content: FORMULA_TESTIMONIAL },
+  { type: "numbered-list", content: FORMULA_NUMBERED_LIST },
 ];
 
 // `--color-*`/`--font-*` sözleşmesi `minimalSections.ts`'teki ile birebir aynı
@@ -1296,6 +1433,33 @@ export const FORMULA_LIBRARY_SECTIONS_CSS = `
 .formula-text-block__body { color: var(--color-muted); line-height: 1.7; margin: 0 0 24px; }
 .formula-text-block__body :last-child { margin-bottom: 0; }
 @media (max-width: 700px) { .formula-text-block { padding: 44px 20px; } }
+
+/* İki Kolonlu Metin (2026-08-19 devamı) */
+.formula-text-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; padding: 64px 40px; align-items: start; }
+.formula-text-columns__eyebrow { text-transform: uppercase; letter-spacing: 0.1em; font-size: 12px; color: var(--color-primary); margin: 0 0 14px; font-weight: 600; }
+.formula-text-columns__title { font-family: var(--font-heading); font-size: clamp(26px, 3.2vw, 38px); line-height: 1.15; letter-spacing: -0.02em; margin: 0 0 20px; }
+.formula-text-columns__body { color: var(--color-muted); line-height: 1.7; }
+.formula-text-columns__body :last-child { margin-bottom: 0; }
+@media (max-width: 700px) { .formula-text-columns { grid-template-columns: 1fr; gap: 20px; padding: 44px 20px; } }
+
+/* Alıntı / Referans kartları (2026-08-19 devamı) */
+.formula-testimonial { padding: 64px 40px; }
+.formula-testimonial__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 24px; }
+.formula-testimonial__card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 18px; padding: 28px; }
+.formula-testimonial__quote { font-family: var(--font-heading); font-size: 16px; line-height: 1.55; margin: 0 0 20px; color: var(--color-text); }
+.formula-testimonial__author { display: flex; align-items: center; gap: 12px; }
+.formula-testimonial__avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+.formula-testimonial__name { font-size: 13px; font-weight: 600; margin: 0; color: var(--color-text); }
+.formula-testimonial__role { font-size: 12px; margin: 2px 0 0; color: var(--color-muted); }
+@media (max-width: 700px) { .formula-testimonial { padding: 44px 20px; } }
+
+/* Numaralı Liste / Adımlar (2026-08-19 devamı) */
+.formula-steps { padding: 64px 40px; }
+.formula-steps__list { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 32px; }
+.formula-step__number { font-family: var(--font-heading); font-size: 15px; font-weight: 700; color: var(--color-primary); letter-spacing: 0.04em; margin: 0 0 10px; }
+.formula-step__title { font-family: var(--font-heading); font-size: 18px; font-weight: 600; margin: 0 0 8px; letter-spacing: -0.01em; }
+.formula-step__desc { color: var(--color-muted); line-height: 1.6; margin: 0; font-size: 14px; }
+@media (max-width: 700px) { .formula-steps { padding: 44px 20px; } .formula-steps__list { gap: 24px; } }
 
 /* 404 (2026-08-19) */
 .formula-404 { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 96px 24px; min-height: 50vh; }
