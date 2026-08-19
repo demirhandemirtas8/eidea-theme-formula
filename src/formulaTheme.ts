@@ -45,8 +45,66 @@ function imageEffectOverlay(prefix: string): string {
   return `{% if ${prefix}.image_overlay_opacity > 0 %}<div class="formula-image-overlay" style="background:{{ ${prefix}.image_overlay_color | default: '#000000' }};opacity:{{ ${prefix}.image_overlay_opacity | default: 0 }}%"></div>{% endif %}`;
 }
 
+/**
+ * 2026-08-19 — kullanıcı isteği: sectionlara hafif, sayfayı yormayan bir
+ * "görünürken canlan" animasyonu, sağ panelden section bazlı açılıp
+ * kapanabilsin, 5-6 seçenek olsun, İLK AÇILIŞ HIZINI etkilemesin.
+ *
+ * `imageEffectSchemaFields()` ile AYNI desen: motorda (`eidea-ei-engine`)
+ * TÜM section'lara ortak enjekte edilen bir şema mekanizması yok (her
+ * section kendi `{% schema %}`'sını kendi yazıyor), o yüzden tek kaynaktan
+ * üretilip her ilgili section'ın `"settings"` dizisine interpolasyonla
+ * ekleniyor. Varsayılan HER ZAMAN "none" — bu, seçilmediği sürece section'ın
+ * `formula-reveal--none` sınıfına düşüp `opacity:1`'de sabit kalması (CSS'te,
+ * bkz. `FORMULA_LIBRARY_SECTIONS_CSS`) anlamına gelir; yani mevcut/varsayılan
+ * davranışta HİÇBİR ek boya/layout maliyeti yok. Yapısal/chrome section'lara
+ * (nav-header, footer-menu, announcement-bar) BİLİNÇLİ OLARAK eklenmedi —
+ * her sayfada tekrarlayan bir öğenin kaybolup belirmesi LCP riski taşır ve
+ * sayfa geçişlerinde "titreşen header" izlenimi verir. */
+function revealAnimationSchemaField(): string {
+  return `
+    { "type": "select", "id": "reveal_animation", "label": "Görünürken Animasyon", "default": "none",
+      "info": "Sayfa kaydırılıp section görünür olduğunda oynar, ilk açılış hızını etkilemez.",
+      "options": [
+        { "label": "Yok", "value": "none" },
+        { "label": "Belirerek gelsin", "value": "fade" },
+        { "label": "Aşağıdan gelsin", "value": "up" },
+        { "label": "Soldan gelsin", "value": "left" },
+        { "label": "Sağdan gelsin", "value": "right" },
+        { "label": "Yakınlaşarak gelsin", "value": "zoom" }
+      ]
+    }`;
+}
+
+/** `revealAnimationSchemaField()`'in ürettiği ayarı GERÇEK CSS sınıfına
+ * çeviren class-token — section'ın üst-seviye etiketine eklenir. */
+function revealAnimationClass(): string {
+  return ` formula-reveal formula-reveal--{{ section.settings.reveal_animation | default: 'none' }}`;
+}
+
+/**
+ * 2026-08-19 — kullanıcı raporu: "ara, hesap, sepet gibi öğeler icon olmalı"
+ * (nav'da düz metin linkti). İnline SVG — harici ikon fontu/paket GEREKMEZ,
+ * ağ isteği yok, `currentColor` ile mevcut link renginden miras alır.
+ * `formula-nav__icon` sınıfı boyut/hizalamayı CSS'te tek yerden kontrol eder.
+ */
+function navIconSvg(kind: "search" | "account" | "cart"): string {
+  const paths: Record<typeof kind, string> = {
+    search: `<circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/>`,
+    account: `<circle cx="12" cy="8" r="4"/><path d="M4 20c0-4.4 3.6-7 8-7s8 2.6 8 7"/>`,
+    cart: `<circle cx="9" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.5 3h2l2.4 12.3a2 2 0 0 0 2 1.7h8.2a2 2 0 0 0 2-1.6L21 8H6"/>`,
+  };
+  return `<svg class="formula-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths[kind]}</svg>`;
+}
+
 export const FORMULA_NAV_HEADER = `<section class="formula-nav">
-  <a class="formula-nav__logo" href="/">{{ section.settings.logo_text | default: shop.name | escape }}</a>
+  <a class="formula-nav__logo" href="/">
+    {% if settings.logo != blank %}
+      <img src="{{ settings.logo | img_url: '160x' }}" alt="{{ section.settings.logo_text | default: shop.name | escape }}" style="height:{{ settings.logo_width | default: 40 }}px;width:auto;display:block" />
+    {% else %}
+      {{ section.settings.logo_text | default: shop.name | escape }}
+    {% endif %}
+  </a>
   <nav class="formula-nav__links">
     {% for block in section.blocks %}
       {% if block.type == "menu_item" %}
@@ -56,9 +114,9 @@ export const FORMULA_NAV_HEADER = `<section class="formula-nav">
   </nav>
   <div class="formula-nav__actions">
     <a href="{{ section.settings.quiz_url | default: '/pages/cilt-analizi' | escape }}" class="formula-nav__quiz">{{ section.settings.quiz_label | default: "Cilt Analizi" | escape }}</a>
-    <a href="/search" aria-label="Ara">Ara</a>
-    <a href="/account" aria-label="Hesabım">Hesap</a>
-    <a href="/cart" aria-label="Sepet">Sepet</a>
+    <a href="/search" aria-label="Ara">${navIconSvg("search")}</a>
+    <a href="/account" aria-label="Hesabım">${navIconSvg("account")}</a>
+    <a href="/cart" aria-label="Sepet">${navIconSvg("cart")}</a>
   </div>
 </section>
 
@@ -66,7 +124,8 @@ export const FORMULA_NAV_HEADER = `<section class="formula-nav">
 {
   "name": "Formula Navigasyon",
   "settings": [
-    { "type": "text", "id": "logo_text", "label": "Logo Metni", "default": "" },
+    { "type": "text", "id": "logo_text", "label": "Logo Metni", "default": "",
+      "info": "Sadece Tema Ayarları'nda bir Logo görseli SEÇİLMEMİŞSE kullanılır." },
     { "type": "text", "id": "quiz_label", "label": "Analiz Buton Metni", "default": "Cilt Analizi" },
     { "type": "url", "id": "quiz_url", "label": "Analiz Bağlantısı", "default": "/pages/cilt-analizi" }
   ],
@@ -92,7 +151,77 @@ export const FORMULA_NAV_HEADER = `<section class="formula-nav">
 }
 {% endschema %}`;
 
-export const FORMULA_HERO = `<section class="formula-hero">
+/**
+ * 2026-08-19 — kullanıcı raporu: "klasik sol logo ve orta logo düzgünç
+ * çalışmıyor görüntü bozuluyor". Kök neden: `sectionDesigns.ts`'in
+ * "Tasarım Değiştir" kataloğu Formula'ya özgü DEĞİLDİ — jenerik/marka-
+ * bağımsız `class="nav-header"` + inline `style` kullanan ("classic"/
+ * "centered") varyantlardı, Formula'nın GERÇEK CSS'iyle (`.formula-nav`,
+ * `assets/theme.css`) hiç eşleşmiyordu. "Ortalı Logo" seçilince section
+ * TAMAMEN STİLSİZ (kendi inline style'ları dışında) render oluyordu —
+ * kullanıcının "görüntü bozuluyor" raporu buydu. Fix: Formula projelerinde
+ * jenerik kataloğun YERİNE bu Formula-özgü varyantlar sunulur (bkz.
+ * `sectionDesigns.ts` `getSectionDesigns`'ın templateId parametresi).
+ * "Klasik" zaten `FORMULA_NAV_HEADER`'ın kendisi — burada SADECE "Ortalı"
+ * gerekiyordu, aynı `.formula-nav` sınıf sözleşmesini (ve ikonlarını)
+ * kullanıp `formula-nav--centered` modifier'ıyla dikey/ortalı bir düzene
+ * geçiyor (CSS: `FORMULA_THEME_CSS`, `.formula-nav--centered`).
+ */
+export const FORMULA_NAV_HEADER_CENTERED = `<section class="formula-nav formula-nav--centered">
+  <a class="formula-nav__logo" href="/">
+    {% if settings.logo != blank %}
+      <img src="{{ settings.logo | img_url: '160x' }}" alt="{{ section.settings.logo_text | default: shop.name | escape }}" style="height:{{ settings.logo_width | default: 40 }}px;width:auto;display:block;margin:0 auto" />
+    {% else %}
+      {{ section.settings.logo_text | default: shop.name | escape }}
+    {% endif %}
+  </a>
+  <nav class="formula-nav__links">
+    {% for block in section.blocks %}
+      {% if block.type == "menu_item" %}
+        <a href="{{ block.settings.url | escape }}">{{ block.settings.label | escape }}</a>
+      {% endif %}
+    {% endfor %}
+  </nav>
+  <div class="formula-nav__actions">
+    <a href="{{ section.settings.quiz_url | default: '/pages/cilt-analizi' | escape }}" class="formula-nav__quiz">{{ section.settings.quiz_label | default: "Cilt Analizi" | escape }}</a>
+    <a href="/search" aria-label="Ara">${navIconSvg("search")}</a>
+    <a href="/account" aria-label="Hesabım">${navIconSvg("account")}</a>
+    <a href="/cart" aria-label="Sepet">${navIconSvg("cart")}</a>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Formula Navigasyon — Ortalı",
+  "settings": [
+    { "type": "text", "id": "logo_text", "label": "Logo Metni", "default": "",
+      "info": "Sadece Tema Ayarları'nda bir Logo görseli SEÇİLMEMİŞSE kullanılır." },
+    { "type": "text", "id": "quiz_label", "label": "Analiz Buton Metni", "default": "Cilt Analizi" },
+    { "type": "url", "id": "quiz_url", "label": "Analiz Bağlantısı", "default": "/pages/cilt-analizi" }
+  ],
+  "blocks": [
+    {
+      "type": "menu_item",
+      "name": "Menü Öğesi",
+      "settings": [
+        { "type": "text", "id": "label", "label": "Metin", "default": "Yüz Bakımı" },
+        { "type": "url", "id": "url", "label": "URL", "default": "/collection" }
+      ]
+    }
+  ],
+  "presets": [{
+    "name": "Formula Navigasyon — Ortalı",
+    "blocks": [
+      { "type": "menu_item", "settings": { "label": "Yüz Bakımı", "url": "/collection" } },
+      { "type": "menu_item", "settings": { "label": "Vücut & Saç", "url": "/collection" } },
+      { "type": "menu_item", "settings": { "label": "Kaygıya Göre", "url": "/collection" } },
+      { "type": "menu_item", "settings": { "label": "Tüm Ürünler", "url": "/products" } }
+    ]
+  }]
+}
+{% endschema %}`;
+
+export const FORMULA_HERO = `<section class="formula-hero${revealAnimationClass()}">
   <div class="formula-hero__copy">
     <p class="formula-hero__eyebrow">{{ section.settings.eyebrow | default: "Az bileşen, yüksek standart" | escape }}</p>
     <h1 class="formula-hero__title">{{ section.settings.title | default: "Cildin ne istiyorsa, sadece o." | escape }}</h1>
@@ -123,13 +252,13 @@ export const FORMULA_HERO = `<section class="formula-hero">
     { "type": "url", "id": "cta_url", "label": "Ana Buton URL", "default": "/products" },
     { "type": "text", "id": "quiz_label", "label": "İkincil Buton Metni", "default": "Cildini Tanı →" },
     { "type": "url", "id": "quiz_url", "label": "İkincil Buton URL", "default": "/pages/cilt-analizi" },
-    { "type": "image_picker", "id": "image", "label": "Görsel" },${imageEffectSchemaFields()}
+    { "type": "image_picker", "id": "image", "label": "Görsel" },${imageEffectSchemaFields()},${revealAnimationSchemaField()}
   ],
   "presets": [{ "name": "Formula Hero" }]
 }
 {% endschema %}`;
 
-export const FORMULA_QUIZ_BANNER = `<section class="formula-quiz">
+export const FORMULA_QUIZ_BANNER = `<section class="formula-quiz${revealAnimationClass()}">
   <p class="formula-quiz__title">{{ section.settings.title | default: "Cildin için hangi aktifler işe yarar, bilmiyor musun?" | escape }}</p>
   <p class="formula-quiz__sub">{{ section.settings.subtitle | default: "60 saniyelik analizle sana özel 3 ürünlük rutini çıkaralım." | escape }}</p>
   <a class="formula-btn formula-btn--invert" href="{{ section.settings.url | default: '/pages/cilt-analizi' | escape }}">{{ section.settings.cta_label | default: "Analize Başla" | escape }}</a>
@@ -142,13 +271,13 @@ export const FORMULA_QUIZ_BANNER = `<section class="formula-quiz">
     { "type": "text", "id": "title", "label": "Başlık", "default": "Cildin için hangi aktifler işe yarar, bilmiyor musun?" },
     { "type": "text", "id": "subtitle", "label": "Alt Metin", "default": "60 saniyelik analizle sana özel 3 ürünlük rutini çıkaralım." },
     { "type": "text", "id": "cta_label", "label": "Buton Metni", "default": "Analize Başla" },
-    { "type": "url", "id": "url", "label": "Buton URL", "default": "/pages/cilt-analizi" }
+    { "type": "url", "id": "url", "label": "Buton URL", "default": "/pages/cilt-analizi" },${revealAnimationSchemaField()}
   ],
   "presets": [{ "name": "Formula Analiz Bandı" }]
 }
 {% endschema %}`;
 
-export const FORMULA_BESTSELLERS = `<section class="formula-bestsellers">
+export const FORMULA_BESTSELLERS = `<section class="formula-bestsellers${revealAnimationClass()}">
   <div class="formula-section-head">
     <h2>{{ section.settings.title | default: "Çok satanlar" | escape }}</h2>
     <a href="{{ section.settings.view_all_url | default: '/products' | escape }}">{{ section.settings.view_all_label | default: "Tümünü Gör" | escape }}</a>
@@ -180,7 +309,7 @@ export const FORMULA_BESTSELLERS = `<section class="formula-bestsellers">
   "settings": [
     { "type": "text", "id": "title", "label": "Başlık", "default": "Çok satanlar" },
     { "type": "text", "id": "view_all_label", "label": "Tümünü Gör Metni", "default": "Tümünü Gör" },
-    { "type": "url", "id": "view_all_url", "label": "Tümünü Gör URL", "default": "/products" }
+    { "type": "url", "id": "view_all_url", "label": "Tümünü Gör URL", "default": "/products" },${revealAnimationSchemaField()}
   ],
   "blocks": [
     {
@@ -196,7 +325,7 @@ export const FORMULA_BESTSELLERS = `<section class="formula-bestsellers">
       ]
     }
   ],
-  "max_blocks": 8,
+  "max_blocks": 12,
   "presets": [{
     "name": "Formula Çok Satanlar",
     "blocks": [
@@ -209,7 +338,7 @@ export const FORMULA_BESTSELLERS = `<section class="formula-bestsellers">
 }
 {% endschema %}`;
 
-export const FORMULA_CONCERNS = `<section class="formula-concerns">
+export const FORMULA_CONCERNS = `<section class="formula-concerns${revealAnimationClass()}">
   <div class="formula-section-head">
     <h2>{{ section.settings.title | default: "Kaygına göre keşfet" | escape }}</h2>
   </div>
@@ -229,7 +358,7 @@ export const FORMULA_CONCERNS = `<section class="formula-concerns">
 {
   "name": "Formula Kaygıya Göre",
   "settings": [
-    { "type": "text", "id": "title", "label": "Başlık", "default": "Kaygına göre keşfet" }
+    { "type": "text", "id": "title", "label": "Başlık", "default": "Kaygına göre keşfet" },${revealAnimationSchemaField()}
   ],
   "blocks": [
     {
@@ -257,7 +386,7 @@ export const FORMULA_CONCERNS = `<section class="formula-concerns">
 }
 {% endschema %}`;
 
-export const FORMULA_PHILOSOPHY = `<section class="formula-philosophy">
+export const FORMULA_PHILOSOPHY = `<section class="formula-philosophy${revealAnimationClass()}">
   <p class="formula-philosophy__statement">{{ section.settings.statement | default: "Az bileşen. Kanıtlanmış aktifler. Her zaman şeffaf." | escape }}</p>
   <div class="formula-philosophy__grid">
     {% for block in section.blocks %}
@@ -276,7 +405,7 @@ export const FORMULA_PHILOSOPHY = `<section class="formula-philosophy">
 {
   "name": "Formula Felsefe",
   "settings": [
-    { "type": "textarea", "id": "statement", "label": "Ana Cümle", "default": "Az bileşen. Kanıtlanmış aktifler. Her zaman şeffaf." }
+    { "type": "textarea", "id": "statement", "label": "Ana Cümle", "default": "Az bileşen. Kanıtlanmış aktifler. Her zaman şeffaf." },${revealAnimationSchemaField()}
   ],
   "blocks": [
     {
@@ -304,7 +433,15 @@ export const FORMULA_PHILOSOPHY = `<section class="formula-philosophy">
 export const FORMULA_FOOTER_MENU = `<section class="formula-footer">
   <div class="formula-footer__top">
     <div class="formula-footer__brand">
-      <p class="formula-footer__logo">{{ section.settings.logo_text | default: shop.name | escape }}</p>
+      {% if section.settings.show_logo %}
+        <p class="formula-footer__logo">
+          {% if settings.logo != blank %}
+            <img src="{{ settings.logo | img_url: '160x' }}" alt="{{ shop.name | escape }}" style="height:{{ settings.logo_width | default: 40 }}px;width:auto;display:block" />
+          {% else %}
+            {{ shop.name | escape }}
+          {% endif %}
+        </p>
+      {% endif %}
       <p class="formula-footer__blurb">{{ section.settings.blurb | default: "Az bileşen, yüksek standart. Cilt bakımını şeffaf ve anlaşılır yapıyoruz." | escape }}</p>
     </div>
     <nav class="formula-footer__links">
@@ -322,7 +459,8 @@ export const FORMULA_FOOTER_MENU = `<section class="formula-footer">
 {
   "name": "Formula Footer",
   "settings": [
-    { "type": "text", "id": "logo_text", "label": "Logo Metni", "default": "" },
+    { "type": "checkbox", "id": "show_logo", "label": "Logoyu Göster", "default": true,
+      "info": "Tema Ayarları'ndaki Logo görselini kullanır (varsa) — burada ayrı bir logo metni/görseli YOK, sadece aç/kapat." },
     { "type": "textarea", "id": "blurb", "label": "Marka Açıklaması", "default": "Az bileşen, yüksek standart. Cilt bakımını şeffaf ve anlaşılır yapıyoruz." }
   ],
   "blocks": [
@@ -381,7 +519,7 @@ export const FORMULA_ANNOUNCEMENT_BAR = `<section class="formula-announcement">
 }
 {% endschema %}`;
 
-export const FORMULA_MARQUEE = `<section class="formula-marquee">
+export const FORMULA_MARQUEE = `<section class="formula-marquee${revealAnimationClass()}">
   <div class="formula-marquee__track" style="animation-duration: {{ section.settings.speed | default: 28 }}s;">
     <div class="formula-marquee__group">
       {% for block in section.blocks %}{% if block.type == "phrase" %}<span class="formula-marquee__item">{{ block.settings.text | default: "Şeffaf Formüller" | escape }}</span><span class="formula-marquee__dot" aria-hidden="true">✦</span>{% endif %}{% endfor %}
@@ -406,7 +544,7 @@ export const FORMULA_MARQUEE = `<section class="formula-marquee">
 {
   "name": "Formula Kayan Yazı",
   "settings": [
-    { "type": "range", "id": "speed", "label": "Hız (sn)", "min": 10, "max": 60, "step": 2, "default": 28 }
+    { "type": "range", "id": "speed", "label": "Hız (sn)", "min": 10, "max": 60, "step": 2, "default": 28 },${revealAnimationSchemaField()}
   ],
   "blocks": [
     {
@@ -442,23 +580,26 @@ export const FORMULA_MARQUEE = `<section class="formula-marquee">
  * `FORMULA_GENERAL_SHOWCASE`) — bu section BİLİNÇLİ olarak koleksiyona kilitli
  * kalıyor.
  */
-export const FORMULA_COLLECTION_LIST = `<section class="formula-collection-list">
+export const FORMULA_COLLECTION_LIST = `<section class="formula-collection-list formula-collection-list--hover-{{ section.settings.hover_effect | default: 'zoom' }}${revealAnimationClass()}">
   <div class="formula-section-head">
     <h2>{{ section.settings.title | default: "Koleksiyonlar" | escape }}</h2>
   </div>
-  <div class="formula-collection-list__grid">
+  <div class="formula-collection-list__grid" style="--formula-collection-cols: {{ section.settings.columns | default: 3 }}; --formula-collection-gap: {{ section.settings.gap | default: 24 }}px">
     {% for block in section.blocks %}
       {% if block.type == "collection" and block.settings.collection != blank %}
-        <a class="formula-collection-card" href="{{ block.settings.collection.url | escape }}">
+        <a class="formula-collection-card formula-collection-card--{{ section.settings.card_style | default: 'below' }}" href="{{ block.settings.collection.url | escape }}">
           <div class="formula-collection-card__media" style="border-radius: {{ section.settings.image_shape | default: 14 }}px">
             {% if block.settings.collection.image != blank %}
               <img src="{{ block.settings.collection.image | img_url: '900x' }}" alt="{{ block.settings.collection.title | escape }}" loading="lazy" />
             {% else %}
               <div class="formula-collection-card__placeholder" aria-hidden="true"></div>
             {% endif %}
+            {% if section.settings.card_style == 'overlay' %}<div class="formula-collection-card__scrim" aria-hidden="true"></div>{% endif %}
           </div>
-          <p class="formula-collection-card__title">{{ block.settings.collection.title | escape }}</p>
-          {% if block.settings.collection.description != blank %}<p class="formula-collection-card__sub">{{ block.settings.collection.description | escape }}</p>{% endif %}
+          <div class="formula-collection-card__copy">
+            <p class="formula-collection-card__title">{{ block.settings.collection.title | escape }}</p>
+            {% if block.settings.collection.description != blank %}<p class="formula-collection-card__sub">{{ block.settings.collection.description | escape }}</p>{% endif %}
+          </div>
         </a>
       {% endif %}
     {% endfor %}
@@ -470,6 +611,27 @@ export const FORMULA_COLLECTION_LIST = `<section class="formula-collection-list"
   "name": "Formula Koleksiyon Listesi",
   "settings": [
     { "type": "text", "id": "title", "label": "Başlık", "default": "Koleksiyonlar" },
+    { "type": "select", "id": "columns", "label": "Sütun Sayısı (masaüstü)", "default": "3",
+      "options": [
+        { "label": "2 sütun", "value": "2" },
+        { "label": "3 sütun", "value": "3" },
+        { "label": "4 sütun", "value": "4" }
+      ]
+    },
+    { "type": "range", "id": "gap", "label": "Kartlar Arası Boşluk (px)", "min": 8, "max": 48, "step": 4, "default": 24 },
+    { "type": "select", "id": "card_style", "label": "Kart Stili", "default": "below",
+      "options": [
+        { "label": "Başlık görselin altında", "value": "below" },
+        { "label": "Başlık görselin üzerinde (kaplamalı)", "value": "overlay" }
+      ]
+    },
+    { "type": "select", "id": "hover_effect", "label": "Üzerine Gelince Efekt", "default": "zoom",
+      "options": [
+        { "label": "Yakınlaştır", "value": "zoom" },
+        { "label": "Yukarı Kalk", "value": "lift" },
+        { "label": "Yok", "value": "none" }
+      ]
+    },
     { "type": "select", "id": "image_shape", "label": "Görsel Şekli", "default": "14",
       "options": [
         { "label": "Köşeli", "value": "0" },
@@ -477,7 +639,7 @@ export const FORMULA_COLLECTION_LIST = `<section class="formula-collection-list"
         { "label": "Yuvarlak", "value": "28" },
         { "label": "Oval", "value": "56" }
       ]
-    }
+    },${revealAnimationSchemaField()}
   ],
   "blocks": [
     {
@@ -505,7 +667,7 @@ export const FORMULA_COLLECTION_LIST = `<section class="formula-collection-list"
  * Sadece `cta_label` (buton metni, koleksiyonun verisi değil salt arayüz
  * metni) ve `image_shape` (görsel köşe yuvarlaklığı seçimi) manuel kalıyor.
  */
-export const FORMULA_COLLECTION_SHOWCASE = `<section class="formula-collection-showcase">
+export const FORMULA_COLLECTION_SHOWCASE = `<section class="formula-collection-showcase formula-collection-showcase--align-{{ section.settings.text_align | default: 'left' }}{% if section.settings.layout == 'image_right' %} formula-collection-showcase--reverse{% endif %}${revealAnimationClass()}">
   {% if section.settings.collection != blank %}
     <div class="formula-collection-showcase__media" style="border-radius: {{ section.settings.image_shape | default: 18 }}px">
       {% if section.settings.collection.image != blank %}
@@ -531,6 +693,18 @@ export const FORMULA_COLLECTION_SHOWCASE = `<section class="formula-collection-s
   "settings": [
     { "type": "collection", "id": "collection", "label": "Koleksiyon" },
     { "type": "text", "id": "cta_label", "label": "Buton Metni", "default": "Koleksiyonu Gör" },
+    { "type": "select", "id": "layout", "label": "Yerleşim", "default": "image_left",
+      "options": [
+        { "label": "Görsel solda", "value": "image_left" },
+        { "label": "Görsel sağda", "value": "image_right" }
+      ]
+    },
+    { "type": "select", "id": "text_align", "label": "Metin Hizası", "default": "left",
+      "options": [
+        { "label": "Sol", "value": "left" },
+        { "label": "Orta", "value": "center" }
+      ]
+    },
     { "type": "select", "id": "image_shape", "label": "Görsel Şekli", "default": "18",
       "options": [
         { "label": "Köşeli", "value": "0" },
@@ -538,7 +712,7 @@ export const FORMULA_COLLECTION_SHOWCASE = `<section class="formula-collection-s
         { "label": "Yuvarlak", "value": "32" },
         { "label": "Oval", "value": "64" }
       ]
-    },${imageEffectSchemaFields()}
+    },${imageEffectSchemaFields()},${revealAnimationSchemaField()}
   ],
   "presets": [{ "name": "Formula Koleksiyon Vitrini" }]
 }
@@ -553,7 +727,7 @@ export const FORMULA_COLLECTION_SHOWCASE = `<section class="formula-collection-s
  * yer — kampanya/indirim/sezon banner'ı gibi koleksiyona bağlı OLMAYAN
  * kullanımlar için. Aynı `image_shape` deseni burada da var.
  */
-export const FORMULA_GENERAL_SHOWCASE = `<section class="formula-showcase{% if section.settings.layout == 'image_right' %} formula-showcase--reverse{% endif %}">
+export const FORMULA_GENERAL_SHOWCASE = `<section class="formula-showcase{% if section.settings.layout == 'image_right' %} formula-showcase--reverse{% endif %}${revealAnimationClass()}">
   <div class="formula-showcase__media" style="border-radius: {{ section.settings.image_shape | default: 18 }}px">
     {% if section.settings.image != blank %}
       <img src="{{ section.settings.image | img_url: '1400x' }}" alt="{{ section.settings.title | escape }}" loading="lazy" style="${imageEffectStyle("section.settings")}" />
@@ -595,7 +769,7 @@ export const FORMULA_GENERAL_SHOWCASE = `<section class="formula-showcase{% if s
       ]
     },
     { "type": "text", "id": "cta_label", "label": "Buton Metni", "default": "Keşfet" },
-    { "type": "url", "id": "cta_url", "label": "Buton Bağlantısı", "default": "" },${imageEffectSchemaFields()}
+    { "type": "url", "id": "cta_url", "label": "Buton Bağlantısı", "default": "" },${imageEffectSchemaFields()},${revealAnimationSchemaField()}
   ],
   "presets": [{ "name": "Formula Genel Vitrin" }]
 }
@@ -608,7 +782,7 @@ export const FORMULA_GENERAL_SHOWCASE = `<section class="formula-showcase{% if s
  * blok deseniyle veya (story dizisinde) yeni `collection` alanıyla aynı çizgide.
  */
 
-export const FORMULA_FAQ = `<section class="formula-faq">
+export const FORMULA_FAQ = `<section class="formula-faq${revealAnimationClass()}">
   <div class="formula-section-head">
     <h2>{{ section.settings.title | default: "Sıkça Sorulan Sorular" | escape }}</h2>
   </div>
@@ -628,7 +802,7 @@ export const FORMULA_FAQ = `<section class="formula-faq">
 {
   "name": "Formula SSS",
   "settings": [
-    { "type": "text", "id": "title", "label": "Başlık", "default": "Sıkça Sorulan Sorular" }
+    { "type": "text", "id": "title", "label": "Başlık", "default": "Sıkça Sorulan Sorular" },${revealAnimationSchemaField()}
   ],
   "blocks": [
     {
@@ -657,7 +831,7 @@ export const FORMULA_FAQ = `<section class="formula-faq">
  * koleksiyona bağlanır (`collection` alanı, `CollectionRefPicker`), aynı
  * `FORMULA_COLLECTION_LIST` deseni ama dairesel/yatay-kaydırmalı sunum.
  */
-export const FORMULA_STORY_ROW = `<section class="formula-story-row">
+export const FORMULA_STORY_ROW = `<section class="formula-story-row formula-story-row--{{ section.settings.avatar_size | default: 'md' }}${revealAnimationClass()}">
   <div class="formula-story-row__track">
     {% for block in section.blocks %}
       {% if block.type == "story" and block.settings.collection != blank %}
@@ -675,7 +849,15 @@ export const FORMULA_STORY_ROW = `<section class="formula-story-row">
 {% schema %}
 {
   "name": "Formula Hızlı Koleksiyonlar",
-  "settings": [],
+  "settings": [
+    { "type": "select", "id": "avatar_size", "label": "Daire Boyutu", "default": "md",
+      "options": [
+        { "label": "Küçük", "value": "sm" },
+        { "label": "Orta", "value": "md" },
+        { "label": "Büyük", "value": "lg" }
+      ]
+    },${revealAnimationSchemaField()}
+  ],
   "blocks": [
     {
       "type": "story",
@@ -712,7 +894,7 @@ export const FORMULA_STORY_ROW = `<section class="formula-story-row">
  *   `<div>`, tıklanabilirlik CTA linkine taşındı).
  * - Metin hizası + metin rengi (açık/koyu — kaplama/arka plana göre).
  */
-export const FORMULA_SLIDER = `<section class="formula-slider" data-section-id="{{ section.id }}">
+export const FORMULA_SLIDER = `<section class="formula-slider${revealAnimationClass()}" data-section-id="{{ section.id }}">
   <div class="formula-slider__track" id="formula-slider-track-{{ section.id }}">
     {% for block in section.blocks %}
       {% if block.type == "slide" %}
@@ -755,7 +937,7 @@ export const FORMULA_SLIDER = `<section class="formula-slider" data-section-id="
         { "label": "Kare (1:1)", "value": "1/1" },
         { "label": "Dikey (3:4)", "value": "3/4" }
       ]
-    }
+    },${revealAnimationSchemaField()}
   ],
   "blocks": [
     {
@@ -807,7 +989,7 @@ export const FORMULA_SLIDER = `<section class="formula-slider" data-section-id="
  * marka diline uygun (bkz. dosya başı notu), somut sayılarla güven inşa eden
  * kısa bir bant. Felsefe section'ının (`FORMULA_PHILOSOPHY`) hemen yanına
  * doğal bir tamamlayıcı. */
-export const FORMULA_STATS = `<section class="formula-stats">
+export const FORMULA_STATS = `<section class="formula-stats${revealAnimationClass()}">
   {% if section.settings.title != blank %}<h2 class="formula-stats__title">{{ section.settings.title | escape }}</h2>{% endif %}
   <div class="formula-stats__grid">
     {% for block in section.blocks %}
@@ -825,7 +1007,7 @@ export const FORMULA_STATS = `<section class="formula-stats">
 {
   "name": "Formula Rakamlarla",
   "settings": [
-    { "type": "text", "id": "title", "label": "Başlık (ops.)", "default": "" }
+    { "type": "text", "id": "title", "label": "Başlık (ops.)", "default": "" },${revealAnimationSchemaField()}
   ],
   "blocks": [
     {
@@ -847,6 +1029,40 @@ export const FORMULA_STATS = `<section class="formula-stats">
       { "type": "stat", "settings": { "number": "0", "label": "Hayvan Deneyi" } }
     ]
   }]
+}
+{% endschema %}`;
+
+/**
+ * 2026-08-19 — kullanıcı raporu: "404 sayfası hâlâ yok". `isMandatoryPage`
+ * (`commandGovernance.ts`) `template: "404"` sayfasını zaten korumuyordu ama
+ * Formula scaffold'ında böyle bir sayfa HİÇ YOKTU — ve `apps/renderer`
+ * eşleşmeyen route'larda temadan tamamen bağımsız, sabit bir `errorPage()`
+ * kullanıyordu (bkz. `renderer.ts`'in fix'i). Bu section main-cart/main-
+ * checkout gibi `formulaPages.ts`'in kendi `utilityPage()`'iyle "404" sayfasına
+ * bağlanıyor — `FORMULA_LIBRARY_SECTIONS`'a EKLENMEDİ (opsiyonel "ekle"
+ * kataloğu değil, main-product/main-cart gibi sayfaya özel zorunlu section).
+ */
+export const FORMULA_404 = `<section class="formula-404${revealAnimationClass()}">
+  <p class="formula-404__code" aria-hidden="true">404</p>
+  <h1 class="formula-404__title">{{ section.settings.title | default: "Bu sayfa bulunamadı" | escape }}</h1>
+  <p class="formula-404__sub">{{ section.settings.subtitle | default: "Aradığın sayfa taşınmış ya da hiç var olmamış olabilir." | escape }}</p>
+  <div class="formula-404__actions">
+    <a class="formula-btn formula-btn--solid" href="{{ section.settings.cta_url | default: '/' | escape }}">{{ section.settings.cta_label | default: "Ana Sayfaya Dön" | escape }}</a>
+    <a class="formula-btn formula-btn--ghost" href="/products">{{ section.settings.secondary_label | default: "Tüm Ürünler" | escape }}</a>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Formula 404",
+  "settings": [
+    { "type": "text", "id": "title", "label": "Başlık", "default": "Bu sayfa bulunamadı" },
+    { "type": "textarea", "id": "subtitle", "label": "Alt Metin", "default": "Aradığın sayfa taşınmış ya da hiç var olmamış olabilir." },
+    { "type": "text", "id": "cta_label", "label": "Ana Buton Metni", "default": "Ana Sayfaya Dön" },
+    { "type": "url", "id": "cta_url", "label": "Ana Buton URL", "default": "/" },
+    { "type": "text", "id": "secondary_label", "label": "İkincil Buton Metni", "default": "Tüm Ürünler" },${revealAnimationSchemaField()}
+  ],
+  "presets": [{ "name": "Formula 404" }]
 }
 {% endschema %}`;
 
@@ -900,28 +1116,49 @@ export const FORMULA_LIBRARY_SECTIONS_CSS = `
 .formula-marquee__dot { color: var(--color-primary); font-size: 12px; }
 @keyframes formula-marquee-scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 
-/* Koleksiyon listesi */
+/* Koleksiyon listesi — 2026-08-19: sütun sayısı/boşluk artık
+   --formula-collection-cols / --formula-collection-gap (section
+   ayarlarından, inline style ile) — mobil media query'ler BİLİNÇLİ OLARAK
+   var() KULLANMIYOR, sabit değer yazıyor, böylece masaüstünde 4 sütun
+   seçilse bile mobilde hâlâ 1-2 sütuna düşüyor (cascade sırası kazanıyor). */
 .formula-collection-list { padding: 64px 40px; }
-.formula-collection-list__grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 24px; }
-.formula-collection-card { text-decoration: none; color: var(--color-text); display: block; }
-.formula-collection-card__media { position: relative; aspect-ratio: 4/3; background: var(--color-surface); border-radius: 14px; overflow: hidden; margin-bottom: 14px; }
+.formula-collection-list__grid { display: grid; grid-template-columns: repeat(var(--formula-collection-cols, 3), minmax(0,1fr)); gap: var(--formula-collection-gap, 24px); }
+.formula-collection-card { text-decoration: none; color: var(--color-text); display: block; position: relative; }
+.formula-collection-card__media { position: relative; aspect-ratio: 4/3; background: var(--color-surface); border-radius: 14px; overflow: hidden; }
 .formula-collection-card__media img { width: 100%; height: 100%; object-fit: cover; transition: transform .3s; }
-.formula-collection-card:hover .formula-collection-card__media img { transform: scale(1.04); }
 .formula-collection-card__placeholder { width: 100%; height: 100%; background: linear-gradient(160deg, var(--color-border), var(--color-surface)); }
+.formula-collection-card__copy { margin-top: 14px; }
 .formula-collection-card__title { font-family: var(--font-heading); font-size: 16px; font-weight: 600; margin: 0 0 4px; }
 .formula-collection-card__sub { font-size: 12px; color: var(--color-muted); margin: 0; }
+/* Üzerine gelince efekt varyantları */
+.formula-collection-list--hover-zoom .formula-collection-card:hover .formula-collection-card__media img { transform: scale(1.04); }
+.formula-collection-list--hover-lift .formula-collection-card { transition: transform .25s; }
+.formula-collection-list--hover-lift .formula-collection-card:hover { transform: translateY(-6px); }
+/* Kart stili: "overlay" — başlık görselin İÇİNDE, alt kaplama gradyanıyla */
+.formula-collection-card--overlay .formula-collection-card__copy { position: absolute; left: 0; right: 0; bottom: 0; margin: 0; padding: 20px; z-index: 1; }
+.formula-collection-card--overlay .formula-collection-card__title,
+.formula-collection-card--overlay .formula-collection-card__sub { color: #ffffff; }
+.formula-collection-card__scrim { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,.7), transparent 60%); pointer-events: none; }
 @media (max-width: 900px) { .formula-collection-list__grid { grid-template-columns: repeat(2, minmax(0,1fr)); } .formula-collection-list { padding: 44px 20px; } }
 @media (max-width: 560px) { .formula-collection-list__grid { grid-template-columns: 1fr; } }
 
-/* Koleksiyon vitrini */
+/* Koleksiyon vitrini — 2026-08-19: --reverse (görsel sağda) formula-
+   showcase--reverse'in AYNI direction:rtl tekniği, --align-center metni
+   ortalar (koleksiyonun kendi görselini büyük/kampanya-tarzı kullanmak
+   isteyenler için). */
 .formula-collection-showcase { display: grid; grid-template-columns: 1fr 1fr; align-items: center; gap: 48px; padding: 64px 40px; background: var(--color-background); }
+.formula-collection-showcase--reverse { direction: rtl; }
+.formula-collection-showcase--reverse > * { direction: ltr; }
+.formula-collection-showcase--reverse .formula-collection-showcase__media { order: 2; }
+.formula-collection-showcase--align-center .formula-collection-showcase__copy { text-align: center; }
+.formula-collection-showcase--align-center .formula-collection-showcase__sub { margin-left: auto; margin-right: auto; }
 .formula-collection-showcase__media { position: relative; aspect-ratio: 5/4; border-radius: 18px; overflow: hidden; background: var(--color-surface); }
 .formula-collection-showcase__media img { width: 100%; height: 100%; object-fit: cover; }
 .formula-collection-showcase__placeholder { width: 100%; height: 100%; background: linear-gradient(155deg, var(--color-accent) 0%, var(--color-surface) 70%); opacity: .5; }
 .formula-collection-showcase__empty { grid-column: 1 / -1; padding: 48px; text-align: center; color: var(--color-muted); font-size: 13px; border: 1px dashed var(--color-border); border-radius: 14px; }
 .formula-collection-showcase__title { font-family: var(--font-heading); font-size: clamp(30px, 3.6vw, 44px); line-height: 1.1; letter-spacing: -0.02em; margin: 0 0 16px; max-width: 14ch; }
 .formula-collection-showcase__sub { color: var(--color-muted); line-height: 1.6; max-width: 40ch; margin: 0 0 28px; }
-@media (max-width: 900px) { .formula-collection-showcase { grid-template-columns: 1fr; padding: 48px 24px; text-align: center; } .formula-collection-showcase__sub { max-width: none; margin-left: auto; margin-right: auto; } }
+@media (max-width: 900px) { .formula-collection-showcase, .formula-collection-showcase--reverse { grid-template-columns: 1fr; direction: ltr; padding: 48px 24px; text-align: center; } .formula-collection-showcase--reverse .formula-collection-showcase__media { order: 0; } .formula-collection-showcase__sub { max-width: none; margin-left: auto; margin-right: auto; } }
 
 /* Genel Vitrin */
 .formula-showcase { display: grid; grid-template-columns: 1fr 1fr; align-items: center; gap: 48px; padding: 64px 40px; background: var(--color-background); }
@@ -955,6 +1192,12 @@ export const FORMULA_LIBRARY_SECTIONS_CSS = `
 .formula-story__ring { display: flex; align-items: center; justify-content: center; width: 72px; height: 72px; border-radius: 999px; padding: 3px; background: linear-gradient(135deg, var(--color-primary), var(--color-accent)); }
 .formula-story__avatar { display: block; width: 100%; height: 100%; border-radius: 999px; background: var(--color-surface) center/cover no-repeat; border: 2px solid var(--color-background); }
 .formula-story__label { font-size: 11px; text-align: center; color: var(--color-text); line-height: 1.3; }
+/* Daire boyutu varyantları (2026-08-19) */
+.formula-story-row--sm .formula-story { width: 60px; }
+.formula-story-row--sm .formula-story__ring { width: 56px; height: 56px; }
+.formula-story-row--lg .formula-story { width: 96px; }
+.formula-story-row--lg .formula-story__ring { width: 92px; height: 92px; }
+.formula-story-row--lg .formula-story__label { font-size: 12px; }
 @media (max-width: 700px) { .formula-story-row { padding: 24px 20px; } }
 
 /* Slider */
@@ -987,6 +1230,41 @@ export const FORMULA_LIBRARY_SECTIONS_CSS = `
 .formula-stat__number { font-family: var(--font-heading); font-size: clamp(28px, 3.4vw, 40px); font-weight: 700; margin: 0 0 6px; letter-spacing: -0.01em; }
 .formula-stat__label { font-size: 13px; opacity: .78; margin: 0; }
 @media (max-width: 700px) { .formula-stats { padding: 40px 20px; } .formula-stats__grid { grid-template-columns: repeat(2, minmax(0,1fr)); gap: 28px 16px; } }
+
+/* 404 (2026-08-19) */
+.formula-404 { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 96px 24px; min-height: 50vh; }
+.formula-404__code { font-family: var(--font-heading); font-size: clamp(64px, 12vw, 140px); font-weight: 700; line-height: 1; margin: 0; color: var(--color-border); letter-spacing: -0.03em; }
+.formula-404__title { font-family: var(--font-heading); font-size: clamp(22px, 2.6vw, 32px); margin: 12px 0 8px; }
+.formula-404__sub { color: var(--color-muted); max-width: 42ch; margin: 0 0 32px; line-height: 1.6; }
+.formula-404__actions { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+
+/* Görünürken animasyon (2026-08-19) — varsayılan "none", HİÇBİR ek boya/
+   layout maliyeti yok (bkz. revealAnimationSchemaField() yorumu). Gerçek
+   gizleme/ortaya çıkarma sadece section explicit bir varyant seçtiğinde
+   devreye girer (:not(.formula-reveal--none)), bu yüzden mevcut/varsayılan
+   sayfalarda bu blok tamamen no-op'tur. Görünürlüğü tetikleyen minik
+   IntersectionObserver script'i apps/renderer/src/eipgTheme.ts ve
+   apps/studio-server/src/index.ts'te (motorun HİÇ script eklemediği tek
+   nokta, bkz. render fonksiyonları) — ikisi de AYNI script'i (FORMULA_REVEAL_SCRIPT
+   ile birebir) body kapanışından hemen önce basar. */
+.formula-reveal--none { opacity: 1; }
+.formula-reveal:not(.formula-reveal--none) {
+  opacity: 0;
+  transition: opacity .6s cubic-bezier(.22,.61,.36,1), transform .6s cubic-bezier(.22,.61,.36,1);
+}
+.formula-reveal--fade:not(.formula-reveal--none) { transform: none; }
+.formula-reveal--up:not(.formula-reveal--none) { transform: translateY(28px); }
+.formula-reveal--left:not(.formula-reveal--none) { transform: translateX(-28px); }
+.formula-reveal--right:not(.formula-reveal--none) { transform: translateX(28px); }
+.formula-reveal--zoom:not(.formula-reveal--none) { transform: scale(.94); }
+.formula-reveal.is-visible { opacity: 1 !important; transform: none !important; }
+/* JS kapalıysa (tarayıcı ayarı ya da script engellendi) içerik sonsuza dek
+   gizli KALMASIN — noscript bu durumda HER ZAMAN devrede, JS'e bağlı
+   bir zamanlama riski yok (bkz. eipgTheme.ts/studio-server/index.ts'in
+   head'e eklediği noscript+style fallback'i). */
+@media (prefers-reduced-motion: reduce) {
+  .formula-reveal { opacity: 1 !important; transform: none !important; transition: none !important; }
+}
 `;
 
 export const FORMULA_THEME_CSS = `
@@ -1023,10 +1301,17 @@ a { color: inherit; }
 .formula-nav__logo { font-family: var(--font-heading); font-weight: 700; font-size: 18px; letter-spacing: -0.01em; text-decoration: none; color: var(--color-secondary); }
 .formula-nav__links { display: flex; gap: 26px; }
 .formula-nav__links a { font-size: 13px; text-decoration: none; color: var(--color-text); text-transform: uppercase; letter-spacing: 0.04em; }
-.formula-nav__actions { display: flex; align-items: center; gap: 18px; font-size: 13px; }
-.formula-nav__actions a { text-decoration: none; color: var(--color-text); }
+.formula-nav__actions { display: flex; align-items: center; gap: 16px; font-size: 13px; }
+.formula-nav__actions a { text-decoration: none; color: var(--color-text); display: flex; align-items: center; }
+.formula-nav__actions a:hover { color: var(--color-primary); }
+.formula-nav__icon { width: 19px; height: 19px; display: block; }
 .formula-nav__quiz { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 999px; padding: 7px 14px; color: var(--color-primary) !important; font-weight: 500; }
 @media (max-width: 767.98px) { .formula-nav__links { display: none; } .formula-nav { padding: 14px 20px; } }
+/* "Ortalı Logo" tasarım varyantı (2026-08-19) — logo üstte ortalı, altında
+   linkler, aksiyonlar (ara/hesap/sepet) sağ üst köşede mutlak konumlanır. */
+.formula-nav--centered { flex-direction: column; justify-content: center; text-align: center; position: relative; padding-top: 16px; padding-bottom: 14px; }
+.formula-nav--centered .formula-nav__actions { position: absolute; right: 40px; top: 50%; transform: translateY(-50%); }
+@media (max-width: 767.98px) { .formula-nav--centered .formula-nav__actions { position: static; transform: none; justify-content: center; margin-top: 2px; } }
 
 /* Hero */
 .formula-hero { display: grid; grid-template-columns: 1fr 1fr; align-items: center; gap: 48px; padding: 64px 40px; background: var(--color-surface); min-height: 560px; }
@@ -1084,19 +1369,26 @@ a { color: inherit; }
 .formula-footer__copy { font-size: 12px; color: var(--color-muted); border-top: 1px solid var(--color-border); padding-top: 20px; margin: 0; }
 ` + FORMULA_LIBRARY_SECTIONS_CSS;
 
-/** `FORMULA_LIBRARY_SECTIONS`'ın CSS'i sadece YENİ scaffold edilen projelerin
- * `assets/theme.css`'ine girer (`scaffoldTemplate.ts`, sadece proje oluşturma
- * anında çalışır) — o TARİHTEN ÖNCE oluşturulmuş projelerin dosyaları donmuş
- * bir kopya, `.formula-marquee` gibi sınıflar hiç tanımlı değil ("yeni
- * eklediğin section'ların css'leri çalışmıyor" — kullanıcı raporu, 2026-08-17/18).
- * `StudioShell.tsx` proje yüklenirken imza sınıfın (`.formula-marquee`) eksik
- * olup olmadığına bakıp eksikse CSS'i client-side yamıyor — sonraki kayıtta
- * kalıcı hale gelir, ayrı bir "senkronize et" adımı gerekmez. İdempotent:
- * imza sınıf zaten varsa (yeni scaffold ya da önceden yamalanmış proje)
- * hiçbir şey değişmez. */
+/** `assets/theme.css`, sadece proje OLUŞTURULURKEN scaffold edilir
+ * (`scaffoldTemplate.ts`, proje oluşturma anında çalışır) — o TARİHTEN
+ * ÖNCE oluşturulmuş projelerin dosyaları donmuş bir kopya. Bu bug SINIFI
+ * (2026-08-17: marquee CSS'i eksik, 2026-08-19: nav ikon CSS'i eksik) her
+ * yeni core CSS değişikliğinde TEKRARLANIYORDU çünkü eski sürüm tek bir
+ * imza sınıfın (`.formula-marquee`) VARLIĞINA bakıyordu — bir proje bir kez
+ * yamalandıktan sonra o imza sınıf artık orada olduğu için, ONDAN SONRAKİ
+ * hiçbir CSS güncellemesi bir daha yansımıyordu (idempotent kontrol yanlış
+ * şeyi kontrol ediyordu). Formula'da Studio'dan elle CSS düzenleme özelliği
+ * YOK (tema ayarları renkleri/fontları AYRI, render zamanında `:root`
+ * enjeksiyonuyla uygulanıyor, bkz. `buildThemeSettingsCss`) — yani
+ * `assets/theme.css` HER ZAMAN o anki `FORMULA_THEME_CSS`'in birebir aynısı
+ * OLMALI. Fix: imza-sınıf kontrolü yerine DOĞRUDAN EŞİTLİK — farklıysa
+ * güncel kaynakla DEĞİŞTİRİLİR (append değil, TAM senkron), bu da gelecekteki
+ * her CSS değişikliğini otomatik kalıcı hale getirir, ayrı bir yama daha
+ * gerekmez. `StudioShell.tsx` proje yüklenirken çağırır, sonraki kayıtta
+ * kalıcı hale gelir. */
 export function patchMissingFormulaLibraryCss(files: Record<string, string>, templateId: string | null | undefined): Record<string, string> {
   if (templateId !== "formula") return files;
   const css = files["assets/theme.css"];
-  if (css === undefined || css.includes(".formula-marquee")) return files;
-  return { ...files, "assets/theme.css": css + FORMULA_LIBRARY_SECTIONS_CSS };
+  if (css === undefined || css === FORMULA_THEME_CSS) return files;
+  return { ...files, "assets/theme.css": FORMULA_THEME_CSS };
 }

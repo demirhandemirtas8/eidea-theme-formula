@@ -7,7 +7,10 @@
  * `universalPages.ts` section'larını kullanır (bkz. o dosyanın başlığı).
  */
 import type { EipgBlock } from "@eidea/ei-engine/browser";
+import { resolveSectionInstanceRole } from "@eidea/ei-engine/browser";
+import type { EiPage, EiSection } from "@eidea/studio-core";
 import type { ThemePageSpec, ThemeSectionInstance } from "./multiPageScaffold.js";
+import { sectionSlot } from "../governance/commandGovernance.js";
 import {
   FORMULA_NAV_HEADER,
   FORMULA_HERO,
@@ -16,7 +19,9 @@ import {
   FORMULA_CONCERNS,
   FORMULA_PHILOSOPHY,
   FORMULA_FOOTER_MENU,
+  FORMULA_404,
   FORMULA_THEME_CSS,
+  FORMULA_LIBRARY_SECTIONS,
 } from "./formulaTheme.js";
 import {
   MAIN_PRODUCT_CONTENT,
@@ -223,10 +228,17 @@ export function buildFormulaPages(): ThemePageSpec[] {
     id: "content-page", type: "content-page", name: "İçerik", src: "sections/content-page.ei",
     settings: { eyebrow: "Hesap", title: "Siparişlerim", body: "Geçmiş siparişlerini burada görüntüle." },
   });
+  // 2026-08-19 — kullanıcı raporu: "404 sayfası hâlâ yok". `template: "404"`
+  // hem doğrudan `/404` ziyaretinde (route eşleşmesiyle) hem de eşleşmeyen
+  // HERHANGİ bir route'ta (renderer.ts'in fallback'i, `resolvePublishedPage`
+  // BULAMADIĞINDA `template === "404"` sayfasını arıyor) render edilir.
+  const notFoundPage = utilityPage("404", "Sayfa Bulunamadı", "/404", "404", {
+    id: "main-404", type: "main-404", name: "404", src: "sections/main-404.ei", settings: {},
+  });
 
   return [
     homePage, productsPage, collectionPage, brandsPage, searchPage, productPage,
-    cartPage, checkoutPage, accountPage, registerPage, loginPage, ordersPage,
+    cartPage, checkoutPage, accountPage, registerPage, loginPage, ordersPage, notFoundPage,
   ];
 }
 
@@ -248,7 +260,124 @@ export function formulaSectionFiles(): Record<string, string> {
     "sections/content-page.ei": CONTENT_PAGE_CONTENT,
     "sections/auth-login.ei": AUTH_LOGIN_CONTENT,
     "sections/auth-register.ei": AUTH_REGISTER_CONTENT,
+    "sections/main-404.ei": FORMULA_404,
   };
+}
+
+/**
+ * 2026-08-19 — kullanıcı raporu: "değişiklik tüm projeleri etkilemeli" (yeni
+ * eklenen `reveal_animation` ayarı var olan bir projede hiç görünmüyordu).
+ * Kök neden: bir section'ın `.ei` içeriği (template+şema) proje
+ * OLUŞTURULDUĞU (ya da o section sayfaya EKLENDİĞİ) anda formulaTheme.ts'teki
+ * O ANKİ kaynaktan kopyalanıp dosyaya DONUYOR (`assets/theme.css`'in
+ * `patchMissingFormulaLibraryCss`'teki AYNI donma sorunu) — temaya sonradan
+ * eklenen bir şema alanı/class var olan projelere hiç yansımıyordu.
+ *
+ * `formulaSectionFiles()`'in temiz `sections/{type}.ei` yoluna GÜVENEMEYİZ —
+ * bu yol SADECE proje oluşturulurken scaffold edilen "çekirdek" section'lar
+ * için geçerli. `Ekle` panelinden SONRADAN eklenen bir kütüphane section'ı
+ * (`FORMULA_LIBRARY_SECTIONS`, ör. koleksiyon listesi) `StudioShell.tsx`
+ * `handleAddSection`'da `sourcePath: null` ile eklenir, kaydedilince
+ * `projectFileMap.ts`'in `sectionFilePath()`'i ona RASTGELE bir dosya adı
+ * (`sections/{section.id}.ei`) üretir — path'ten type'a asla güvenilir
+ * geri dönülemez. Bu yüzden `files` yerine ZATEN PARSE EDİLMİŞ `pages`
+ * (`EiPage[]`) üzerinden section.type'a göre eşleştirilip section.sourcePath
+ * (gerçek dosya anahtarı, ne olursa olsun) yamanır — `serializeProjectFiles`
+ * ile BİREBİR aynı `sectionFilePath` mantığını taklit etmeye gerek kalmaz.
+ *
+ * Formula'nın canonical section'ları (custom-html'in AKSİNE) Studio'da elle
+ * düzenlenebilir bir "kod" alanına sahip değil — section.settings'teki
+ * GERÇEK içerik değerleri bu dosyanın İÇİNDE değil, ayrı saklanıyor (bu
+ * dosya sadece şema+template) — bu yüzden projenin gerçek verisine
+ * dokunmadan güvenle en güncel kaynakla değiştirilebilir. `StudioShell.tsx`
+ * proje yüklenirken `parseProjectFiles`'tan HEMEN SONRA çağrılır, sonra
+ * `pages` patched `files`'tan TEKRAR parse edilir (bkz. çağrı yeri).
+ */
+export function patchStaleFormulaSectionContent(
+  files: Record<string, string>,
+  pages: Array<{ sections: Array<{ type: string; sourcePath: string | null }> }>,
+  templateId: string | null | undefined,
+): Record<string, string> {
+  if (templateId !== "formula") return files;
+  const canonicalByType: Record<string, string> = {
+    ...Object.fromEntries(
+      Object.entries(formulaSectionFiles()).map(([path, content]) => [
+        path.replace(/^sections\//, "").replace(/\.ei$/, ""),
+        content,
+      ]),
+    ),
+    ...Object.fromEntries(FORMULA_LIBRARY_SECTIONS.map((s) => [s.type, s.content])),
+  };
+  let changed = false;
+  const next = { ...files };
+  for (const page of pages) {
+    for (const section of page.sections) {
+      const canonical = canonicalByType[section.type];
+      if (!canonical || !section.sourcePath) continue;
+      if (next[section.sourcePath] !== undefined && next[section.sourcePath] !== canonical) {
+        next[section.sourcePath] = canonical;
+        changed = true;
+      }
+    }
+  }
+  return changed ? next : files;
+}
+
+/**
+ * 2026-08-19 — kullanıcı raporu: "404 sayfası hâlâ yok" — `patchStaleFormulaSectionContent`'in
+ * ele almadığı AYRI bir boşluk: bu SADECE var olan section İÇERİĞİNİ
+ * tazeler, projeye eksik bir SAYFA eklemez. `page.create`/"404" desteği
+ * (bkz. `commandGovernance.ts` `isMandatoryPage`, `formulaPages.ts`
+ * `buildFormulaPages`) bu özellikten ÖNCE oluşturulmuş projelerin hiçbirinde
+ * `template: "404"` sayfası hiç yoktu — dolayısıyla "404 sayfası hâlâ yok"
+ * raporu tam olarak doğruydu, staleness DEĞİLDİ.
+ *
+ * `reducer.ts`'in `page.create` mutation'ıyla AYNI klonlama mantığı (aktif/
+ * "home" sayfasının yapısal — header/footer/duyuru çubuğu — section'larını
+ * YENİ id'lerle, `sourcePath: null` ile klonlar) kullanılıyor — böylece
+ * kullanıcının nav/footer'da yaptığı "Tasarım Değiştir" seçimi (ör. Ortalı
+ * Logo) 404 sayfasına da aynen yansır, ham `formulaTheme.ts` varsayılanına
+ * DÜŞMEZ. `StudioShell.tsx`'te `patchStaleFormulaSectionContent`'ten HEMEN
+ * SONRA, AYNI parse-patch-reparse döngüsünde çağrılır.
+ */
+export function patchMissingFormula404Page(pages: EiPage[], templateId: string | null | undefined): EiPage[] {
+  if (templateId !== "formula") return pages;
+  if (pages.some((p) => p.template === "404")) return pages;
+  const source = pages.find((p) => p.slug === "home") ?? pages[0];
+  if (!source) return pages;
+
+  const clone = (s: EiSection): EiSection => ({ ...s, id: `section-${crypto.randomUUID().slice(0, 8)}`, sourcePath: null, ownedByPage: false });
+  // Header (nav-header + varsa duyuru çubuğu) ile footer AYRI toplanıyor —
+  // ikisini de "structural" diye TEK listeye koyup peş peşe klonlamak footer'ı
+  // ana içerikten ÖNCE, sayfanın ortasına düşürürdü (gerçek bir bug, ilk
+  // sürümde e2e/unit ile yakalandı: [header, footer, main] yanlış sırası).
+  const header = source.sections.filter((s) => sectionSlot(resolveSectionInstanceRole(s)) === "header").map(clone);
+  const footer = source.sections.filter((s) => sectionSlot(resolveSectionInstanceRole(s)) === "footer").map(clone);
+  const mainSection: EiSection = {
+    id: `section-${crypto.randomUUID().slice(0, 8)}`,
+    type: "main-404",
+    name: "404",
+    enabled: true,
+    settings: {},
+    schema: [],
+    blocks: [],
+    content: FORMULA_404,
+    sourcePath: null,
+    ownedByPage: false,
+  };
+  const sections = [...header, mainSection, ...footer];
+  const page: EiPage = {
+    slug: "404",
+    name: "404 Sayfası",
+    path: "pages/404.eipg",
+    template: "404",
+    locale: source.locale,
+    requires: [],
+    sections,
+    sectionOrder: sections.map((s) => s.id),
+    dirty: true,
+  };
+  return [...pages, page];
 }
 
 export { FORMULA_THEME_CSS };
