@@ -11,6 +11,7 @@ import { resolveSectionInstanceRole } from "@eidea/ei-engine/browser";
 import type { EiPage, EiSection } from "@eidea/studio-core";
 import type { ThemePageSpec, ThemeSectionInstance } from "./multiPageScaffold.js";
 import { sectionSlot } from "../governance/commandGovernance.js";
+import { getSectionDesigns } from "./sectionDesigns.js";
 import {
   FORMULA_NAV_HEADER,
   FORMULA_HERO,
@@ -314,10 +315,28 @@ export function patchStaleFormulaSectionContent(
     for (const section of page.sections) {
       const canonical = canonicalByType[section.type];
       if (!canonical || !section.sourcePath) continue;
-      if (next[section.sourcePath] !== undefined && next[section.sourcePath] !== canonical) {
-        next[section.sourcePath] = canonical;
-        changed = true;
-      }
+      const current = next[section.sourcePath];
+      if (current === undefined || current === canonical) continue;
+      // 2026-08-19 devamı — GERÇEK bug bulundu (header/footer paylaşım işi
+      // sırasında): bir section "Tasarım Değiştir" ile VARSAYILAN-DIŞI bir
+      // varyanta geçmiş olabilir (ör. nav-header → "Ortalı Logo") — bu
+      // durumda içeriğin `canonical`dan (her zaman varsayılan/klasik
+      // varyant) FARKLI olması BEKLENEN bir durumdur, staleness DEĞİLDİR.
+      // Eski kod bunu ayırt edemiyordu — HER swap edilmiş section'ı, proje
+      // her açıldığında SESSİZCE varsayılana geri döndürüyordu (`getSectionDesigns`
+      // ile doğrulandı, "Ortalı Logo" bir sonraki yüklemede "Klasik"e
+      // dönüyordu). Fix: mevcut içerik o TİP için bilinen HERHANGİ bir
+      // varyantla (default dahil) birebir eşleşiyorsa dokunma — sadece
+      // HİÇBİRİYLE eşleşmeyen (artık var olmayan eski bir sürümden kalma,
+      // gerçekten stale) içerik varsayılana tazelenir. Bilinen kısıt: zaten
+      // seçilmiş NON-default bir varyantın KENDİ koduna sonradan gelen bir
+      // düzeltme (ör. CSS class eklenmesi) bu section'a otomatik yansımaz —
+      // kullanıcı tasarımı yeniden seçmeli; bu, sessiz-varsayılana-dönmekten
+      // çok daha küçük bir kapsam.
+      const knownVariants = new Set([canonical, ...getSectionDesigns(section.type, templateId).map((d) => d.content)]);
+      if (knownVariants.has(current)) continue;
+      next[section.sourcePath] = canonical;
+      changed = true;
     }
   }
   return changed ? next : files;
