@@ -1655,6 +1655,278 @@ export const FORMULA_NEWSLETTER = `<section class="formula-newsletter${revealAni
 }
 {% endschema %}`;
 
+/**
+ * 2026-08-20 devamı — kullanıcı: "shopify'a bak oradan ilham al". Dawn
+ * temasının (shopify/dawn GitHub) section listesinden 3 tanesi Formula'da
+ * hiç karşılığı olmayan, saf-frontend (backend gerektirmeyen) desenler:
+ * `collage.liquid` (asimetrik mozaik grid), `multirow.liquid` (tek section
+ * içinde tekrarlayan görsel+metin satırları) ve cilt bakımı temalarına özgü
+ * "öncesi/sonrası" karşılaştırma (Dawn'da yok ama niş araştırmasında en çok
+ * istenen özellik). Diğer 3 fikir (basında biz, tüm koleksiyonlar arşivi,
+ * ilgili ürünler, iletişim formu) backend/veri gerektirdiği için ayrı
+ * araştırmadan sonra ekleniyor.
+ */
+/** Blok ayarı adı bilinçli olarak "scale" — "size" DEĞİL. E2E ile bulunan
+ * gerçek bug: bir block ayarına literal "size" adı verilince ei-engine
+ * onu Liquid'in HER nesnede örtük var olan .size (uzunluk/eleman sayısı)
+ * özelliğiyle karıştırıyor ve gerçek değer yerine (block'un kendi iç
+ * temsilinin alan sayısına benzer) sabit bir sayı döndürüyor — render
+ * çıktısı `formula-collage__item--large` yerine `formula-collage__item--3`
+ * oluyordu, TÜM bloklarda AYNI sabit değerle. `reference-ei-engine-liquid-
+ * scoping-gotchas`'a eklenmesi gereken yeni bir motor tuzağı. */
+export const FORMULA_COLLAGE = `<section class="formula-collage${revealAnimationClass()}">
+  <div class="formula-section-head">
+    <h2>{{ section.settings.title | default: "Koleksiyon" | escape }}</h2>
+  </div>
+  <div class="formula-collage__grid">
+    {% for block in section.blocks %}
+      {% if block.type == "item" %}
+        <a class="formula-collage__item formula-collage__item--{{ block.settings.scale | default: 'normal' }}" href="{{ block.settings.url | default: '#' | escape }}">
+          {% if block.settings.image != blank %}
+            <img src="{{ block.settings.image | img_url: '900x' }}" alt="{{ block.settings.label | escape }}" loading="lazy" />
+          {% else %}
+            <div class="formula-collage__placeholder" aria-hidden="true"></div>
+          {% endif %}
+          {% if block.settings.label != blank %}<span class="formula-collage__label">{{ block.settings.label | escape }}</span>{% endif %}
+        </a>
+      {% endif %}
+    {% endfor %}
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Formula Kolaj",
+  "settings": [
+    { "type": "text", "id": "title", "label": "Başlık", "default": "Koleksiyon" },${revealAnimationSchemaField()}
+  ],
+  "blocks": [
+    {
+      "type": "item",
+      "name": "Öğe",
+      "settings": [
+        { "type": "image_picker", "id": "image", "label": "Görsel" },
+        { "type": "text", "id": "label", "label": "Etiket (ops.)", "default": "" },
+        { "type": "url", "id": "url", "label": "Bağlantı (ops.)", "default": "" },
+        { "type": "select", "id": "scale", "label": "Boyut", "default": "normal",
+          "options": [
+            { "label": "Normal", "value": "normal" },
+            { "label": "Büyük (2×2)", "value": "large" }
+          ]
+        }
+      ]
+    }
+  ],
+  "max_blocks": 6,
+  "presets": [{
+    "name": "Formula Kolaj",
+    "blocks": [
+      { "type": "item", "settings": { "label": "Yeni Sezon", "scale": "large" } },
+      { "type": "item", "settings": { "scale": "normal" } },
+      { "type": "item", "settings": { "scale": "normal" } },
+      { "type": "item", "settings": { "label": "Koleksiyonu Gör", "scale": "normal" } },
+      { "type": "item", "settings": { "scale": "normal" } }
+    ]
+  }]
+}
+{% endschema %}`;
+
+export const FORMULA_MULTIROW = `<section class="formula-multirow${revealAnimationClass()}">
+  {% for block in section.blocks %}
+    {% if block.type == "row" %}
+      <div class="formula-multirow__row{% if block.settings.layout == 'image_right' %} formula-multirow__row--reverse{% endif %}">
+        <div class="formula-multirow__media" style="border-radius: {{ block.settings.image_shape | default: 18 }}px">
+          {% if block.settings.image != blank %}
+            <img src="{{ block.settings.image | img_url: '1200x' }}" alt="{{ block.settings.title | escape }}" loading="lazy" />
+          {% else %}
+            <div class="formula-multirow__placeholder" aria-hidden="true"></div>
+          {% endif %}
+        </div>
+        <div class="formula-multirow__copy">
+          {% if block.settings.eyebrow != blank %}<p class="formula-multirow__eyebrow">{{ block.settings.eyebrow | escape }}</p>{% endif %}
+          <h2 class="formula-multirow__title">{{ block.settings.title | default: "Başlık" | escape }}</h2>
+          {% if block.settings.body != blank %}<p class="formula-multirow__body">{{ block.settings.body | escape }}</p>{% endif %}
+          {% if block.settings.cta_label != blank %}<a class="formula-btn formula-btn--solid" href="{{ block.settings.cta_url | default: '/' | escape }}">{{ block.settings.cta_label | escape }}</a>{% endif %}
+        </div>
+      </div>
+    {% endif %}
+  {% endfor %}
+</section>
+
+{% schema %}
+{
+  "name": "Formula Alternatif Sıra Vitrini",
+  "settings": [${revealAnimationSchemaField()}
+  ],
+  "blocks": [
+    {
+      "type": "row",
+      "name": "Satır",
+      "settings": [
+        { "type": "image_picker", "id": "image", "label": "Görsel" },
+        { "type": "text", "id": "eyebrow", "label": "Üst Etiket (ops.)", "default": "" },
+        { "type": "text", "id": "title", "label": "Başlık", "default": "Başlık" },
+        { "type": "textarea", "id": "body", "label": "Metin", "default": "" },
+        { "type": "text", "id": "cta_label", "label": "Buton Metni (ops.)", "default": "" },
+        { "type": "url", "id": "cta_url", "label": "Buton Bağlantısı (ops.)", "default": "" },
+        { "type": "select", "id": "layout", "label": "Yerleşim", "default": "image_left",
+          "options": [
+            { "label": "Görsel solda", "value": "image_left" },
+            { "label": "Görsel sağda", "value": "image_right" }
+          ]
+        },
+        { "type": "select", "id": "image_shape", "label": "Görsel Şekli", "default": "18",
+          "options": [
+            { "label": "Köşeli", "value": "0" },
+            { "label": "Yumuşak", "value": "18" },
+            { "label": "Yuvarlak", "value": "32" },
+            { "label": "Oval", "value": "64" }
+          ]
+        }
+      ]
+    }
+  ],
+  "max_blocks": 4,
+  "presets": [{
+    "name": "Formula Alternatif Sıra Vitrini",
+    "blocks": [
+      { "type": "row", "settings": { "eyebrow": "01", "title": "Temizle", "body": "Cildi kurutmadan, koruma bariyerine dokunmadan temizler.", "layout": "image_left" } },
+      { "type": "row", "settings": { "eyebrow": "02", "title": "Besle", "body": "Aktif oranları etikette — ne sürdüğünü tam olarak bilirsin.", "layout": "image_right" } },
+      { "type": "row", "settings": { "eyebrow": "03", "title": "Koru", "body": "Gün boyu koruma, gece boyu onarım.", "layout": "image_left" } }
+    ]
+  }]
+}
+{% endschema %}`;
+
+/** Sürükleme YOK — sürekli `pointermove` takibi gerektirir, bu dosyadaki
+ * TÜM diğer etkileşimler (slider okları dahil) tek satırlık `onclick`
+ * attribute'u, kalıcı bir `<script>` bloğu YOK (bkz. dosyanın geri kalanı).
+ * Onun yerine native `<input type="range">` (opacity:0, tüm görselin
+ * üzerine kaplanmış) + TEK `oninput` attribute'u `--ba-pos` CSS custom
+ * property'sini günceller; "before" katmanı `clip-path: inset()` ile o
+ * değere göre kırpılır. Klavyeyle de (ok tuşları) çalışır — native range
+ * input olduğu için ekstra bir şey gerekmedi. */
+export const FORMULA_BEFORE_AFTER = `<section class="formula-before-after${revealAnimationClass()}">
+  <div class="formula-section-head">
+    <h2>{{ section.settings.title | default: "Öncesi / Sonrası" | escape }}</h2>
+  </div>
+  <div class="formula-ba" style="--ba-pos: 50%; aspect-ratio: {{ section.settings.aspect_ratio | default: '4/3' }}">
+    <div class="formula-ba__layer formula-ba__layer--after">
+      {% if section.settings.after_image != blank %}
+        <img src="{{ section.settings.after_image | img_url: '1200x' }}" alt="{{ section.settings.after_label | default: 'Sonra' | escape }}" loading="lazy" />
+      {% else %}
+        <div class="formula-ba__placeholder" aria-hidden="true"></div>
+      {% endif %}
+    </div>
+    <div class="formula-ba__layer formula-ba__layer--before" style="clip-path: inset(0 calc(100% - var(--ba-pos)) 0 0)">
+      {% if section.settings.before_image != blank %}
+        <img src="{{ section.settings.before_image | img_url: '1200x' }}" alt="{{ section.settings.before_label | default: 'Önce' | escape }}" loading="lazy" />
+      {% else %}
+        <div class="formula-ba__placeholder" aria-hidden="true"></div>
+      {% endif %}
+    </div>
+    <div class="formula-ba__divider" style="left: var(--ba-pos)" aria-hidden="true"></div>
+    {% if section.settings.before_label != blank %}<span class="formula-ba__tag formula-ba__tag--before">{{ section.settings.before_label | escape }}</span>{% endif %}
+    {% if section.settings.after_label != blank %}<span class="formula-ba__tag formula-ba__tag--after">{{ section.settings.after_label | escape }}</span>{% endif %}
+    <input class="formula-ba__range" type="range" min="0" max="100" value="50" aria-label="Öncesi sonrası kaydırıcısı" oninput="this.closest('.formula-ba').style.setProperty('--ba-pos', this.value + '%')" />
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Formula Öncesi / Sonrası",
+  "settings": [
+    { "type": "text", "id": "title", "label": "Başlık", "default": "Öncesi / Sonrası" },
+    { "type": "image_picker", "id": "before_image", "label": "Önce Görseli" },
+    { "type": "text", "id": "before_label", "label": "Önce Etiketi", "default": "Önce" },
+    { "type": "image_picker", "id": "after_image", "label": "Sonra Görseli" },
+    { "type": "text", "id": "after_label", "label": "Sonra Etiketi", "default": "Sonra" },
+    { "type": "select", "id": "aspect_ratio", "label": "Görsel Oranı", "default": "4/3",
+      "options": [
+        { "label": "Standart (4:3)", "value": "4/3" },
+        { "label": "Kare (1:1)", "value": "1/1" },
+        { "label": "Geniş (16:9)", "value": "16/9" }
+      ]
+    },${revealAnimationSchemaField()}
+  ],
+  "presets": [{ "name": "Formula Öncesi / Sonrası" }]
+}
+{% endschema %}`;
+
+/**
+ * 2026-08-20 devamı — kullanıcı: "en son bakılanlar sectionı ekle genel
+ * temaya". Backend'de ID-listesiyle toplu ürün getiren public bir route YOK
+ * (araştırıldı) — yeni bir tane eklemek yerine `eipgTheme.ts`'in ürün
+ * sayfasında zaten bastığı `window.__EI_PRODUCT__` anlık görüntüsünü
+ * (cartRuntimeClient.ts) localStorage'a biriktirip buradan okuyoruz. Bu
+ * section Studio'nun KENDİ önizlemesinde (gerçek sayfa geçmişi yok) hep boş
+ * görünür — `data-formula-recently-viewed` grid'i sadece yayınlanmış sitede,
+ * gerçek gezinme sonrası dolar; aynı cart-badge/checkout gibi "sadece
+ * published'ta çalışır" sınıfı (bkz. formulaPages.ts'in cart runtime notu).
+ */
+export const FORMULA_RECENTLY_VIEWED = `<section class="formula-recently-viewed${revealAnimationClass()}">
+  <div class="formula-section-head">
+    <h2>{{ section.settings.title | default: "Son Baktıkların" | escape }}</h2>
+  </div>
+  <div class="formula-recently-viewed__grid" data-formula-recently-viewed data-limit="{{ section.settings.limit | default: 4 }}"></div>
+</section>
+
+{% schema %}
+{
+  "name": "Formula Son Bakılanlar",
+  "settings": [
+    { "type": "text", "id": "title", "label": "Başlık", "default": "Son Baktıkların" },
+    { "type": "range", "id": "limit", "label": "Gösterilecek Ürün Sayısı", "min": 2, "max": 8, "step": 1, "default": 4 },${revealAnimationSchemaField()}
+  ],
+  "presets": [{ "name": "Formula Son Bakılanlar" }]
+}
+{% endschema %}`;
+
+/**
+ * 2026-08-20 devamı — kullanıcı: önerilen 6 Dawn-ilhamlı fikirden "İlgili
+ * Ürünler" (Related Products). Bu TAMAMEN sunucu tarafında render edilir —
+ * `recommendations` context anahtarı zaten VAR (ecommerceContext.ts'in
+ * buildRecommendations'ı, sadece ürün detay sayfasında dolduruluyor:
+ * manuel product.metafields.crossSell → "birlikte alınanlar" → aynı
+ * kategori sırasıyla). Bu section ürün sayfası DIŞINDA bir sayfaya eklenirse
+ * `recommendations.performed` yok/false olur ve section HİÇBİR ŞEY
+ * render etmez (sessiz no-op, hata değil) — kütüphaneye eklenmiş olması
+ * her sayfada anlamlı olacağı anlamına gelmez, sadece HER ZAMAN teklif
+ * edilen ortak kataloğun (`AddSectionPanel`) bir parçası.
+ */
+export const FORMULA_RELATED_PRODUCTS = `<section{% if recommendations.performed %} class="formula-related${revealAnimationClass()}"{% endif %}>
+  {% if recommendations.performed %}
+  <div class="formula-section-head">
+    <h2>{{ section.settings.title | default: "Bunları da Beğenebilirsin" | escape }}</h2>
+  </div>
+  <div class="formula-related__grid">
+    {% for p in recommendations.products %}
+      <a class="formula-product-card" href="{{ p.url | escape }}">
+        <div class="formula-product-card__media">
+          {% if p.images.size > 0 %}
+            <img src="{{ p.images.first | img_url: '700x' }}" alt="{{ p.title | escape }}" loading="lazy" />
+          {% else %}
+            <div class="formula-product-card__placeholder" aria-hidden="true"></div>
+          {% endif %}
+        </div>
+        <p class="formula-product-card__name">{{ p.title | escape }}</p>
+        <p class="formula-product-card__price">{{ p.price | money }}</p>
+      </a>
+    {% endfor %}
+  </div>
+  {% endif %}
+</section>
+
+{% schema %}
+{
+  "name": "Formula İlgili Ürünler",
+  "settings": [
+    { "type": "text", "id": "title", "label": "Başlık", "default": "Bunları da Beğenebilirsin" },${revealAnimationSchemaField()}
+  ],
+  "presets": [{ "name": "Formula İlgili Ürünler" }]
+}
+{% endschema %}`;
+
 /** `StudioShell.tsx`'in `addCatalog`'una `templateId === "formula"` iken
  * eklenen sabit kütüphane girdileri — sayfada henüz var olmasalar bile her
  * zaman teklif edilirler (bkz. `custom-html`'in aynı deseni). */
@@ -1679,6 +1951,11 @@ export const FORMULA_LIBRARY_SECTIONS: { type: string; content: string }[] = [
   { type: "journal-teaser", content: FORMULA_JOURNAL_TEASER },
   { type: "comparison-table", content: FORMULA_COMPARISON_TABLE },
   { type: "newsletter-signup", content: FORMULA_NEWSLETTER },
+  { type: "collage", content: FORMULA_COLLAGE },
+  { type: "multirow", content: FORMULA_MULTIROW },
+  { type: "before-after", content: FORMULA_BEFORE_AFTER },
+  { type: "recently-viewed", content: FORMULA_RECENTLY_VIEWED },
+  { type: "related-products", content: FORMULA_RELATED_PRODUCTS },
 ];
 
 // `--color-*`/`--font-*` sözleşmesi `minimalSections.ts`'teki ile birebir aynı
@@ -1964,6 +2241,64 @@ export const FORMULA_LIBRARY_SECTIONS_CSS = `
 .formula-newsletter__message--err { color: #b3261e; }
 .formula-newsletter__disclaimer { color: var(--color-muted); font-size: 11px; margin: 10px 0 0; }
 @media (max-width: 560px) { .formula-newsletter { padding: 48px 20px; } .formula-newsletter__form { flex-direction: column; } }
+
+/* Kolaj (2026-08-20) — 4 sütunlu grid, "büyük" öğeler 2x2 span (grid-auto-
+   flow: dense boşlukları otomatik dolduruyor). */
+.formula-collage { padding: 64px 40px; }
+.formula-collage__grid { display: grid; grid-template-columns: repeat(4, 1fr); grid-auto-rows: 160px; gap: 16px; grid-auto-flow: dense; }
+.formula-collage__item { position: relative; display: block; overflow: hidden; border-radius: 14px; background: var(--color-surface); grid-column: span 1; grid-row: span 1; text-decoration: none; }
+.formula-collage__item--large { grid-column: span 2; grid-row: span 2; }
+.formula-collage__item img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .3s; }
+.formula-collage__item:hover img { transform: scale(1.04); }
+.formula-collage__placeholder { width: 100%; height: 100%; background: linear-gradient(160deg, var(--color-border), var(--color-surface)); }
+.formula-collage__label { position: absolute; left: 14px; bottom: 14px; color: #fff; font-family: var(--font-heading); font-size: 14px; font-weight: 600; text-shadow: 0 1px 4px rgba(0,0,0,.4); }
+@media (max-width: 900px) { .formula-collage__grid { grid-template-columns: repeat(2, 1fr); grid-auto-rows: 140px; } .formula-collage { padding: 44px 20px; } }
+
+/* Alternatif Sıra Vitrini (2026-08-20) — her satır kendi image_left/
+   image_right ayarını taşır (otomatik forloop.index alternation YOK, ei-
+   engine'in modulo/forloop desteği doğrulanmadığı için bilinçli tercih). */
+.formula-multirow__row { display: grid; grid-template-columns: 1fr 1fr; align-items: center; gap: 48px; padding: 48px 40px; }
+.formula-multirow__row--reverse .formula-multirow__media { order: 2; }
+.formula-multirow__media { position: relative; aspect-ratio: 5/4; overflow: hidden; background: var(--color-surface); }
+.formula-multirow__media img { width: 100%; height: 100%; object-fit: cover; }
+.formula-multirow__placeholder { width: 100%; height: 100%; background: linear-gradient(155deg, var(--color-primary) 0%, var(--color-surface) 70%); opacity: .5; }
+.formula-multirow__eyebrow { text-transform: uppercase; letter-spacing: 0.1em; font-size: 12px; color: var(--color-primary); margin: 0 0 16px; font-weight: 600; }
+.formula-multirow__title { font-family: var(--font-heading); font-size: clamp(24px, 3vw, 36px); line-height: 1.15; letter-spacing: -0.02em; margin: 0 0 16px; max-width: 16ch; }
+.formula-multirow__body { color: var(--color-muted); line-height: 1.6; max-width: 42ch; margin: 0 0 24px; }
+@media (max-width: 900px) { .formula-multirow__row, .formula-multirow__row--reverse { grid-template-columns: 1fr; padding: 32px 20px; text-align: center; } .formula-multirow__row--reverse .formula-multirow__media { order: 0; } .formula-multirow__body { max-width: none; margin-left: auto; margin-right: auto; } }
+
+/* Öncesi/Sonrası (2026-08-20) — clip-path tabanlı, native range input ile
+   sürüklenir (bkz. formulaTheme.ts'in yorumu, kalıcı script YOK). */
+.formula-before-after { padding: 64px 40px; }
+.formula-ba { position: relative; max-width: 720px; margin: 0 auto; border-radius: 18px; overflow: hidden; background: var(--color-surface); }
+.formula-ba__layer { position: absolute; inset: 0; }
+.formula-ba__layer img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+.formula-ba__placeholder { position: absolute; inset: 0; background: linear-gradient(160deg, var(--color-border), var(--color-surface)); }
+.formula-ba__divider { position: absolute; top: 0; bottom: 0; width: 3px; background: #fff; box-shadow: 0 0 0 1px rgba(0,0,0,.15); transform: translateX(-50%); pointer-events: none; }
+.formula-ba__tag { position: absolute; top: 14px; padding: 4px 12px; border-radius: 999px; background: rgba(0,0,0,.55); color: #fff; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
+.formula-ba__tag--before { left: 14px; }
+.formula-ba__tag--after { right: 14px; }
+.formula-ba__range { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: ew-resize; appearance: none; -webkit-appearance: none; }
+.formula-ba__range::-webkit-slider-thumb { -webkit-appearance: none; width: 100%; height: 100%; }
+@media (max-width: 700px) { .formula-before-after { padding: 44px 20px; } }
+
+/* Son Bakılanlar (2026-08-20) — grid boşken JS section'ı gizler (bkz.
+   cartRuntimeClient.ts), bu yüzden burada boş-durum CSS'i gerekmiyor. */
+.formula-recently-viewed { padding: 64px 40px; }
+.formula-recently-viewed__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 20px; }
+.formula-recently-viewed__card { text-decoration: none; color: var(--color-text); display: block; }
+.formula-recently-viewed__media { position: relative; aspect-ratio: 1; border-radius: 12px; overflow: hidden; background: var(--color-surface); margin-bottom: 10px; }
+.formula-recently-viewed__media img { width: 100%; height: 100%; object-fit: cover; }
+.formula-recently-viewed__placeholder { width: 100%; height: 100%; background: linear-gradient(160deg, var(--color-border), var(--color-surface)); }
+.formula-recently-viewed__name { font-size: 13px; font-weight: 600; margin: 0 0 4px; }
+.formula-recently-viewed__price { font-size: 12px; color: var(--color-muted); margin: 0; }
+@media (max-width: 700px) { .formula-recently-viewed { padding: 44px 20px; } }
+
+/* İlgili Ürünler (2026-08-20) — .formula-product-card/__grid deseni
+   FORMULA_BESTSELLERS ile PAYLAŞILIYOR, ayrı bir kart stili gerekmedi. */
+.formula-related { padding: 64px 40px; }
+.formula-related__grid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 24px; }
+@media (max-width: 900px) { .formula-related__grid { grid-template-columns: repeat(2, minmax(0,1fr)); } .formula-related { padding: 44px 20px; } }
 
 /* 404 (2026-08-19) */
 .formula-404 { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 96px 24px; min-height: 50vh; }
