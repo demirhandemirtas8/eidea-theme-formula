@@ -1264,6 +1264,397 @@ export const FORMULA_404 = `<section class="formula-404${revealAnimationClass()}
 }
 {% endschema %}`;
 
+/**
+ * 2026-08-20 — kullanıcı: "5 section daha ekleyelim, temanın sonlarına
+ * yaklaşalım", 7 fikir sunuldu ve "hepsini inşa edelim" onayı geldi. Marka
+ * felsefesindeki ("aktif oranlarının öne çıkarılması", bkz. dosya başı
+ * yorumu) tek gerçek karşılığı olan Aktif İçerik Vitrini öncelikli; Kullanım
+ * Rutini `FORMULA_NUMBERED_LIST`'ten farklı olarak GÖRSELLİ adım kartları
+ * (ürün uygulama sırası), Karşılaştırma Tablosu ise sabit 4 satırlık
+ * (feature1..4) blok-başına-değer deseniyle — ei-engine'in dinamik alan adı
+ * ÇÖZEMEMESİ (bkz. `reference-ei-engine-liquid-scoping-gotchas`) yüzünden
+ * satır sayısı bilinçli olarak sabit tutuldu, döngü-içi döngü YOK.
+ */
+export const FORMULA_INGREDIENT_SPOTLIGHT = `<section class="formula-ingredients${revealAnimationClass()}">
+  <div class="formula-section-head">
+    <h2>{{ section.settings.title | default: "Aktif İçerikler" | escape }}</h2>
+  </div>
+  {% if section.settings.subtitle != blank %}<p class="formula-ingredients__sub">{{ section.settings.subtitle | escape }}</p>{% endif %}
+  <div class="formula-ingredients__grid">
+    {% for block in section.blocks %}
+      {% if block.type == "ingredient" %}
+        <div class="formula-ingredient-card">
+          <div class="formula-ingredient-card__top">
+            <span class="formula-ingredient-card__icon" aria-hidden="true">{{ block.settings.icon | default: "◆" | escape }}</span>
+            {% if block.settings.percent != blank %}<span class="formula-ingredient-card__percent">{{ block.settings.percent | escape }}</span>{% endif %}
+          </div>
+          <p class="formula-ingredient-card__name">{{ block.settings.name | default: "Aktif İçerik" | escape }}</p>
+          {% if block.settings.description != blank %}<p class="formula-ingredient-card__desc">{{ block.settings.description | escape }}</p>{% endif %}
+        </div>
+      {% endif %}
+    {% endfor %}
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Formula Aktif İçerik Vitrini",
+  "settings": [
+    { "type": "text", "id": "title", "label": "Başlık", "default": "Aktif İçerikler" },
+    { "type": "text", "id": "subtitle", "label": "Alt Metin (ops.)", "default": "Her formülde ne olduğunu, ne kadar olduğunu görürsün." },${revealAnimationSchemaField()}
+  ],
+  "blocks": [
+    {
+      "type": "ingredient",
+      "name": "Aktif İçerik",
+      "settings": [
+        { "type": "text", "id": "icon", "label": "Glif", "default": "◆" },
+        { "type": "text", "id": "name", "label": "İçerik Adı", "default": "Niasinamid" },
+        { "type": "text", "id": "percent", "label": "Oran", "default": "%10" },
+        { "type": "textarea", "id": "description", "label": "Açıklama", "default": "Ten tonunu eşitler, gözenek görünümünü azaltır." }
+      ]
+    }
+  ],
+  "max_blocks": 6,
+  "presets": [{
+    "name": "Formula Aktif İçerik Vitrini",
+    "blocks": [
+      { "type": "ingredient", "settings": { "icon": "◆", "name": "Niasinamid", "percent": "%10", "description": "Ten tonunu eşitler, gözenek görünümünü azaltır." } },
+      { "type": "ingredient", "settings": { "icon": "●", "name": "Hyalüronik Asit", "percent": "%2", "description": "Yoğun nem bağlar, cildi dolgunlaştırır." } },
+      { "type": "ingredient", "settings": { "icon": "▲", "name": "Retinol", "percent": "%0.3", "description": "Yenilenmeyi hızlandırır, ince çizgileri azaltır." } },
+      { "type": "ingredient", "settings": { "icon": "◇", "name": "Vitamin C", "percent": "%15", "description": "Aydınlatır, serbest radikallere karşı korur." } }
+    ]
+  }]
+}
+{% endschema %}`;
+
+export const FORMULA_ROUTINE_STEPS = `<section class="formula-routine${revealAnimationClass()}">
+  <div class="formula-section-head">
+    <h2>{{ section.settings.title | default: "Günlük Rutin" | escape }}</h2>
+  </div>
+  {% if section.settings.subtitle != blank %}<p class="formula-routine__sub">{{ section.settings.subtitle | escape }}</p>{% endif %}
+  <div class="formula-routine__list">
+    {% for block in section.blocks %}
+      {% if block.type == "routine_step" %}
+        <a class="formula-routine-step" href="{{ block.settings.url | default: '#' | escape }}">
+          <div class="formula-routine-step__media">
+            {% if block.settings.image != blank %}
+              <img src="{{ block.settings.image | img_url: '500x' }}" alt="{{ block.settings.name | escape }}" loading="lazy" />
+            {% else %}
+              <div class="formula-routine-step__placeholder" aria-hidden="true"></div>
+            {% endif %}
+            <span class="formula-routine-step__badge">{{ block.settings.order | default: "1" | escape }}</span>
+          </div>
+          <p class="formula-routine-step__name">{{ block.settings.name | default: "Ürün" | escape }}</p>
+          {% if block.settings.description != blank %}<p class="formula-routine-step__desc">{{ block.settings.description | escape }}</p>{% endif %}
+        </a>
+      {% endif %}
+    {% endfor %}
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Formula Kullanım Rutini",
+  "settings": [
+    { "type": "text", "id": "title", "label": "Başlık", "default": "Günlük Rutin" },
+    { "type": "text", "id": "subtitle", "label": "Alt Metin (ops.)", "default": "Sabah ve akşam uygulama sırası." },${revealAnimationSchemaField()}
+  ],
+  "blocks": [
+    {
+      "type": "routine_step",
+      "name": "Adım",
+      "settings": [
+        { "type": "text", "id": "order", "label": "Sıra No", "default": "1" },
+        { "type": "image_picker", "id": "image", "label": "Görsel" },
+        { "type": "text", "id": "name", "label": "Ürün/Adım Adı", "default": "Nazik Temizleyici" },
+        { "type": "textarea", "id": "description", "label": "Açıklama", "default": "Cildi kurutmadan temizler, pH dengesini korur." },
+        { "type": "url", "id": "url", "label": "Bağlantı (ops.)", "default": "" }
+      ]
+    }
+  ],
+  "max_blocks": 6,
+  "presets": [{
+    "name": "Formula Kullanım Rutini",
+    "blocks": [
+      { "type": "routine_step", "settings": { "order": "1", "name": "Nazik Temizleyici", "description": "Cildi kurutmadan temizler, pH dengesini korur." } },
+      { "type": "routine_step", "settings": { "order": "2", "name": "Niasinamid Serum", "description": "Ten tonunu eşitler, gözenekleri sıkılaştırır." } },
+      { "type": "routine_step", "settings": { "order": "3", "name": "Nemlendirici", "description": "Nem bariyerini onarır, gün boyu korur." } },
+      { "type": "routine_step", "settings": { "order": "4", "name": "SPF 50", "description": "Geniş spektrum koruma, her sabah şart." } }
+    ]
+  }]
+}
+{% endschema %}`;
+
+export const FORMULA_TRUST_BAR = `<section class="formula-trust${revealAnimationClass()}">
+  <div class="formula-trust__row">
+    {% for block in section.blocks %}
+      {% if block.type == "badge" %}
+        <div class="formula-trust-badge">
+          <span class="formula-trust-badge__icon" aria-hidden="true">{{ block.settings.icon | default: "✓" | escape }}</span>
+          <span class="formula-trust-badge__label">{{ block.settings.label | default: "Rozet" | escape }}</span>
+        </div>
+      {% endif %}
+    {% endfor %}
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Formula Güven Rozetleri",
+  "settings": [${revealAnimationSchemaField()}
+  ],
+  "blocks": [
+    {
+      "type": "badge",
+      "name": "Rozet",
+      "settings": [
+        { "type": "text", "id": "icon", "label": "Glif", "default": "✓" },
+        { "type": "text", "id": "label", "label": "Etiket", "default": "Dermatolojik Test" }
+      ]
+    }
+  ],
+  "max_blocks": 8,
+  "presets": [{
+    "name": "Formula Güven Rozetleri",
+    "blocks": [
+      { "type": "badge", "settings": { "icon": "✓", "label": "Dermatolojik Test Edildi" } },
+      { "type": "badge", "settings": { "icon": "◆", "label": "Vegan" } },
+      { "type": "badge", "settings": { "icon": "●", "label": "Kruelti-Free" } },
+      { "type": "badge", "settings": { "icon": "○", "label": "Geri Dönüştürülebilir Ambalaj" } },
+      { "type": "badge", "settings": { "icon": "▲", "label": "Şeffaf Etiket" } }
+    ]
+  }]
+}
+{% endschema %}`;
+
+/** Video için `imageEffectSchemaFields()` BİLİNÇLİ OLARAK kullanılmadı —
+ * opacity/blur/grayscale/brightness bir `<video>` üzerinde de CSS filter ile
+ * çalışırdı ama poster/video ikilisini aynı anda derecelendirmek karmaşayı
+ * artırır; sabit, hafif bir karartma gradyanı (`formula-video-overlay`,
+ * her zaman aktif) metin okunabilirliği için yeterli. */
+export const FORMULA_VIDEO_BANNER = `<section class="formula-video${revealAnimationClass()}">
+  <div class="formula-video__media">
+    {% if section.settings.video_url != blank %}
+      <video class="formula-video__el" src="{{ section.settings.video_url | escape }}" {% if section.settings.poster != blank %}poster="{{ section.settings.poster | img_url: '1400x' }}"{% endif %} autoplay muted loop playsinline></video>
+    {% elsif section.settings.poster != blank %}
+      <img src="{{ section.settings.poster | img_url: '1400x' }}" alt="{{ section.settings.title | escape }}" loading="lazy" />
+    {% else %}
+      <div class="formula-video__placeholder" aria-hidden="true"></div>
+    {% endif %}
+    <div class="formula-video-overlay" aria-hidden="true"></div>
+  </div>
+  <div class="formula-video__copy">
+    {% if section.settings.eyebrow != blank %}<p class="formula-video__eyebrow">{{ section.settings.eyebrow | escape }}</p>{% endif %}
+    {% if section.settings.title != blank %}<h2 class="formula-video__title">{{ section.settings.title | escape }}</h2>{% endif %}
+    {% if section.settings.cta_label != blank %}<a class="formula-btn formula-btn--invert" href="{{ section.settings.cta_url | default: '/' | escape }}">{{ section.settings.cta_label | escape }}</a>{% endif %}
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Formula Video Banner",
+  "settings": [
+    { "type": "text", "id": "video_url", "label": "Video Bağlantısı (.mp4)", "default": "",
+      "info": "Boş bırakılırsa aşağıdaki kapak görseli statik olarak gösterilir." },
+    { "type": "image_picker", "id": "poster", "label": "Kapak Görseli" },
+    { "type": "text", "id": "eyebrow", "label": "Üst Etiket (ops.)", "default": "" },
+    { "type": "text", "id": "title", "label": "Başlık", "default": "Rutinini görüntüde izle" },
+    { "type": "text", "id": "cta_label", "label": "Buton Metni (ops.)", "default": "" },
+    { "type": "url", "id": "cta_url", "label": "Buton Bağlantısı (ops.)", "default": "" },${revealAnimationSchemaField()}
+  ],
+  "presets": [{ "name": "Formula Video Banner" }]
+}
+{% endschema %}`;
+
+export const FORMULA_JOURNAL_TEASER = `<section class="formula-journal${revealAnimationClass()}">
+  <div class="formula-section-head">
+    <h2>{{ section.settings.title | default: "Dergi" | escape }}</h2>
+    <a href="{{ section.settings.view_all_url | default: '/' | escape }}">{{ section.settings.view_all_label | default: "Tümünü Oku" | escape }}</a>
+  </div>
+  <div class="formula-journal__grid">
+    {% for block in section.blocks %}
+      {% if block.type == "article" %}
+        <a class="formula-journal-card" href="{{ block.settings.url | default: '#' | escape }}">
+          <div class="formula-journal-card__media">
+            {% if block.settings.image != blank %}
+              <img src="{{ block.settings.image | img_url: '700x' }}" alt="{{ block.settings.title | escape }}" loading="lazy" />
+            {% else %}
+              <div class="formula-journal-card__placeholder" aria-hidden="true"></div>
+            {% endif %}
+          </div>
+          {% if block.settings.category != blank %}<p class="formula-journal-card__category">{{ block.settings.category | escape }}</p>{% endif %}
+          <p class="formula-journal-card__title">{{ block.settings.title | default: "Başlık" | escape }}</p>
+          {% if block.settings.excerpt != blank %}<p class="formula-journal-card__excerpt">{{ block.settings.excerpt | escape }}</p>{% endif %}
+        </a>
+      {% endif %}
+    {% endfor %}
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Formula Dergi Vitrini",
+  "settings": [
+    { "type": "text", "id": "title", "label": "Başlık", "default": "Dergi" },
+    { "type": "text", "id": "view_all_label", "label": "Tümünü Gör Metni", "default": "Tümünü Oku" },
+    { "type": "url", "id": "view_all_url", "label": "Tümünü Gör URL", "default": "/" },${revealAnimationSchemaField()}
+  ],
+  "blocks": [
+    {
+      "type": "article",
+      "name": "Yazı",
+      "settings": [
+        { "type": "image_picker", "id": "image", "label": "Görsel" },
+        { "type": "text", "id": "category", "label": "Kategori (ops.)", "default": "Cilt Bakımı" },
+        { "type": "text", "id": "title", "label": "Başlık", "default": "Aktif İçerik Nedir, Nasıl Okunur?" },
+        { "type": "textarea", "id": "excerpt", "label": "Özet", "default": "Etikette gördüğün oranların ne anlama geldiğini açıklıyoruz." },
+        { "type": "url", "id": "url", "label": "Bağlantı", "default": "/pages" }
+      ]
+    }
+  ],
+  "max_blocks": 6,
+  "presets": [{
+    "name": "Formula Dergi Vitrini",
+    "blocks": [
+      { "type": "article", "settings": { "category": "Cilt Bakımı", "title": "Aktif İçerik Nedir, Nasıl Okunur?", "excerpt": "Etikette gördüğün oranların ne anlama geldiğini açıklıyoruz." } },
+      { "type": "article", "settings": { "category": "Rutin", "title": "Sabah mı Akşam mı: Ne Zaman Ne Kullanılır?", "excerpt": "Aktiflerin doğru sırası ve zamanlaması." } },
+      { "type": "article", "settings": { "category": "Kaygılar", "title": "Kızarıklığa Karşı 3 Adımlık Yaklaşım", "excerpt": "Hassas ciltler için minimal ama etkili rutin." } }
+    ]
+  }]
+}
+{% endschema %}`;
+
+export const FORMULA_COMPARISON_TABLE = `<section class="formula-compare${revealAnimationClass()}">
+  <div class="formula-section-head">
+    <h2>{{ section.settings.title | default: "Ürünleri Karşılaştır" | escape }}</h2>
+  </div>
+  <div class="formula-compare__scroll">
+    <div class="formula-compare__table" style="--formula-compare-cols: {{ section.blocks.size }}">
+      <div class="formula-compare__row formula-compare__row--head">
+        <div class="formula-compare__cell formula-compare__cell--label"></div>
+        {% for block in section.blocks %}
+          {% if block.type == "product" %}
+            <a class="formula-compare__cell formula-compare__cell--product" href="{{ block.settings.url | default: '#' | escape }}">
+              {% if block.settings.image != blank %}
+                <img src="{{ block.settings.image | img_url: '300x' }}" alt="{{ block.settings.name | escape }}" loading="lazy" />
+              {% endif %}
+              <p>{{ block.settings.name | default: "Ürün" | escape }}</p>
+            </a>
+          {% endif %}
+        {% endfor %}
+      </div>
+      {% if section.settings.feature1_label != blank %}
+        <div class="formula-compare__row">
+          <div class="formula-compare__cell formula-compare__cell--label">{{ section.settings.feature1_label | escape }}</div>
+          {% for block in section.blocks %}{% if block.type == "product" %}<div class="formula-compare__cell">{{ block.settings.feature1_value | default: "—" | escape }}</div>{% endif %}{% endfor %}
+        </div>
+      {% endif %}
+      {% if section.settings.feature2_label != blank %}
+        <div class="formula-compare__row">
+          <div class="formula-compare__cell formula-compare__cell--label">{{ section.settings.feature2_label | escape }}</div>
+          {% for block in section.blocks %}{% if block.type == "product" %}<div class="formula-compare__cell">{{ block.settings.feature2_value | default: "—" | escape }}</div>{% endif %}{% endfor %}
+        </div>
+      {% endif %}
+      {% if section.settings.feature3_label != blank %}
+        <div class="formula-compare__row">
+          <div class="formula-compare__cell formula-compare__cell--label">{{ section.settings.feature3_label | escape }}</div>
+          {% for block in section.blocks %}{% if block.type == "product" %}<div class="formula-compare__cell">{{ block.settings.feature3_value | default: "—" | escape }}</div>{% endif %}{% endfor %}
+        </div>
+      {% endif %}
+      {% if section.settings.feature4_label != blank %}
+        <div class="formula-compare__row">
+          <div class="formula-compare__cell formula-compare__cell--label">{{ section.settings.feature4_label | escape }}</div>
+          {% for block in section.blocks %}{% if block.type == "product" %}<div class="formula-compare__cell">{{ block.settings.feature4_value | default: "—" | escape }}</div>{% endif %}{% endfor %}
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Formula Karşılaştırma Tablosu",
+  "settings": [
+    { "type": "text", "id": "title", "label": "Başlık", "default": "Ürünleri Karşılaştır" },
+    { "type": "text", "id": "feature1_label", "label": "1. Satır Etiketi", "default": "Cilt Tipi" },
+    { "type": "text", "id": "feature2_label", "label": "2. Satır Etiketi", "default": "Ana Aktif" },
+    { "type": "text", "id": "feature3_label", "label": "3. Satır Etiketi", "default": "Kullanım Sıklığı" },
+    { "type": "text", "id": "feature4_label", "label": "4. Satır Etiketi (ops.)", "default": "Fiyat" },${revealAnimationSchemaField()}
+  ],
+  "blocks": [
+    {
+      "type": "product",
+      "name": "Ürün",
+      "settings": [
+        { "type": "image_picker", "id": "image", "label": "Görsel" },
+        { "type": "text", "id": "name", "label": "Ürün Adı", "default": "Niasinamid Serum" },
+        { "type": "url", "id": "url", "label": "Ürün URL", "default": "#" },
+        { "type": "text", "id": "feature1_value", "label": "1. Satır Değeri", "default": "Tüm Cilt Tipleri" },
+        { "type": "text", "id": "feature2_value", "label": "2. Satır Değeri", "default": "%10 Niasinamid" },
+        { "type": "text", "id": "feature3_value", "label": "3. Satır Değeri", "default": "Günde 2 kez" },
+        { "type": "text", "id": "feature4_value", "label": "4. Satır Değeri (ops.)", "default": "₺349" }
+      ]
+    }
+  ],
+  "max_blocks": 4,
+  "presets": [{
+    "name": "Formula Karşılaştırma Tablosu",
+    "blocks": [
+      { "type": "product", "settings": { "name": "Niasinamid Serum", "feature1_value": "Yağlı/Karma", "feature2_value": "%10 Niasinamid", "feature3_value": "Günde 2 kez", "feature4_value": "₺349" } },
+      { "type": "product", "settings": { "name": "Hyalüronik Asit Serum", "feature1_value": "Tüm Cilt Tipleri", "feature2_value": "%2 Hyalüronik Asit", "feature3_value": "Günde 2 kez", "feature4_value": "₺389" } },
+      { "type": "product", "settings": { "name": "Retinol Bakım", "feature1_value": "Yaşlanma Karşıtı", "feature2_value": "%0.3 Retinol", "feature3_value": "Haftada 3 kez", "feature4_value": "₺429" } }
+    ]
+  }]
+}
+{% endschema %}`;
+
+/**
+ * 2026-08-20 devamı — kullanıcı: "eposta bültenine kayıt olan, kayıt
+ * olurken pazarlama bildirimlerini kabul eden tüm müşteriler admin
+ * müşteriler sayfasında pazarlama epostalarını onayladı gibi belirtilsin".
+ * Bu section BİLEREK diğer library section'larından FARKLI — tek başına
+ * markup DEĞİL, gerçek bir POST akışına bağlı: form `data-formula-
+ * newsletter-form` attribute'uyla işaretli, submit'i `cartRuntimeClient.ts`
+ * (ECOMMERCE proje tipinde her sayfaya enjekte edilen TEK runtime script,
+ * bkz. `renderer.ts`) yakalayıp zaten PUBLIC olan `/marketing/consent`
+ * uç noktasına `{ email, emailConsent: true }` gönderir. O uç nokta
+ * (`marketing.ts` `upsertConsent`) artık `Customer.acceptsMarketing`'i de
+ * günceliyor — admin `customers/index.tsx` listesi tam olarak bu alanı
+ * okuyor ("Pazarlama ✓" rozeti). Diğer library section'larının aksine
+ * (`theme-extensions.ts`'in "sahte özellik eklemeyelim" ilkesi, bkz.
+ * newsletter-popup yorumu) BU form GERÇEKTEN bir yere gidiyor — o ilkeye
+ * aykırı değil, TAM TERSİNE onu karşılıyor.
+ */
+export const FORMULA_NEWSLETTER = `<section class="formula-newsletter${revealAnimationClass()}">
+  <div class="formula-newsletter__inner">
+    {% if section.settings.eyebrow != blank %}<p class="formula-newsletter__eyebrow">{{ section.settings.eyebrow | escape }}</p>{% endif %}
+    <h2 class="formula-newsletter__title">{{ section.settings.title | default: "Bültenimize Katıl" | escape }}</h2>
+    {% if section.settings.subtitle != blank %}<p class="formula-newsletter__sub">{{ section.settings.subtitle | escape }}</p>{% endif %}
+    <form class="formula-newsletter__form" data-formula-newsletter-form>
+      <input class="formula-newsletter__input" type="email" name="email" placeholder="{{ section.settings.placeholder | default: 'E-posta adresin' | escape }}" required />
+      <button class="formula-btn formula-btn--solid" type="submit">{{ section.settings.cta_label | default: "Katıl" | escape }}</button>
+    </form>
+    <p class="formula-newsletter__message" data-formula-newsletter-message></p>
+    {% if section.settings.disclaimer != blank %}<p class="formula-newsletter__disclaimer">{{ section.settings.disclaimer | escape }}</p>{% endif %}
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Formula Bülten Kaydı",
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Üst Etiket (ops.)", "default": "" },
+    { "type": "text", "id": "title", "label": "Başlık", "default": "Bültenimize Katıl" },
+    { "type": "textarea", "id": "subtitle", "label": "Alt Metin (ops.)", "default": "Yeni formüller ve rutin önerileri e-postana gelsin." },
+    { "type": "text", "id": "placeholder", "label": "Girdi Yer Tutucusu", "default": "E-posta adresin" },
+    { "type": "text", "id": "cta_label", "label": "Buton Metni", "default": "Katıl" },
+    { "type": "text", "id": "disclaimer", "label": "Küçük Not (ops.)", "default": "İstediğin zaman abonelikten çıkabilirsin." },${revealAnimationSchemaField()}
+  ],
+  "presets": [{ "name": "Formula Bülten Kaydı" }]
+}
+{% endschema %}`;
+
 /** `StudioShell.tsx`'in `addCatalog`'una `templateId === "formula"` iken
  * eklenen sabit kütüphane girdileri — sayfada henüz var olmasalar bile her
  * zaman teklif edilirler (bkz. `custom-html`'in aynı deseni). */
@@ -1281,6 +1672,13 @@ export const FORMULA_LIBRARY_SECTIONS: { type: string; content: string }[] = [
   { type: "text-columns", content: FORMULA_TEXT_COLUMNS },
   { type: "testimonial", content: FORMULA_TESTIMONIAL },
   { type: "numbered-list", content: FORMULA_NUMBERED_LIST },
+  { type: "ingredient-spotlight", content: FORMULA_INGREDIENT_SPOTLIGHT },
+  { type: "routine-steps", content: FORMULA_ROUTINE_STEPS },
+  { type: "trust-bar", content: FORMULA_TRUST_BAR },
+  { type: "video-banner", content: FORMULA_VIDEO_BANNER },
+  { type: "journal-teaser", content: FORMULA_JOURNAL_TEASER },
+  { type: "comparison-table", content: FORMULA_COMPARISON_TABLE },
+  { type: "newsletter-signup", content: FORMULA_NEWSLETTER },
 ];
 
 // `--color-*`/`--font-*` sözleşmesi `minimalSections.ts`'teki ile birebir aynı
@@ -1476,6 +1874,96 @@ export const FORMULA_LIBRARY_SECTIONS_CSS = `
 .formula-step__title { font-family: var(--font-heading); font-size: 18px; font-weight: 600; margin: 0 0 8px; letter-spacing: -0.01em; }
 .formula-step__desc { color: var(--color-muted); line-height: 1.6; margin: 0; font-size: 14px; }
 @media (max-width: 700px) { .formula-steps { padding: 44px 20px; } .formula-steps__list { gap: 24px; } }
+
+/* Aktif İçerik Vitrini (2026-08-20) */
+.formula-ingredients { padding: 64px 40px; }
+.formula-ingredients__sub { color: var(--color-muted); font-size: 14px; margin: -16px 0 28px; }
+.formula-ingredients__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; }
+.formula-ingredient-card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 16px; padding: 24px; }
+.formula-ingredient-card__top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.formula-ingredient-card__icon { font-size: 18px; color: var(--color-primary); }
+.formula-ingredient-card__percent { font-family: var(--font-heading); font-size: 20px; font-weight: 700; letter-spacing: -0.01em; color: var(--color-text); }
+.formula-ingredient-card__name { font-family: var(--font-heading); font-size: 16px; font-weight: 600; margin: 0 0 6px; }
+.formula-ingredient-card__desc { color: var(--color-muted); font-size: 13px; line-height: 1.6; margin: 0; }
+@media (max-width: 700px) { .formula-ingredients { padding: 44px 20px; } }
+
+/* Kullanım Rutini (2026-08-20) */
+.formula-routine { padding: 64px 40px; }
+.formula-routine__sub { color: var(--color-muted); font-size: 14px; margin: -16px 0 28px; }
+.formula-routine__list { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 24px; }
+.formula-routine-step { text-decoration: none; color: var(--color-text); display: block; }
+.formula-routine-step__media { position: relative; aspect-ratio: 1; border-radius: 50%; overflow: hidden; background: var(--color-surface); margin-bottom: 14px; }
+.formula-routine-step__media img { width: 100%; height: 100%; object-fit: cover; }
+.formula-routine-step__placeholder { width: 100%; height: 100%; background: linear-gradient(160deg, var(--color-border), var(--color-surface)); }
+.formula-routine-step__badge { position: absolute; top: 8px; left: 8px; width: 24px; height: 24px; border-radius: 50%; background: var(--color-primary); color: #fff; font-family: var(--font-heading); font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+.formula-routine-step__name { font-family: var(--font-heading); font-size: 15px; font-weight: 600; margin: 0 0 4px; text-align: center; }
+.formula-routine-step__desc { color: var(--color-muted); font-size: 12px; line-height: 1.5; margin: 0; text-align: center; }
+@media (max-width: 700px) { .formula-routine { padding: 44px 20px; } }
+
+/* Güven Rozetleri (2026-08-20) */
+.formula-trust { padding: 40px 40px; border-top: 1px solid var(--color-border); border-bottom: 1px solid var(--color-border); }
+.formula-trust__row { display: flex; flex-wrap: wrap; justify-content: center; gap: 32px; }
+.formula-trust-badge { display: flex; align-items: center; gap: 8px; }
+.formula-trust-badge__icon { color: var(--color-primary); font-size: 14px; }
+.formula-trust-badge__label { font-size: 12px; letter-spacing: 0.03em; text-transform: uppercase; color: var(--color-muted); font-weight: 600; }
+@media (max-width: 700px) { .formula-trust { padding: 28px 20px; } .formula-trust__row { gap: 20px 24px; } }
+
+/* Video Banner (2026-08-20) */
+.formula-video { position: relative; min-height: 480px; display: flex; align-items: flex-end; overflow: hidden; }
+.formula-video__media { position: absolute; inset: 0; z-index: 0; }
+.formula-video__el, .formula-video__media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.formula-video__placeholder { width: 100%; height: 100%; background: linear-gradient(160deg, var(--color-secondary), var(--color-surface)); }
+.formula-video-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,.6), rgba(0,0,0,0) 55%); pointer-events: none; }
+.formula-video__copy { position: relative; z-index: 1; padding: 40px; color: #ffffff; max-width: 480px; }
+.formula-video__eyebrow { text-transform: uppercase; letter-spacing: 0.1em; font-size: 12px; margin: 0 0 12px; opacity: .85; }
+.formula-video__title { font-family: var(--font-heading); font-size: clamp(24px, 3vw, 36px); line-height: 1.15; letter-spacing: -0.02em; margin: 0 0 20px; }
+@media (max-width: 700px) { .formula-video { min-height: 360px; } .formula-video__copy { padding: 28px 20px; } }
+
+/* Dergi Vitrini (2026-08-20) */
+.formula-journal { padding: 64px 40px; }
+.formula-journal__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 28px; }
+.formula-journal-card { text-decoration: none; color: var(--color-text); display: block; }
+.formula-journal-card__media { position: relative; aspect-ratio: 4/3; border-radius: 14px; overflow: hidden; background: var(--color-surface); margin-bottom: 14px; }
+.formula-journal-card__media img { width: 100%; height: 100%; object-fit: cover; transition: transform .3s; }
+.formula-journal-card:hover .formula-journal-card__media img { transform: scale(1.04); }
+.formula-journal-card__placeholder { width: 100%; height: 100%; background: linear-gradient(160deg, var(--color-border), var(--color-surface)); }
+.formula-journal-card__category { text-transform: uppercase; letter-spacing: 0.06em; font-size: 11px; color: var(--color-primary); font-weight: 600; margin: 0 0 6px; }
+.formula-journal-card__title { font-family: var(--font-heading); font-size: 17px; font-weight: 600; margin: 0 0 6px; letter-spacing: -0.01em; }
+.formula-journal-card__excerpt { color: var(--color-muted); font-size: 13px; line-height: 1.6; margin: 0; }
+@media (max-width: 700px) { .formula-journal { padding: 44px 20px; } }
+
+/* Karşılaştırma Tablosu (2026-08-20) — display:contents ile grid hücreleri
+   satır-wrapper'larını "görünmez" kılıyor, gerçek bir table yerine CSS
+   grid'in kendisi tablo düzenini kuruyor (bkz. formulaTheme.ts'in yorumu:
+   satır sayısı sabit 4, ei-engine dinamik alan adı çözmüyor). */
+.formula-compare { padding: 64px 40px; }
+.formula-compare__scroll { overflow-x: auto; }
+.formula-compare__table { display: grid; grid-template-columns: 160px repeat(var(--formula-compare-cols, 3), minmax(140px, 1fr)); min-width: 560px; }
+.formula-compare__row { display: contents; }
+.formula-compare__cell { padding: 14px 16px; border-bottom: 1px solid var(--color-border); display: flex; align-items: center; font-size: 13px; color: var(--color-text); }
+.formula-compare__row--head .formula-compare__cell { border-bottom: 2px solid var(--color-border); align-items: flex-start; }
+.formula-compare__cell--label { color: var(--color-muted); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; }
+.formula-compare__cell--product { flex-direction: column; align-items: flex-start; gap: 8px; text-decoration: none; }
+.formula-compare__cell--product img { width: 64px; height: 64px; object-fit: cover; border-radius: 10px; background: var(--color-surface); }
+.formula-compare__cell--product p { margin: 0; font-family: var(--font-heading); font-weight: 600; color: var(--color-text); font-size: 13px; }
+@media (max-width: 700px) { .formula-compare { padding: 44px 20px; } }
+
+/* Bülten Kaydı (2026-08-20) — gerçek fetch akışı cartRuntimeClient.ts'te,
+   bu section sadece markup+state class'ları sağlıyor. */
+.formula-newsletter { padding: 72px 40px; background: var(--color-surface); text-align: center; }
+.formula-newsletter__inner { max-width: 480px; margin: 0 auto; }
+.formula-newsletter__eyebrow { text-transform: uppercase; letter-spacing: 0.1em; font-size: 12px; color: var(--color-primary); margin: 0 0 14px; font-weight: 600; }
+.formula-newsletter__title { font-family: var(--font-heading); font-size: clamp(24px, 3vw, 32px); line-height: 1.15; letter-spacing: -0.02em; margin: 0 0 12px; }
+.formula-newsletter__sub { color: var(--color-muted); line-height: 1.6; margin: 0 0 24px; }
+.formula-newsletter__form { display: flex; gap: 10px; }
+.formula-newsletter__input { flex: 1; min-width: 0; padding: 12px 16px; border: 1px solid var(--color-border); border-radius: 999px; font-size: 14px; background: var(--color-background); color: var(--color-text); }
+.formula-newsletter__input:focus { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+.formula-newsletter__form .formula-btn { white-space: nowrap; }
+.formula-newsletter__message { min-height: 18px; margin: 12px 0 0; font-size: 13px; }
+.formula-newsletter__message--ok { color: var(--color-primary); }
+.formula-newsletter__message--err { color: #b3261e; }
+.formula-newsletter__disclaimer { color: var(--color-muted); font-size: 11px; margin: 10px 0 0; }
+@media (max-width: 560px) { .formula-newsletter { padding: 48px 20px; } .formula-newsletter__form { flex-direction: column; } }
 
 /* 404 (2026-08-19) */
 .formula-404 { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 96px 24px; min-height: 50vh; }
