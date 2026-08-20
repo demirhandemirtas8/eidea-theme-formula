@@ -116,7 +116,7 @@ export const FORMULA_NAV_HEADER = `<section class="formula-nav">
     {% if section.settings.quiz_label != blank %}<a href="{{ section.settings.quiz_url | default: '/pages/cilt-analizi' | escape }}" class="formula-nav__quiz">{{ section.settings.quiz_label | escape }}</a>{% endif %}
     <a href="/search" aria-label="Ara">${navIconSvg("search")}</a>
     <a href="/account" aria-label="Hesabım">${navIconSvg("account")}</a>
-    <a href="/cart" aria-label="Sepet">${navIconSvg("cart")}</a>
+    <a href="/cart" aria-label="Sepet" data-cart-open-mode="{{ section.settings.cart_open_mode | default: 'page' }}">${navIconSvg("cart")}</a>
   </div>
 </section>
 
@@ -127,7 +127,15 @@ export const FORMULA_NAV_HEADER = `<section class="formula-nav">
     { "type": "text", "id": "logo_text", "label": "Logo Metni", "default": "",
       "info": "Sadece Tema Ayarları'nda bir Logo görseli SEÇİLMEMİŞSE kullanılır." },
     { "type": "text", "id": "quiz_label", "label": "Analiz Buton Metni", "default": "Cilt Analizi" },
-    { "type": "url", "id": "quiz_url", "label": "Analiz Bağlantısı", "default": "/pages/cilt-analizi" }
+    { "type": "url", "id": "quiz_url", "label": "Analiz Bağlantısı", "default": "/pages/cilt-analizi" },
+    { "type": "select", "id": "cart_open_mode", "label": "Sepet Açılış Şekli", "default": "page",
+      "info": "Sepet ikonuna tıklanınca ne olacağını belirler.",
+      "options": [
+        { "label": "Direkt Sepet Sayfası", "value": "page" },
+        { "label": "Yandan Aç (Panel)", "value": "drawer" },
+        { "label": "Üstten Aç (Panel)", "value": "top" }
+      ]
+    }
   ],
   "blocks": [
     {
@@ -186,7 +194,7 @@ export const FORMULA_NAV_HEADER_CENTERED = `<section class="formula-nav formula-
     {% if section.settings.quiz_label != blank %}<a href="{{ section.settings.quiz_url | default: '/pages/cilt-analizi' | escape }}" class="formula-nav__quiz">{{ section.settings.quiz_label | escape }}</a>{% endif %}
     <a href="/search" aria-label="Ara">${navIconSvg("search")}</a>
     <a href="/account" aria-label="Hesabım">${navIconSvg("account")}</a>
-    <a href="/cart" aria-label="Sepet">${navIconSvg("cart")}</a>
+    <a href="/cart" aria-label="Sepet" data-cart-open-mode="{{ section.settings.cart_open_mode | default: 'page' }}">${navIconSvg("cart")}</a>
   </div>
 </section>
 
@@ -197,7 +205,15 @@ export const FORMULA_NAV_HEADER_CENTERED = `<section class="formula-nav formula-
     { "type": "text", "id": "logo_text", "label": "Logo Metni", "default": "",
       "info": "Sadece Tema Ayarları'nda bir Logo görseli SEÇİLMEMİŞSE kullanılır." },
     { "type": "text", "id": "quiz_label", "label": "Analiz Buton Metni", "default": "Cilt Analizi" },
-    { "type": "url", "id": "quiz_url", "label": "Analiz Bağlantısı", "default": "/pages/cilt-analizi" }
+    { "type": "url", "id": "quiz_url", "label": "Analiz Bağlantısı", "default": "/pages/cilt-analizi" },
+    { "type": "select", "id": "cart_open_mode", "label": "Sepet Açılış Şekli", "default": "page",
+      "info": "Sepet ikonuna tıklanınca ne olacağını belirler.",
+      "options": [
+        { "label": "Direkt Sepet Sayfası", "value": "page" },
+        { "label": "Yandan Aç (Panel)", "value": "drawer" },
+        { "label": "Üstten Aç (Panel)", "value": "top" }
+      ]
+    }
   ],
   "blocks": [
     {
