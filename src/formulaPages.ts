@@ -409,4 +409,65 @@ export function patchMissingFormula404Page(pages: EiPage[], templateId: string |
   return [...pages, page];
 }
 
+/**
+ * 2026-08-21 — kullanıcı raporu: giriş yapmamışken de "Hesabım" görünüyor,
+ * login/register'a giden gerçek bir yol yok. Kök neden: `account-dashboard`/
+ * `account-orders` section tipleri bu özellikten (bkz. `formulaSectionFiles()`)
+ * ÖNCE oluşturulmuş projelerde henüz yok — `/account` ve `/account/orders`
+ * sayfaları hâlâ eski jenerik `content-page` placeholder'ını taşıyor.
+ * `patchStaleFormulaSectionContent` bunu YAKALAMAZ çünkü section TİPİ aynı
+ * kalıyorsa (content-page → content-page) çalışır, burada tip'in KENDİSİ
+ * değişmesi gerekiyor. `patchMissingFormula404Page`'deki AYNI desen: header/
+ * footer KORUNUR (kullanıcının "Tasarım Değiştir" seçimi yansır), sadece
+ * ana (content-page tipli) section account-dashboard/account-orders ile
+ * DEĞİŞTİRİLİR — `content-page`'in eski eyebrow/title/body ayarları zaten
+ * yeni section'da hiç okunmuyor, kayıp veri yok. `StudioShell.tsx`'te
+ * `patchMissingFormula404Page`'ten HEMEN SONRA, AYNI parse-patch-reparse
+ * döngüsünde çağrılır.
+ */
+export function patchStaleAccountPages(pages: EiPage[], templateId: string | null | undefined): EiPage[] {
+  if (templateId !== "formula") return pages;
+  const targets: Record<string, { type: string; name: string; content: string; blocks: EipgBlock[] }> = {
+    account: {
+      type: "account-dashboard",
+      name: "Hesabım",
+      content: ACCOUNT_DASHBOARD_CONTENT,
+      blocks: [
+        block(`block-${crypto.randomUUID().slice(0, 8)}`, "tab", "Sekme", { key: "orders", label: "Siparişlerim" }),
+        block(`block-${crypto.randomUUID().slice(0, 8)}`, "tab", "Sekme", { key: "addresses", label: "Adreslerim" }),
+        block(`block-${crypto.randomUUID().slice(0, 8)}`, "tab", "Sekme", { key: "loyalty", label: "Sadakat Puanlarım" }),
+      ],
+    },
+    orders: { type: "account-orders", name: "Siparişlerim", content: ACCOUNT_ORDERS_CONTENT, blocks: [] },
+  };
+  let changed = false;
+  const nextPages = pages.map((page) => {
+    const target = targets[page.slug];
+    if (!target) return page;
+    const sections = page.sections.map((section) => {
+      if (section.type !== "content-page") return section;
+      const role = sectionSlot(resolveSectionInstanceRole(section));
+      if (role === "header" || role === "footer") return section;
+      changed = true;
+      const patched: EiSection = {
+        id: `section-${crypto.randomUUID().slice(0, 8)}`,
+        type: target.type,
+        name: target.name,
+        enabled: true,
+        settings: {},
+        schema: [],
+        blocks: target.blocks,
+        content: target.content,
+        sourcePath: null,
+        ownedByPage: false,
+      };
+      return patched;
+    });
+    if (sections === page.sections) return page;
+    const sectionOrder = sections.map((s) => s.id);
+    return { ...page, sections, sectionOrder, dirty: true };
+  });
+  return changed ? nextPages : pages;
+}
+
 export { FORMULA_THEME_CSS };
