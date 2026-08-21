@@ -34,6 +34,8 @@ import {
   CONTENT_PAGE_CONTENT,
   AUTH_LOGIN_CONTENT,
   AUTH_REGISTER_CONTENT,
+  ACCOUNT_DASHBOARD_CONTENT,
+  ACCOUNT_ORDERS_CONTENT,
 } from "./universalPages.js";
 
 function block(id: string, type: string, name: string, settings: Record<string, unknown>, blocks: EipgBlock[] = []): EipgBlock {
@@ -213,9 +215,15 @@ export function buildFormulaPages(): ThemePageSpec[] {
     id: "main-checkout", type: "main-checkout", name: "Ödeme", src: "sections/main-checkout.ei",
     settings: {}, blocks: checkoutBlocks,
   });
+  const accountDashboardBlocks: EipgBlock[] = [
+    block("account-tab-orders", "tab", "Sekme", { key: "orders", label: "Siparişlerim" }),
+    block("account-tab-addresses", "tab", "Sekme", { key: "addresses", label: "Adreslerim" }),
+    block("account-tab-loyalty", "tab", "Sekme", { key: "loyalty", label: "Sadakat Puanlarım" }),
+  ];
+
   const accountPage = utilityPage("account", "Hesabım", "/account", "page", {
-    id: "content-page", type: "content-page", name: "İçerik", src: "sections/content-page.ei",
-    settings: { eyebrow: "Hesap", title: "Hesabım", body: "Sipariş geçmişini ve hesap bilgilerini burada yönet." },
+    id: "account-dashboard", type: "account-dashboard", name: "Hesabım", src: "sections/account-dashboard.ei",
+    settings: {}, blocks: accountDashboardBlocks,
   });
   const registerPage = utilityPage("register", "Kayıt Ol", "/register", "page", {
     id: "auth-register", type: "auth-register", name: "Kayıt Ol", src: "sections/auth-register.ei",
@@ -226,8 +234,8 @@ export function buildFormulaPages(): ThemePageSpec[] {
     settings: {}, blocks: authLoginBlocks,
   });
   const ordersPage = utilityPage("orders", "Siparişlerim", "/account/orders", "page", {
-    id: "content-page", type: "content-page", name: "İçerik", src: "sections/content-page.ei",
-    settings: { eyebrow: "Hesap", title: "Siparişlerim", body: "Geçmiş siparişlerini burada görüntüle." },
+    id: "account-orders", type: "account-orders", name: "Siparişlerim", src: "sections/account-orders.ei",
+    settings: {},
   });
   // 2026-08-19 — kullanıcı raporu: "404 sayfası hâlâ yok". `template: "404"`
   // hem doğrudan `/404` ziyaretinde (route eşleşmesiyle) hem de eşleşmeyen
@@ -261,6 +269,8 @@ export function formulaSectionFiles(): Record<string, string> {
     "sections/content-page.ei": CONTENT_PAGE_CONTENT,
     "sections/auth-login.ei": AUTH_LOGIN_CONTENT,
     "sections/auth-register.ei": AUTH_REGISTER_CONTENT,
+    "sections/account-dashboard.ei": ACCOUNT_DASHBOARD_CONTENT,
+    "sections/account-orders.ei": ACCOUNT_ORDERS_CONTENT,
     "sections/main-404.ei": FORMULA_404,
   };
 }
