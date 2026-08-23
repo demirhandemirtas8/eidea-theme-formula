@@ -2178,12 +2178,60 @@ export const FORMULA_CONTACT_FORM = `<section data-section-id="{{ section.id }}"
 }
 {% endschema %}`;
 
+/**
+ * 2026-08-23 — Faz 6. `FORMULA_MARQUEE`'den (brand-marquee) FARKI: o section
+ * manuel/editoryal bloklarla düz METİN kayan yazı basıyor (gerçek marka
+ * verisine hiç bağlı değil). Bu section GERÇEK `Brand` kayıtlarını (logoUrl
+ * dahil) kullanıyor — `ecommerceContext.ts`'teki `resolveBrandsSlider()`
+ * SADECE bu section tipi sayfada varsa çalışıyor (lazy, her sayfada ekstra
+ * sorguya girmemek için — bkz. o fonksiyonun kendi yorumu). Native CSS
+ * `scroll-snap` ile kaydırılabilir/dokunmatik-dostu bir "slider" — ayrı bir
+ * JS kütüphanesi/karousel motoru GEREKMİYOR, sadece iki ok butonu
+ * `scrollBy` ile (inline onclick, quantity-selector'daki AYNI desen).
+ */
+export const FORMULA_BRANDS_SLIDER = `<section class="formula-brands-slider${revealAnimationClass()}">
+  <div class="formula-section-head">
+    <h2>{{ section.settings.title | default: "Markalarımız" | escape }}</h2>
+    {% if section.settings.show_arrows %}
+      <div class="formula-brands-slider__nav">
+        <button type="button" aria-label="Önceki" onclick="this.closest('.formula-brands-slider').querySelector('.formula-brands-slider__track').scrollBy({left:-240,behavior:'smooth'})">←</button>
+        <button type="button" aria-label="Sonraki" onclick="this.closest('.formula-brands-slider').querySelector('.formula-brands-slider__track').scrollBy({left:240,behavior:'smooth'})">→</button>
+      </div>
+    {% endif %}
+  </div>
+  <div class="formula-brands-slider__track">
+    {% for brand in all_brands %}
+      <a class="formula-brands-slider__item" href="{{ brand.url | escape }}">
+        {% if brand.logo_url != blank %}
+          <img src="{{ brand.logo_url | img_url: '300x' }}" alt="{{ brand.title | escape }}" loading="lazy" />
+        {% else %}
+          <span class="formula-brands-slider__name">{{ brand.title | escape }}</span>
+        {% endif %}
+      </a>
+    {% else %}
+      <p class="formula-brands-slider__empty">Henüz marka eklenmemiş.</p>
+    {% endfor %}
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Markalar Slider",
+  "settings": [
+    { "type": "text", "id": "title", "label": "Başlık", "default": "Markalarımız" },
+    { "type": "checkbox", "id": "show_arrows", "label": "Ok butonları göster", "default": true },${revealAnimationSchemaField()}
+  ],
+  "presets": [{ "name": "Markalar Slider" }]
+}
+{% endschema %}`;
+
 /** `StudioShell.tsx`'in `addCatalog`'una `templateId === "formula"` iken
  * eklenen sabit kütüphane girdileri — sayfada henüz var olmasalar bile her
  * zaman teklif edilirler (bkz. `custom-html`'in aynı deseni). */
 export const FORMULA_LIBRARY_SECTIONS: { type: string; content: string }[] = [
   { type: "announcement-bar", content: FORMULA_ANNOUNCEMENT_BAR },
   { type: "brand-marquee", content: FORMULA_MARQUEE },
+  { type: "brands-slider", content: FORMULA_BRANDS_SLIDER },
   { type: "collection-list", content: FORMULA_COLLECTION_LIST },
   { type: "collection-showcase", content: FORMULA_COLLECTION_SHOWCASE },
   { type: "general-showcase", content: FORMULA_GENERAL_SHOWCASE },
@@ -2244,6 +2292,20 @@ export const FORMULA_LIBRARY_SECTIONS_CSS = `
 .formula-marquee__item { font-family: var(--font-heading); font-size: 14px; font-weight: 600; letter-spacing: 0.02em; color: var(--color-text); padding: 0 20px; white-space: nowrap; }
 .formula-marquee__dot { color: var(--color-primary); font-size: 12px; }
 @keyframes formula-marquee-scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+/* Markalar slider (2026-08-23) — native CSS scroll-snap, JS kütüphanesi yok. */
+.formula-brands-slider { padding: 56px 40px; }
+.formula-brands-slider__nav { display: flex; gap: 8px; }
+.formula-brands-slider__nav button { width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--color-border); background: #fff; cursor: pointer; font-size: 15px; color: var(--color-text); }
+.formula-brands-slider__nav button:hover { background: var(--color-surface); }
+.formula-brands-slider__track { display: flex; gap: 32px; overflow-x: auto; scroll-snap-type: x proximity; padding-bottom: 8px; scrollbar-width: thin; }
+.formula-brands-slider__item { flex: 0 0 auto; scroll-snap-align: start; display: flex; align-items: center; justify-content: center; height: 64px; min-width: 120px; opacity: .7; transition: opacity .2s; }
+.formula-brands-slider__item:hover { opacity: 1; }
+.formula-brands-slider__item img { max-height: 100%; max-width: 160px; object-fit: contain; filter: grayscale(1); transition: filter .2s; }
+.formula-brands-slider__item:hover img { filter: grayscale(0); }
+.formula-brands-slider__name { font-family: var(--font-heading); font-size: 16px; font-weight: 600; color: var(--color-text); white-space: nowrap; }
+.formula-brands-slider__empty { color: var(--color-muted); font-size: 13px; }
+@media (max-width: 700px) { .formula-brands-slider { padding: 40px 20px; } }
 
 /* Koleksiyon listesi — 2026-08-19: sütun sayısı/boşluk artık
    --formula-collection-cols / --formula-collection-gap (section
