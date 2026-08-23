@@ -108,7 +108,18 @@ export const FORMULA_NAV_HEADER = `<section class="formula-nav">
   <nav class="formula-nav__links">
     {% for block in section.blocks %}
       {% if block.type == "menu_item" %}
-        <a href="{{ block.settings.url | escape }}">{{ block.settings.label | escape }}</a>
+        {% if block.blocks.size > 0 %}
+          <div class="formula-nav__item">
+            <a href="{{ block.settings.url | escape }}">{{ block.settings.label | escape }}</a>
+            <div class="formula-nav__submenu">
+              {% for child in block.blocks %}
+                {% if child.type == "submenu_item" %}<a href="{{ child.settings.url | escape }}">{{ child.settings.label | escape }}</a>{% endif %}
+              {% endfor %}
+            </div>
+          </div>
+        {% else %}
+          <a href="{{ block.settings.url | escape }}">{{ block.settings.label | escape }}</a>
+        {% endif %}
       {% endif %}
     {% endfor %}
   </nav>
@@ -144,6 +155,16 @@ export const FORMULA_NAV_HEADER = `<section class="formula-nav">
       "settings": [
         { "type": "text", "id": "label", "label": "Metin", "default": "Yüz Bakımı" },
         { "type": "url", "id": "url", "label": "URL", "default": "/collection" }
+      ],
+      "blocks": [
+        {
+          "type": "submenu_item",
+          "name": "Alt Menü Öğesi",
+          "settings": [
+            { "type": "text", "id": "label", "label": "Metin", "default": "Alt Kategori" },
+            { "type": "url", "id": "url", "label": "URL", "default": "/collection" }
+          ]
+        }
       ]
     }
   ],
@@ -186,7 +207,18 @@ export const FORMULA_NAV_HEADER_CENTERED = `<section class="formula-nav formula-
   <nav class="formula-nav__links">
     {% for block in section.blocks %}
       {% if block.type == "menu_item" %}
-        <a href="{{ block.settings.url | escape }}">{{ block.settings.label | escape }}</a>
+        {% if block.blocks.size > 0 %}
+          <div class="formula-nav__item">
+            <a href="{{ block.settings.url | escape }}">{{ block.settings.label | escape }}</a>
+            <div class="formula-nav__submenu">
+              {% for child in block.blocks %}
+                {% if child.type == "submenu_item" %}<a href="{{ child.settings.url | escape }}">{{ child.settings.label | escape }}</a>{% endif %}
+              {% endfor %}
+            </div>
+          </div>
+        {% else %}
+          <a href="{{ block.settings.url | escape }}">{{ block.settings.label | escape }}</a>
+        {% endif %}
       {% endif %}
     {% endfor %}
   </nav>
@@ -222,6 +254,16 @@ export const FORMULA_NAV_HEADER_CENTERED = `<section class="formula-nav formula-
       "settings": [
         { "type": "text", "id": "label", "label": "Metin", "default": "Yüz Bakımı" },
         { "type": "url", "id": "url", "label": "URL", "default": "/collection" }
+      ],
+      "blocks": [
+        {
+          "type": "submenu_item",
+          "name": "Alt Menü Öğesi",
+          "settings": [
+            { "type": "text", "id": "label", "label": "Metin", "default": "Alt Kategori" },
+            { "type": "url", "id": "url", "label": "URL", "default": "/collection" }
+          ]
+        }
       ]
     }
   ],
@@ -468,6 +510,24 @@ export const FORMULA_FOOTER_MENU = `<section class="formula-footer">
         </p>
       {% endif %}
       <p class="formula-footer__blurb">{{ section.settings.blurb | default: "Az bileşen, yüksek standart. Cilt bakımını şeffaf ve anlaşılır yapıyoruz." | escape }}</p>
+      {%- comment -%}
+        2026-08-23 — 20.08-revizeler.md madde 2: sosyal ikonlar satırı EKLENDİ
+        (mevcut menu_item/nav yapısına DOKUNULMADI — geriye dönük uyumlu,
+        var olan footer'lar hiç etkilenmez, yeni block tipi opsiyonel).
+        Hiç social_link block'u yoksa for döngüsü hiç iterasyon yapmaz, div
+        boş kalır (display:flex + çocuksuz = 0 yükseklik, zararsız) — bir
+        "var mı" kontrolüyle sarmalamaya GEREK YOK; ayrıca bu motorda for
+        içindeki {% assign %} döngü dışına hiç sızmıyor (bkz.
+        reference-ei-engine-liquid-scoping-gotchas), o yaklaşım denendi ve
+        gerçek render testinde SESSİZCE render OLMADIĞI görüldü.
+      {%- endcomment -%}
+      <div class="formula-footer__social">
+        {% for block in section.blocks %}
+          {% if block.type == "social_link" and block.settings.url != blank %}
+            <a href="{{ block.settings.url | escape }}" target="_blank" rel="noopener">{{ block.settings.platform | default: "Bağlantı" | escape }}</a>
+          {% endif %}
+        {% endfor %}
+      </div>
     </div>
     <nav class="formula-footer__links">
       {% for block in section.blocks %}
@@ -476,6 +536,23 @@ export const FORMULA_FOOTER_MENU = `<section class="formula-footer">
         {% endif %}
       {% endfor %}
     </nav>
+    {%- comment -%}
+      Çok sütunlu footer (opsiyonel) — "link_column" block'u başlık +
+      kendi içine gömülü "link" bloklarıyla ayrı bir grup oluşturur, düz
+      "menu_item" listesinin YANINA eklenir, onu DEĞİŞTİRMEZ.
+    {%- endcomment -%}
+    {% for block in section.blocks %}
+      {% if block.type == "link_column" %}
+        <div class="formula-footer__column">
+          {% if block.settings.title != blank %}<p class="formula-footer__column-title">{{ block.settings.title | escape }}</p>{% endif %}
+          <nav class="formula-footer__column-links">
+            {% for link in block.blocks %}
+              {% if link.type == "link" %}<a href="{{ link.settings.url | escape }}">{{ link.settings.label | escape }}</a>{% endif %}
+            {% endfor %}
+          </nav>
+        </div>
+      {% endif %}
+    {% endfor %}
   </div>
   <p class="formula-footer__copy">&copy; {{ "now" | date: "%Y" }} {{ shop.name | escape }}. {{ section.settings.copyright_text | default: "Tüm hakları saklıdır." | escape }}</p>
 </section>
@@ -497,6 +574,41 @@ export const FORMULA_FOOTER_MENU = `<section class="formula-footer">
       "settings": [
         { "type": "text", "id": "label", "label": "Metin", "default": "Sayfa" },
         { "type": "url", "id": "url", "label": "URL", "default": "/" }
+      ]
+    },
+    {
+      "type": "social_link",
+      "name": "Sosyal Medya İkonu",
+      "settings": [
+        { "type": "select", "id": "platform", "label": "Platform", "default": "Instagram",
+          "options": [
+            { "label": "Instagram", "value": "Instagram" },
+            { "label": "Facebook", "value": "Facebook" },
+            { "label": "TikTok", "value": "TikTok" },
+            { "label": "YouTube", "value": "YouTube" },
+            { "label": "X (Twitter)", "value": "X" },
+            { "label": "Pinterest", "value": "Pinterest" },
+            { "label": "WhatsApp", "value": "WhatsApp" }
+          ]
+        },
+        { "type": "url", "id": "url", "label": "Profil URL", "default": "" }
+      ]
+    },
+    {
+      "type": "link_column",
+      "name": "Bağlantı Sütunu",
+      "settings": [
+        { "type": "text", "id": "title", "label": "Sütun Başlığı", "default": "Kurumsal" }
+      ],
+      "blocks": [
+        {
+          "type": "link",
+          "name": "Bağlantı",
+          "settings": [
+            { "type": "text", "id": "label", "label": "Metin", "default": "Sayfa" },
+            { "type": "url", "id": "url", "label": "URL", "default": "/" }
+          ]
+        }
       ]
     }
   ],
@@ -1864,11 +1976,11 @@ export const FORMULA_BEFORE_AFTER = `<section class="formula-before-after${revea
  * gerçek gezinme sonrası dolar; aynı cart-badge/checkout gibi "sadece
  * published'ta çalışır" sınıfı (bkz. formulaPages.ts'in cart runtime notu).
  */
-export const FORMULA_RECENTLY_VIEWED = `<section class="formula-recently-viewed${revealAnimationClass()}">
+export const FORMULA_RECENTLY_VIEWED = `<section class="formula-recently-viewed${revealAnimationClass()}" style="--formula-recently-viewed-cols: {{ section.settings.columns | default: 4 }}">
   <div class="formula-section-head">
     <h2>{{ section.settings.title | default: "Son Baktıkların" | escape }}</h2>
   </div>
-  <div class="formula-recently-viewed__grid" data-formula-recently-viewed data-limit="{{ section.settings.limit | default: 4 }}"></div>
+  <div class="formula-recently-viewed__grid" data-formula-recently-viewed data-limit="{{ section.settings.limit | default: 4 }}" data-card-style="{{ section.settings.card_style | default: 'minimal' }}"></div>
 </section>
 
 {% schema %}
@@ -1876,7 +1988,15 @@ export const FORMULA_RECENTLY_VIEWED = `<section class="formula-recently-viewed$
   "name": "Formula Son Bakılanlar",
   "settings": [
     { "type": "text", "id": "title", "label": "Başlık", "default": "Son Baktıkların" },
-    { "type": "range", "id": "limit", "label": "Gösterilecek Ürün Sayısı", "min": 2, "max": 8, "step": 1, "default": 4 },${revealAnimationSchemaField()}
+    { "type": "range", "id": "limit", "label": "Gösterilecek Ürün Sayısı", "min": 2, "max": 8, "step": 1, "default": 4 },
+    { "type": "range", "id": "columns", "label": "Sütun Sayısı", "min": 2, "max": 6, "step": 1, "default": 4 },
+    { "type": "select", "id": "card_style", "label": "Kart Stili", "default": "minimal",
+      "options": [
+        { "label": "Minimal", "value": "minimal" },
+        { "label": "Çerçeveli", "value": "bordered" },
+        { "label": "Gölgeli", "value": "shadow" }
+      ]
+    },${revealAnimationSchemaField()}
   ],
   "presets": [{ "name": "Formula Son Bakılanlar" }]
 }
@@ -1894,14 +2014,14 @@ export const FORMULA_RECENTLY_VIEWED = `<section class="formula-recently-viewed$
  * her sayfada anlamlı olacağı anlamına gelmez, sadece HER ZAMAN teklif
  * edilen ortak kataloğun (`AddSectionPanel`) bir parçası.
  */
-export const FORMULA_RELATED_PRODUCTS = `<section{% if recommendations.performed %} class="formula-related${revealAnimationClass()}"{% endif %}>
+export const FORMULA_RELATED_PRODUCTS = `<section{% if recommendations.performed %} class="formula-related${revealAnimationClass()}" style="--formula-related-cols: {{ section.settings.columns | default: 4 }}"{% endif %}>
   {% if recommendations.performed %}
   <div class="formula-section-head">
     <h2>{{ section.settings.title | default: "Bunları da Beğenebilirsin" | escape }}</h2>
   </div>
   <div class="formula-related__grid">
     {% for p in recommendations.products %}
-      <a class="formula-product-card" href="{{ p.url | escape }}">
+      <a class="formula-product-card formula-product-card--{{ section.settings.card_style | default: 'minimal' }}" href="{{ p.url | escape }}">
         <div class="formula-product-card__media">
           {% if p.images.size > 0 %}
             <img src="{{ p.images.first | img_url: '700x' }}" alt="{{ p.title | escape }}" loading="lazy" />
@@ -1909,6 +2029,7 @@ export const FORMULA_RELATED_PRODUCTS = `<section{% if recommendations.performed
             <div class="formula-product-card__placeholder" aria-hidden="true"></div>
           {% endif %}
         </div>
+        {% if section.settings.show_vendor and p.vendor != blank %}<p class="formula-product-card__vendor">{{ p.vendor | escape }}</p>{% endif %}
         <p class="formula-product-card__name">{{ p.title | escape }}</p>
         <p class="formula-product-card__price">{{ p.price | money }}</p>
       </a>
@@ -1921,9 +2042,79 @@ export const FORMULA_RELATED_PRODUCTS = `<section{% if recommendations.performed
 {
   "name": "Formula İlgili Ürünler",
   "settings": [
-    { "type": "text", "id": "title", "label": "Başlık", "default": "Bunları da Beğenebilirsin" },${revealAnimationSchemaField()}
+    { "type": "text", "id": "title", "label": "Başlık", "default": "Bunları da Beğenebilirsin" },
+    { "type": "range", "id": "columns", "label": "Sütun Sayısı", "min": 2, "max": 5, "step": 1, "default": 4 },
+    { "type": "select", "id": "card_style", "label": "Kart Stili", "default": "minimal",
+      "options": [
+        { "label": "Minimal", "value": "minimal" },
+        { "label": "Çerçeveli", "value": "bordered" },
+        { "label": "Gölgeli", "value": "shadow" }
+      ]
+    },
+    { "type": "checkbox", "id": "show_vendor", "label": "Marka göster", "default": false },${revealAnimationSchemaField()}
   ],
   "presets": [{ "name": "Formula İlgili Ürünler" }]
+}
+{% endschema %}`;
+
+/**
+ * 2026-08-23 — 20.08-revizeler.md madde 6: "iletişim formu MOCK değil GERÇEK
+ * olmalı, backend'de de karşılığı olmalı". Gönderilen mesaj gerçekten DB'ye
+ * yazılıyor (`ContactMessage`, `packages/modules/ecommerce/src/routes/messages.ts`,
+ * `POST /api/v1/p/:projectId/contact`, auth yok — herkes iletişim kurabilmeli)
+ * ve admin panelde gerçek bir "Mesajlar" gelen kutusunda (`/messages`)
+ * görünüyor. E-posta bildirimi BİLİNÇLİ atlandı — bu ortamda hiçbir e-posta
+ * sağlayıcısı (RESEND_API_KEY) yapılandırılı değil, o kodu yazmak
+ * doğrulanamaz/çalışmayan bir özellik eklemek olurdu; DB'ye kalıcı yazılıp
+ * gerçek bir admin sayfasından okunması "mock değil gerçek" şartını zaten
+ * karşılıyor. Diğer library section'ların aksine bir class/CSS bağımlılığı
+ * YOK — tamamen inline stil (favoriler/hesabım'daki AYNI tercih, bkz.
+ * universalPages.ts) — böylece `FORMULA_LIBRARY_SECTIONS_CSS`'in eski
+ * projelere patch'lenmesi gereken staleness sorununa hiç girmiyor.
+ */
+export const FORMULA_CONTACT_FORM = `<section data-section-id="{{ section.id }}" style="padding:64px 24px;background:{{ section.settings.bg | default: '#ffffff' }}">
+  <div style="width:min(100%,{{ section.settings.max_width | default: 640 }}px);margin:0 auto;text-align:{{ section.settings.align | default: 'left' }}">
+    {% if section.settings.eyebrow != blank %}<p style="font-size:12px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:{{ section.settings.accent | default: '#2563eb' }};margin:0 0 10px">{{ section.settings.eyebrow | escape }}</p>{% endif %}
+    <h2 style="font-size:clamp(24px,4vw,34px);font-weight:900;letter-spacing:-.03em;margin:0 0 12px;color:{{ section.settings.text | default: '#0f172a' }}">{{ section.settings.title | default: "Bize Ulaşın" | escape }}</h2>
+    {% if section.settings.subtitle != blank %}<p style="font-size:15px;line-height:1.7;color:{{ section.settings.muted | default: '#64748b' }};margin:0 0 28px">{{ section.settings.subtitle | escape }}</p>{% endif %}
+    <form data-eidea-contact-form style="display:grid;gap:12px;text-align:left">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <label style="display:grid;gap:6px;font-size:13px;font-weight:700;color:{{ section.settings.text | default: '#0f172a' }}"><span>Ad Soyad</span><input name="name" required style="height:46px;border-radius:10px;border:1px solid {{ section.settings.border | default: '#e5e7eb' }};padding:0 14px"></label>
+        <label style="display:grid;gap:6px;font-size:13px;font-weight:700;color:{{ section.settings.text | default: '#0f172a' }}"><span>E-posta</span><input type="email" name="email" required style="height:46px;border-radius:10px;border:1px solid {{ section.settings.border | default: '#e5e7eb' }};padding:0 14px"></label>
+      </div>
+      {% if section.settings.show_phone %}<label style="display:grid;gap:6px;font-size:13px;font-weight:700;color:{{ section.settings.text | default: '#0f172a' }}"><span>Telefon (ops.)</span><input name="phone" style="height:46px;border-radius:10px;border:1px solid {{ section.settings.border | default: '#e5e7eb' }};padding:0 14px"></label>{% endif %}
+      {% if section.settings.show_subject %}<label style="display:grid;gap:6px;font-size:13px;font-weight:700;color:{{ section.settings.text | default: '#0f172a' }}"><span>Konu (ops.)</span><input name="subject" style="height:46px;border-radius:10px;border:1px solid {{ section.settings.border | default: '#e5e7eb' }};padding:0 14px"></label>{% endif %}
+      <label style="display:grid;gap:6px;font-size:13px;font-weight:700;color:{{ section.settings.text | default: '#0f172a' }}"><span>Mesajın</span><textarea name="message" required rows="5" style="border-radius:10px;border:1px solid {{ section.settings.border | default: '#e5e7eb' }};padding:12px 14px;font-family:inherit;resize:vertical"></textarea></label>
+      <button type="submit" style="justify-self:start;height:48px;padding:0 28px;border:0;border-radius:10px;background:{{ section.settings.button_bg | default: '#111827' }};color:{{ section.settings.button_text | default: '#ffffff' }};font-weight:800;cursor:pointer">{{ section.settings.submit_label | default: "Gönder" | escape }}</button>
+      <p data-eidea-contact-form-message style="font-size:13px;margin:0"></p>
+    </form>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "İletişim Formu",
+  "settings": [
+    { "type": "header", "content": "İçerik" },
+    { "type": "text", "id": "eyebrow", "label": "Üst etiket", "default": "" },
+    { "type": "text", "id": "title", "label": "Başlık", "default": "Bize Ulaşın" },
+    { "type": "textarea", "id": "subtitle", "label": "Alt metin", "default": "Sorularınız için formu doldurun, en kısa sürede dönüş yapalım." },
+    { "type": "text", "id": "submit_label", "label": "Gönder buton metni", "default": "Gönder" },
+    { "type": "checkbox", "id": "show_phone", "label": "Telefon alanı göster", "default": true },
+    { "type": "checkbox", "id": "show_subject", "label": "Konu alanı göster", "default": false },
+    { "type": "header", "content": "Layout" },
+    { "type": "select", "id": "align", "label": "Hiza", "default": "left", "options": [{"label":"Sol","value":"left"},{"label":"Orta","value":"center"}] },
+    { "type": "range", "id": "max_width", "label": "Maksimum genişlik", "min": 420, "max": 900, "step": 20, "unit": "px", "default": 640 },
+    { "type": "header", "content": "Renkler" },
+    { "type": "color", "id": "bg", "label": "Arka plan", "default": "#ffffff" },
+    { "type": "color", "id": "text", "label": "Yazı", "default": "#0f172a" },
+    { "type": "color", "id": "muted", "label": "İkincil yazı", "default": "#64748b" },
+    { "type": "color", "id": "accent", "label": "Vurgu", "default": "#2563eb" },
+    { "type": "color", "id": "border", "label": "Çizgi", "default": "#e5e7eb" },
+    { "type": "color", "id": "button_bg", "label": "Buton arka plan", "default": "#111827" },
+    { "type": "color", "id": "button_text", "label": "Buton yazı", "default": "#ffffff" }
+  ],
+  "presets": [{ "name": "İletişim Formu" }]
 }
 {% endschema %}`;
 
@@ -1956,6 +2147,7 @@ export const FORMULA_LIBRARY_SECTIONS: { type: string; content: string }[] = [
   { type: "before-after", content: FORMULA_BEFORE_AFTER },
   { type: "recently-viewed", content: FORMULA_RECENTLY_VIEWED },
   { type: "related-products", content: FORMULA_RELATED_PRODUCTS },
+  { type: "contact-form", content: FORMULA_CONTACT_FORM },
 ];
 
 // `--color-*`/`--font-*` sözleşmesi `minimalSections.ts`'teki ile birebir aynı
@@ -2268,7 +2460,19 @@ export const FORMULA_LIBRARY_SECTIONS_CSS = `
 @media (max-width: 900px) { .formula-multirow__row, .formula-multirow__row--reverse { grid-template-columns: 1fr; padding: 32px 20px; text-align: center; } .formula-multirow__row--reverse .formula-multirow__media { order: 0; } .formula-multirow__body { max-width: none; margin-left: auto; margin-right: auto; } }
 
 /* Öncesi/Sonrası (2026-08-20) — clip-path tabanlı, native range input ile
-   sürüklenir (bkz. formulaTheme.ts'in yorumu, kalıcı script YOK). */
+   sürüklenir (bkz. formulaTheme.ts'in yorumu, kalıcı script YOK).
+   2026-08-23 — 20.08-revizeler.md madde 1: "buglı, çalışmıyor" raporunun
+   KÖK NEDENİ gerçek bir tarayıcıda (Playwright, mouse.down+move+up ile
+   GERÇEK sürükleme simülasyonu) bulundu: ::-webkit-slider-thumb'ın
+   width/height'i track'le AYNI (100%/100%) yapılmıştı — "her yerden
+   sürüklenebilsin" niyetiyle, ama Chromium'da thumb track'le TAM aynı
+   boyuttayken sürükleme matematiği BOZULUYOR: sağa sürüklemek değeri 0'a
+   (beklenenin TERSİ) düşürüyordu. Klavye (Home/End) doğru çalıştığı için
+   önceki "yapısal var mı" testleri (input[type=range] var mı) bunu hiç
+   yakalayamamıştı. Fix DOĞRULANDI: thumb küçük/normal boyuta (28px)
+   çekilince (aynı invisible-thumb + tüm alanı kaplayan invisible TRACK
+   deseni korunarak) sürükleme GERÇEKTEN çalışıyor — 85% pozisyona sürükleme
+   artık 85% civarı bir değer veriyor, 0 değil. */
 .formula-before-after { padding: 64px 40px; }
 .formula-ba { position: relative; max-width: 720px; margin: 0 auto; border-radius: 18px; overflow: hidden; background: var(--color-surface); }
 .formula-ba__layer { position: absolute; inset: 0; }
@@ -2279,25 +2483,34 @@ export const FORMULA_LIBRARY_SECTIONS_CSS = `
 .formula-ba__tag--before { left: 14px; }
 .formula-ba__tag--after { right: 14px; }
 .formula-ba__range { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: ew-resize; appearance: none; -webkit-appearance: none; }
-.formula-ba__range::-webkit-slider-thumb { -webkit-appearance: none; width: 100%; height: 100%; }
+.formula-ba__range::-webkit-slider-thumb { -webkit-appearance: none; width: 28px; height: 28px; }
+.formula-ba__range::-moz-range-thumb { border: 0; width: 28px; height: 28px; }
+.formula-ba__range::-moz-range-track { background: transparent; border: 0; }
 @media (max-width: 700px) { .formula-before-after { padding: 44px 20px; } }
 
 /* Son Bakılanlar (2026-08-20) — grid boşken JS section'ı gizler (bkz.
    cartRuntimeClient.ts), bu yüzden burada boş-durum CSS'i gerekmiyor. */
 .formula-recently-viewed { padding: 64px 40px; }
-.formula-recently-viewed__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 20px; }
+.formula-recently-viewed__grid { display: grid; grid-template-columns: repeat(var(--formula-recently-viewed-cols, 4), minmax(0,1fr)); gap: 20px; }
 .formula-recently-viewed__card { text-decoration: none; color: var(--color-text); display: block; }
 .formula-recently-viewed__media { position: relative; aspect-ratio: 1; border-radius: 12px; overflow: hidden; background: var(--color-surface); margin-bottom: 10px; }
 .formula-recently-viewed__media img { width: 100%; height: 100%; object-fit: cover; }
 .formula-recently-viewed__placeholder { width: 100%; height: 100%; background: linear-gradient(160deg, var(--color-border), var(--color-surface)); }
 .formula-recently-viewed__name { font-size: 13px; font-weight: 600; margin: 0 0 4px; }
 .formula-recently-viewed__price { font-size: 12px; color: var(--color-muted); margin: 0; }
+.formula-recently-viewed__card--bordered .formula-recently-viewed__media { border: 1px solid var(--color-border); }
+.formula-recently-viewed__card--shadow .formula-recently-viewed__media { box-shadow: 0 18px 44px rgba(15,23,42,.10); }
+@media (max-width: 700px) { .formula-recently-viewed__grid { grid-template-columns: repeat(2, minmax(0,1fr)); } }
 @media (max-width: 700px) { .formula-recently-viewed { padding: 44px 20px; } }
 
 /* İlgili Ürünler (2026-08-20) — .formula-product-card/__grid deseni
-   FORMULA_BESTSELLERS ile PAYLAŞILIYOR, ayrı bir kart stili gerekmedi. */
+   FORMULA_BESTSELLERS ile PAYLAŞILIYOR.
+   2026-08-23 — 20.08-revizeler.md madde 5: sütun sayısı artık section'ın
+   inline style'ında yazan --formula-related-cols'a göre (bkz. şablonun
+   kendisi), kart stili (bordered/shadow) .formula-product-card--*
+   modifier'larıyla (aşağıda, .formula-product-card'ın hemen altında). */
 .formula-related { padding: 64px 40px; }
-.formula-related__grid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 24px; }
+.formula-related__grid { display: grid; grid-template-columns: repeat(var(--formula-related-cols, 4), minmax(0,1fr)); gap: 24px; }
 @media (max-width: 900px) { .formula-related__grid { grid-template-columns: repeat(2, minmax(0,1fr)); } .formula-related { padding: 44px 20px; } }
 
 /* 404 (2026-08-19) */
@@ -2377,6 +2590,17 @@ a { color: inherit; }
 .formula-nav__logo { font-family: var(--font-heading); font-weight: 700; font-size: 18px; letter-spacing: -0.01em; text-decoration: none; color: var(--color-secondary); }
 .formula-nav__links { display: flex; gap: 26px; }
 .formula-nav__links a { font-size: 13px; text-decoration: none; color: var(--color-text); text-transform: uppercase; letter-spacing: 0.04em; }
+/* 2026-08-23 — 20.08-revizeler.md madde 2: alt menü (dropdown) — sadece
+   "submenu_item" alt bloğu OLAN menu_item'lar için sarmalayıcı div basılıyor
+   (bkz. şablon), diğerleri eski düz <a>'ya dokunulmadan devam ediyor. */
+.formula-nav__item { position: relative; }
+.formula-nav__item > a { display: block; }
+.formula-nav__submenu { position: absolute; top: 100%; left: 0; min-width: 180px; padding: 10px 0; margin-top: 8px; background: var(--color-background); border: 1px solid var(--color-border); border-radius: 10px; box-shadow: 0 18px 44px rgba(15,23,42,.10); display: flex; flex-direction: column; opacity: 0; visibility: hidden; transform: translateY(4px); transition: opacity .15s, transform .15s; z-index: 20; }
+.formula-nav__item:hover .formula-nav__submenu, .formula-nav__item:focus-within .formula-nav__submenu { opacity: 1; visibility: visible; transform: translateY(0); }
+.formula-nav__submenu a { padding: 8px 16px; text-transform: none; letter-spacing: normal; font-size: 13px; }
+.formula-nav__submenu a:hover { color: var(--color-primary); }
+.formula-nav--centered .formula-nav__submenu { left: 50%; transform: translate(-50%, 4px); }
+.formula-nav--centered .formula-nav__item:hover .formula-nav__submenu, .formula-nav--centered .formula-nav__item:focus-within .formula-nav__submenu { transform: translate(-50%, 0); }
 .formula-nav__actions { display: flex; align-items: center; gap: 16px; font-size: 13px; }
 /* 2026-08-19 — GERÇEK bug: position:relative kullanıcı raporuyla
    ("sepet rozeti ikondan uzak/kötü konumlanmış") bulundu — sepet sayacı
@@ -2420,8 +2644,13 @@ a { color: inherit; }
 .formula-product-card__placeholder { width: 100%; height: 100%; background: linear-gradient(160deg, var(--color-border), var(--color-surface)); }
 .formula-badge { position: absolute; top: 10px; left: 10px; background: var(--color-accent); color: #fff; font-size: 10px; text-transform: uppercase; letter-spacing: 0.04em; padding: 4px 9px; border-radius: 999px; }
 .formula-product-card__active { font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--color-primary); margin: 0 0 4px; }
+.formula-product-card__vendor { font-size: 11px; color: var(--color-muted); margin: 0 0 2px; text-transform: uppercase; letter-spacing: 0.04em; }
 .formula-product-card__name { font-size: 14px; font-weight: 500; margin: 0 0 4px; }
 .formula-product-card__price { font-size: 14px; color: var(--color-muted); margin: 0; }
+/* 2026-08-23 — 20.08-revizeler.md madde 5: kart stili varyantları
+   (related-products/recently-viewed'in yeni "Kart Stili" ayarı). */
+.formula-product-card--bordered .formula-product-card__media { border: 1px solid var(--color-border); }
+.formula-product-card--shadow .formula-product-card__media { box-shadow: 0 18px 44px rgba(15,23,42,.10); }
 @media (max-width: 900px) { .formula-bestsellers__grid { grid-template-columns: repeat(2, minmax(0,1fr)); } .formula-bestsellers, .formula-concerns, .formula-philosophy { padding: 44px 20px; } }
 
 /* Concerns */
@@ -2449,6 +2678,15 @@ a { color: inherit; }
 .formula-footer__links { display: flex; gap: 22px; flex-wrap: wrap; }
 .formula-footer__links a { font-size: 13px; text-decoration: none; color: var(--color-text); }
 .formula-footer__copy { font-size: 12px; color: var(--color-muted); border-top: 1px solid var(--color-border); padding-top: 20px; margin: 0; }
+/* 2026-08-23 — 20.08-revizeler.md madde 2: sosyal ikonlar + çok sütunlu footer */
+.formula-footer__social { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 14px; }
+.formula-footer__social a { font-size: 12px; font-weight: 600; text-decoration: none; color: var(--color-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+.formula-footer__social a:hover { color: var(--color-text); }
+.formula-footer__column { min-width: 140px; }
+.formula-footer__column-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 12px; color: var(--color-text); }
+.formula-footer__column-links { display: flex; flex-direction: column; gap: 10px; }
+.formula-footer__column-links a { font-size: 13px; text-decoration: none; color: var(--color-muted); }
+.formula-footer__column-links a:hover { color: var(--color-text); }
 ` + FORMULA_LIBRARY_SECTIONS_CSS;
 
 /** `assets/theme.css`, sadece proje OLUŞTURULURKEN scaffold edilir
