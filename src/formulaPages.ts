@@ -218,6 +218,7 @@ export function buildFormulaPages(): ThemePageSpec[] {
   const accountDashboardBlocks: EipgBlock[] = [
     block("account-tab-orders", "tab", "Sekme", { key: "orders", label: "Siparişlerim" }),
     block("account-tab-addresses", "tab", "Sekme", { key: "addresses", label: "Adreslerim" }),
+    block("account-tab-favorites", "tab", "Sekme", { key: "favorites", label: "Favorilerim" }),
     block("account-tab-loyalty", "tab", "Sekme", { key: "loyalty", label: "Sadakat Puanlarım" }),
   ];
 
@@ -466,6 +467,36 @@ export function patchStaleAccountPages(pages: EiPage[], templateId: string | nul
     if (sections === page.sections) return page;
     const sectionOrder = sections.map((s) => s.id);
     return { ...page, sections, sectionOrder, dirty: true };
+  });
+  return changed ? nextPages : pages;
+}
+
+/**
+ * 2026-08-23 — Faz 3 (Favoriler) frontend'i: `account-dashboard` section'ının
+ * blok şemasına yeni bir "favorites" tab seçeneği eklendi (bkz.
+ * `universalPages.ts`). `patchStaleAccountPages`'in eklediği (veya yeni
+ * scaffold'daki) mevcut section instance'ları bu blok'u İÇERMİYOR — yeni
+ * eklenen bir schema seçeneği var olan projelerin donmuş `blocks` dizisine
+ * geriye dönük yansımaz. Aynı desen: sadece EKSİKSE ekle (idempotent), var
+ * olan tab sırası/etiketleri değişmez.
+ */
+export function patchMissingFavoritesTab(pages: EiPage[], templateId: string | null | undefined): EiPage[] {
+  if (templateId !== "formula") return pages;
+  let changed = false;
+  const nextPages = pages.map((page) => {
+    if (page.slug !== "account") return page;
+    const sections = page.sections.map((section) => {
+      if (section.type !== "account-dashboard") return section;
+      const hasFavoritesTab = section.blocks.some((b) => b.type === "tab" && b.settings?.key === "favorites");
+      if (hasFavoritesTab) return section;
+      changed = true;
+      return {
+        ...section,
+        blocks: [...section.blocks, block(`block-${crypto.randomUUID().slice(0, 8)}`, "tab", "Sekme", { key: "favorites", label: "Favorilerim" })],
+      };
+    });
+    if (sections === page.sections) return page;
+    return { ...page, sections, dirty: true };
   });
   return changed ? nextPages : pages;
 }
