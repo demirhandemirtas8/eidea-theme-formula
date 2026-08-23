@@ -2077,14 +2077,54 @@ export const FORMULA_CONTACT_FORM = `<section data-section-id="{{ section.id }}"
     {% if section.settings.eyebrow != blank %}<p style="font-size:12px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:{{ section.settings.accent | default: '#2563eb' }};margin:0 0 10px">{{ section.settings.eyebrow | escape }}</p>{% endif %}
     <h2 style="font-size:clamp(24px,4vw,34px);font-weight:900;letter-spacing:-.03em;margin:0 0 12px;color:{{ section.settings.text | default: '#0f172a' }}">{{ section.settings.title | default: "Bize Ulaşın" | escape }}</h2>
     {% if section.settings.subtitle != blank %}<p style="font-size:15px;line-height:1.7;color:{{ section.settings.muted | default: '#64748b' }};margin:0 0 28px">{{ section.settings.subtitle | escape }}</p>{% endif %}
-    <form data-eidea-contact-form style="display:grid;gap:12px;text-align:left">
+    <form data-eidea-contact-form data-success-message="{{ section.settings.success_message | default: 'Mesajın alındı, en kısa sürede dönüş yapacağız.' | escape }}" style="display:grid;gap:12px;text-align:left">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
         <label style="display:grid;gap:6px;font-size:13px;font-weight:700;color:{{ section.settings.text | default: '#0f172a' }}"><span>Ad Soyad</span><input name="name" required style="height:46px;border-radius:10px;border:1px solid {{ section.settings.border | default: '#e5e7eb' }};padding:0 14px"></label>
         <label style="display:grid;gap:6px;font-size:13px;font-weight:700;color:{{ section.settings.text | default: '#0f172a' }}"><span>E-posta</span><input type="email" name="email" required style="height:46px;border-radius:10px;border:1px solid {{ section.settings.border | default: '#e5e7eb' }};padding:0 14px"></label>
       </div>
-      {% if section.settings.show_phone %}<label style="display:grid;gap:6px;font-size:13px;font-weight:700;color:{{ section.settings.text | default: '#0f172a' }}"><span>Telefon (ops.)</span><input name="phone" style="height:46px;border-radius:10px;border:1px solid {{ section.settings.border | default: '#e5e7eb' }};padding:0 14px"></label>{% endif %}
+      {% if section.settings.show_phone %}<label style="display:grid;gap:6px;font-size:13px;font-weight:700;color:{{ section.settings.text | default: '#0f172a' }}"><span>Telefon (ops.)</span><input name="phone" type="tel" inputmode="numeric" pattern="[0-9]*" placeholder="05XX XXX XX XX" data-eidea-phone-field style="height:46px;border-radius:10px;border:1px solid {{ section.settings.border | default: '#e5e7eb' }};padding:0 14px"></label>{% endif %}
       {% if section.settings.show_subject %}<label style="display:grid;gap:6px;font-size:13px;font-weight:700;color:{{ section.settings.text | default: '#0f172a' }}"><span>Konu (ops.)</span><input name="subject" style="height:46px;border-radius:10px;border:1px solid {{ section.settings.border | default: '#e5e7eb' }};padding:0 14px"></label>{% endif %}
       <label style="display:grid;gap:6px;font-size:13px;font-weight:700;color:{{ section.settings.text | default: '#0f172a' }}"><span>Mesajın</span><textarea name="message" required rows="5" style="border-radius:10px;border:1px solid {{ section.settings.border | default: '#e5e7eb' }};padding:12px 14px;font-family:inherit;resize:vertical"></textarea></label>
+      {%- comment -%}
+        2026-08-23 — kullanıcı isteği: Studio'dan mağaza sahibi formu
+        istediği kadar özel soruyla genişletebilsin (kısa metin/uzun metin/
+        çoktan seçmeli/dosya). Her "question" block'u kendi tipine göre
+        farklı bir alan basıyor, cevaplar q_{{ block.id }} adıyla submit
+        edilip messages.ts'te answers JSON'a toplanıyor.
+      {%- endcomment -%}
+      {% for block in section.blocks %}
+        {% if block.type == "question" %}
+          <label data-eidea-contact-question data-question-id="{{ block.id }}" data-question-type="{{ block.settings.field_type | default: 'short_text' }}" data-question-label="{{ block.settings.label | default: 'Soru' | escape }}" style="display:grid;gap:6px;font-size:13px;font-weight:700;color:{{ section.settings.text | default: '#0f172a' }}">
+            <span>{{ block.settings.label | default: "Soru" | escape }}{% if block.settings.required %} *{% endif %}</span>
+            {% if block.settings.field_type == "long_text" %}
+              <textarea name="q_{{ block.id }}" rows="4" {% if block.settings.required %}required{% endif %} style="border-radius:10px;border:1px solid {{ section.settings.border | default: '#e5e7eb' }};padding:12px 14px;font-family:inherit;resize:vertical"></textarea>
+            {% elsif block.settings.field_type == "choice" %}
+              {%- comment -%}
+                ei-engine'in for tag'i "in X" kısmını evaluatePipeline DEĞİL
+                evaluateExpression ile çözüyor — filtre (| split) desteklemiyor,
+                sessizce boş array'e düşüyor (gerçek render testiyle bulundu,
+                reference-ei-engine-liquid-scoping-gotchas'a eklenmeli). Bu
+                yüzden önce assign ile ayrı bir adımda bölünüyor (assign
+                evaluatePipeline kullanıyor, filtre destekliyor) — bu assign
+                bir for İÇİNDE DEĞİL, sadece if/elsif içinde (if kendi scope
+                kopyası oluşturmuyor, aynı obje referansını paylaşıyor), o
+                yüzden hemen altındaki for tarafından güvenle okunabiliyor.
+              {%- endcomment -%}
+              {% assign contact_choice_options = block.settings.options | split: "," %}
+              <select name="q_{{ block.id }}" {% if block.settings.required %}required{% endif %} style="height:46px;border-radius:10px;border:1px solid {{ section.settings.border | default: '#e5e7eb' }};padding:0 14px;background:#fff">
+                <option value="">Seçiniz</option>
+                {% for opt in contact_choice_options %}
+                  {% if opt != blank %}<option value="{{ opt | strip | escape }}">{{ opt | strip | escape }}</option>{% endif %}
+                {% endfor %}
+              </select>
+            {% elsif block.settings.field_type == "file" %}
+              <input type="file" name="q_{{ block.id }}" data-eidea-contact-file {% if block.settings.required %}required{% endif %} style="border-radius:10px;border:1px dashed {{ section.settings.border | default: '#e5e7eb' }};padding:12px 14px">
+            {% else %}
+              <input type="text" name="q_{{ block.id }}" {% if block.settings.required %}required{% endif %} style="height:46px;border-radius:10px;border:1px solid {{ section.settings.border | default: '#e5e7eb' }};padding:0 14px">
+            {% endif %}
+          </label>
+        {% endif %}
+      {% endfor %}
       <button type="submit" style="justify-self:start;height:48px;padding:0 28px;border:0;border-radius:10px;background:{{ section.settings.button_bg | default: '#111827' }};color:{{ section.settings.button_text | default: '#ffffff' }};font-weight:800;cursor:pointer">{{ section.settings.submit_label | default: "Gönder" | escape }}</button>
       <p data-eidea-contact-form-message style="font-size:13px;margin:0"></p>
     </form>
@@ -2100,6 +2140,7 @@ export const FORMULA_CONTACT_FORM = `<section data-section-id="{{ section.id }}"
     { "type": "text", "id": "title", "label": "Başlık", "default": "Bize Ulaşın" },
     { "type": "textarea", "id": "subtitle", "label": "Alt metin", "default": "Sorularınız için formu doldurun, en kısa sürede dönüş yapalım." },
     { "type": "text", "id": "submit_label", "label": "Gönder buton metni", "default": "Gönder" },
+    { "type": "text", "id": "success_message", "label": "Başarı mesajı", "default": "Mesajın alındı, en kısa sürede dönüş yapacağız." },
     { "type": "checkbox", "id": "show_phone", "label": "Telefon alanı göster", "default": true },
     { "type": "checkbox", "id": "show_subject", "label": "Konu alanı göster", "default": false },
     { "type": "header", "content": "Layout" },
@@ -2113,6 +2154,25 @@ export const FORMULA_CONTACT_FORM = `<section data-section-id="{{ section.id }}"
     { "type": "color", "id": "border", "label": "Çizgi", "default": "#e5e7eb" },
     { "type": "color", "id": "button_bg", "label": "Buton arka plan", "default": "#111827" },
     { "type": "color", "id": "button_text", "label": "Buton yazı", "default": "#ffffff" }
+  ],
+  "blocks": [
+    {
+      "type": "question",
+      "name": "Özel Soru",
+      "settings": [
+        { "type": "text", "id": "label", "label": "Soru metni", "default": "Soru" },
+        { "type": "select", "id": "field_type", "label": "Cevap tipi", "default": "short_text",
+          "options": [
+            { "label": "Kısa metin", "value": "short_text" },
+            { "label": "Uzun metin", "value": "long_text" },
+            { "label": "Çoktan seçmeli", "value": "choice" },
+            { "label": "Dosya", "value": "file" }
+          ]
+        },
+        { "type": "text", "id": "options", "label": "Seçenekler (virgülle ayır, sadece Çoktan seçmeli için)", "default": "Seçenek 1, Seçenek 2" },
+        { "type": "checkbox", "id": "required", "label": "Zorunlu", "default": false }
+      ]
+    }
   ],
   "presets": [{ "name": "İletişim Formu" }]
 }
