@@ -2544,6 +2544,81 @@ export const FORMULA_SHOPPABLE_IMAGE = `<section class="formula-shoppable-image{
 }
 {% endschema %}`;
 
+/** Kullanıcı İçerikleri / Sosyal Kanıt Galerisi (2026-08-24, Codex'in
+ * `ugc-gallery` önerisi) — müşteri fotoğrafı + isim + alıntı + puan +
+ * opsiyonel ürün linki. `shoppable-image` ile AYNI mimari karar: gerçek
+ * connector ürün bağlantısı yok, manuel ad/URL. Puan (rating) `{% for i in
+ * (1..5) %}` gibi bir range-literal döngüsü GEREKTİRMİYOR — bilinçli tercih,
+ * `reference-ei-engine-liquid-scoping-gotchas`'ın belgelediği "range literal
+ * desteklenmiyor" riskini taşımamak için yıldız dizisi doğrudan bir
+ * `select`'in seçenek DEĞERİ olarak veriliyor (ör. value: "★★★★☆"). */
+export const FORMULA_UGC_GALLERY = `<section class="formula-ugc{% if section.settings.layout_style == 'masonry' %} formula-ugc--masonry{% elsif section.settings.layout_style == 'scroll' %} formula-ugc--scroll{% endif %}${revealAnimationClass()}">
+  {% if section.settings.title != blank %}<div class="formula-section-head"><h2>{{ section.settings.title | escape }}</h2></div>{% endif %}
+  <div class="formula-ugc__grid">
+    {% for block in section.blocks %}
+      {% if block.type == "post" %}
+        <div class="formula-ugc-card">
+          {% if block.settings.image != blank %}<div class="formula-ugc-card__media"><img src="{{ block.settings.image | img_url: '600x' }}" alt="{{ block.settings.author | escape }}" loading="lazy" /></div>{% endif %}
+          <div class="formula-ugc-card__body">
+            {% if block.settings.rating != blank %}<p class="formula-ugc-card__rating">{{ block.settings.rating }}</p>{% endif %}
+            {% if block.settings.caption != blank %}<p class="formula-ugc-card__caption">{{ block.settings.caption | escape }}</p>{% endif %}
+            {% if block.settings.author != blank %}<p class="formula-ugc-card__author">{{ block.settings.author | escape }}</p>{% endif %}
+            {% if block.settings.product_name != blank %}<a class="formula-ugc-card__product" href="{{ block.settings.product_url | default: '#' | escape }}">{{ block.settings.product_name | escape }} →</a>{% endif %}
+          </div>
+        </div>
+      {% endif %}
+    {% endfor %}
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Formula Kullanıcı İçerikleri",
+  "settings": [
+    { "type": "text", "id": "title", "label": "Başlık (ops.)", "default": "Müşterilerimizden" },
+    { "type": "select", "id": "layout_style", "label": "Yerleşim", "default": "grid",
+      "options": [
+        { "label": "Grid", "value": "grid" },
+        { "label": "Masonry (kesişik yükseklik)", "value": "masonry" },
+        { "label": "Yatay akış", "value": "scroll" }
+      ]
+    },${revealAnimationSchemaField()}
+  ],
+  "blocks": [
+    {
+      "type": "post",
+      "name": "Gönderi",
+      "settings": [
+        { "type": "image_picker", "id": "image", "label": "Fotoğraf" },
+        { "type": "text", "id": "author", "label": "Kullanıcı Adı", "default": "@kullanici" },
+        { "type": "textarea", "id": "caption", "label": "Kısa Metin (ops.)", "default": "" },
+        { "type": "select", "id": "rating", "label": "Puan (ops.)", "default": "",
+          "options": [
+            { "label": "Gösterme", "value": "" },
+            { "label": "★☆☆☆☆", "value": "★☆☆☆☆" },
+            { "label": "★★☆☆☆", "value": "★★☆☆☆" },
+            { "label": "★★★☆☆", "value": "★★★☆☆" },
+            { "label": "★★★★☆", "value": "★★★★☆" },
+            { "label": "★★★★★", "value": "★★★★★" }
+          ]
+        },
+        { "type": "text", "id": "product_name", "label": "İlgili Ürün Adı (ops.)", "default": "" },
+        { "type": "url", "id": "product_url", "label": "İlgili Ürün URL", "default": "#" }
+      ]
+    }
+  ],
+  "max_blocks": 12,
+  "presets": [{
+    "name": "Formula Kullanıcı İçerikleri",
+    "blocks": [
+      { "type": "post", "settings": { "author": "@elifyy", "caption": "Rutinimin vazgeçilmezi oldu.", "rating": "★★★★★", "product_name": "Niasinamid Serum" } },
+      { "type": "post", "settings": { "author": "@denizk", "caption": "Cildim çok daha dengeli.", "rating": "★★★★☆" } },
+      { "type": "post", "settings": { "author": "@asli.t", "caption": "Kokusunu ve dokusunu çok sevdim.", "rating": "★★★★★" } }
+    ]
+  }]
+}
+{% endschema %}`;
+
 /** `StudioShell.tsx`'in `addCatalog`'una `templateId === "formula"` iken
  * eklenen sabit kütüphane girdileri — sayfada henüz var olmasalar bile her
  * zaman teklif edilirler (bkz. `custom-html`'in aynı deseni). */
@@ -2551,6 +2626,7 @@ export const FORMULA_LIBRARY_SECTIONS: { type: string; content: string }[] = [
   { type: "announcement-bar", content: FORMULA_ANNOUNCEMENT_BAR },
   { type: "countdown-promotion", content: FORMULA_COUNTDOWN_PROMOTION },
   { type: "shoppable-image", content: FORMULA_SHOPPABLE_IMAGE },
+  { type: "ugc-gallery", content: FORMULA_UGC_GALLERY },
   { type: "brand-marquee", content: FORMULA_MARQUEE },
   { type: "brands-slider", content: FORMULA_BRANDS_SLIDER },
   { type: "collection-list", content: FORMULA_COLLECTION_LIST },
@@ -3043,6 +3119,24 @@ export const FORMULA_LIBRARY_SECTIONS_CSS = `
 .formula-shoppable-image__card-price { font-size: 13px; color: #6b7280; margin: 0 0 6px; }
 .formula-shoppable-image__card-link { font-size: 12px; font-weight: 600; color: var(--color-primary); text-decoration: underline; text-underline-offset: 2px; }
 @media (max-width: 600px) { .formula-shoppable-image { padding: 40px 20px; } .formula-shoppable-image__card { width: 168px; } }
+
+/* Kullanıcı İçerikleri Galerisi (2026-08-24) */
+.formula-ugc { padding: 64px 40px; }
+.formula-ugc__grid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 20px; }
+.formula-ugc-card { border-radius: 10px; overflow: hidden; background: var(--color-surface); border: 1px solid var(--color-border); }
+.formula-ugc-card__media { aspect-ratio: 1 / 1; overflow: hidden; }
+.formula-ugc-card__media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.formula-ugc-card__body { padding: 14px; }
+.formula-ugc-card__rating { color: #f59e0b; font-size: 13px; margin: 0 0 6px; letter-spacing: 1px; }
+.formula-ugc-card__caption { font-size: 13px; color: var(--color-text); line-height: 1.5; margin: 0 0 8px; }
+.formula-ugc-card__author { font-size: 12px; color: var(--color-muted); margin: 0; }
+.formula-ugc-card__product { display: inline-block; margin-top: 8px; font-size: 12px; font-weight: 600; color: var(--color-primary); text-decoration: underline; text-underline-offset: 2px; }
+.formula-ugc--masonry .formula-ugc__grid { display: block; column-count: 4; column-gap: 20px; }
+.formula-ugc--masonry .formula-ugc-card { break-inside: avoid; margin-bottom: 20px; }
+.formula-ugc--scroll .formula-ugc__grid { display: flex; overflow-x: auto; scroll-snap-type: x proximity; gap: 16px; padding-bottom: 8px; grid-template-columns: none; }
+.formula-ugc--scroll .formula-ugc-card { flex: 0 0 min(72vw, 240px); scroll-snap-align: start; }
+@media (max-width: 900px) { .formula-ugc__grid { grid-template-columns: repeat(2, minmax(0,1fr)); } .formula-ugc--masonry .formula-ugc__grid { column-count: 2; } }
+@media (max-width: 600px) { .formula-ugc { padding: 40px 20px; } }
 
 /* 404 (2026-08-19) */
 .formula-404 { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 96px 24px; min-height: 50vh; }
