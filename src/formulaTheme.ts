@@ -291,7 +291,7 @@ export const FORMULA_NAV_HEADER_CENTERED = `<section class="formula-nav formula-
 export const FORMULA_HERO = `<section class="formula-hero{% if section.settings.layout_style == 'overlay' %} formula-hero--overlay{% elsif section.settings.layout_style == 'centered' %} formula-hero--centered{% endif %}{% if section.settings.image_side == 'right' and section.settings.layout_style == 'split' %} formula-hero--reverse{% endif %}${revealAnimationClass()}" style="{% if section.settings.bg_color != blank %}background:{{ section.settings.bg_color }};{% endif %}{% if section.settings.min_height %}min-height:{{ section.settings.min_height }}px;{% endif %}">
   <div class="formula-hero__copy" style="{% if section.settings.text_color != blank %}color:{{ section.settings.text_color }};{% endif %}text-align:{{ section.settings.content_align | default: 'left' }}">
     {% if section.settings.eyebrow != blank %}<p class="formula-hero__eyebrow"{% if section.settings.eyebrow_color != blank %} style="color:{{ section.settings.eyebrow_color }}"{% endif %}>{{ section.settings.eyebrow | escape }}</p>{% endif %}
-    <h1 class="formula-hero__title">{{ section.settings.title | default: "Cildin ne istiyorsa, sadece o." | escape }}</h1>
+    {% if section.settings.title != blank %}<h1 class="formula-hero__title">{{ section.settings.title | escape }}</h1>{% endif %}
     {% if section.settings.subtitle != blank %}<p class="formula-hero__sub">{{ section.settings.subtitle | escape }}</p>{% endif %}
     <div class="formula-hero__actions" style="justify-content:{% if section.settings.content_align == 'center' %}center{% else %}flex-start{% endif %}">
       {% if section.settings.cta_label != blank %}<a class="formula-btn formula-btn--solid" href="{{ section.settings.cta_url | default: '/products' | escape }}">{{ section.settings.cta_label | escape }}</a>{% endif %}
@@ -360,7 +360,7 @@ export const FORMULA_HERO = `<section class="formula-hero{% if section.settings.
 {% endschema %}`;
 
 export const FORMULA_QUIZ_BANNER = `<section class="formula-quiz${revealAnimationClass()}">
-  <p class="formula-quiz__title">{{ section.settings.title | default: "Cildin için hangi aktifler işe yarar, bilmiyor musun?" | escape }}</p>
+  {% if section.settings.title != blank %}<p class="formula-quiz__title">{{ section.settings.title | escape }}</p>{% endif %}
   <p class="formula-quiz__sub">{{ section.settings.subtitle | default: "60 saniyelik analizle sana özel 3 ürünlük rutini çıkaralım." | escape }}</p>
   <a class="formula-btn formula-btn--invert" href="{{ section.settings.url | default: '/pages/cilt-analizi' | escape }}">{{ section.settings.cta_label | default: "Analize Başla" | escape }}</a>
 </section>
@@ -380,7 +380,7 @@ export const FORMULA_QUIZ_BANNER = `<section class="formula-quiz${revealAnimatio
 
 export const FORMULA_BESTSELLERS = `<section class="formula-bestsellers{% if section.settings.layout_style == 'carousel' %} formula-bestsellers--carousel{% elsif section.settings.layout_style == 'featured' %} formula-bestsellers--featured{% endif %}${revealAnimationClass()}">
   <div class="formula-section-head">
-    <h2>{{ section.settings.title | default: "Çok satanlar" | escape }}</h2>
+    {% if section.settings.title != blank %}<h2>{{ section.settings.title | escape }}</h2>{% endif %}
     <a href="{{ section.settings.view_all_url | default: '/products' | escape }}">{{ section.settings.view_all_label | default: "Tümünü Gör" | escape }}</a>
   </div>
   <div class="formula-bestsellers__grid">
@@ -442,7 +442,7 @@ export const FORMULA_BESTSELLERS = `<section class="formula-bestsellers{% if sec
 
 export const FORMULA_CONCERNS = `<section class="formula-concerns${revealAnimationClass()}">
   <div class="formula-section-head">
-    <h2>{{ section.settings.title | default: "Kaygına göre keşfet" | escape }}</h2>
+    {% if section.settings.title != blank %}<h2>{{ section.settings.title | escape }}</h2>{% endif %}
   </div>
   <div class="formula-concerns__grid">
     {% for block in section.blocks %}
@@ -760,7 +760,7 @@ export const FORMULA_MARQUEE = `<section class="formula-marquee${revealAnimation
  */
 export const FORMULA_COLLECTION_LIST = `<section class="formula-collection-list formula-collection-list--hover-{{ section.settings.hover_effect | default: 'zoom' }}{% if section.settings.layout_style == 'carousel' %} formula-collection-list--carousel{% elsif section.settings.layout_style == 'circles' %} formula-collection-list--circles{% endif %}${revealAnimationClass()}">
   <div class="formula-section-head">
-    <h2>{{ section.settings.title | default: "Koleksiyonlar" | escape }}</h2>
+    {% if section.settings.title != blank %}<h2>{{ section.settings.title | escape }}</h2>{% endif %}
   </div>
   <div class="formula-collection-list__grid" style="--formula-collection-cols: {{ section.settings.columns | default: 3 }}; --formula-collection-gap: {{ section.settings.gap | default: 24 }}px">
     {% for block in section.blocks %}
@@ -923,7 +923,7 @@ export const FORMULA_GENERAL_SHOWCASE = `<section class="formula-showcase{% if s
   </div>
   <div class="formula-showcase__copy">
     {% if section.settings.eyebrow != blank %}<p class="formula-showcase__eyebrow">{{ section.settings.eyebrow | escape }}</p>{% endif %}
-    <h2 class="formula-showcase__title">{{ section.settings.title | default: "Yeni Sezon" | escape }}</h2>
+    {% if section.settings.title != blank %}<h2 class="formula-showcase__title">{{ section.settings.title | escape }}</h2>{% endif %}
     {% if section.settings.subtitle != blank %}<p class="formula-showcase__sub">{{ section.settings.subtitle | escape }}</p>{% endif %}
     {% if section.settings.cta_url != blank %}
       <a class="formula-btn formula-btn--solid" href="{{ section.settings.cta_url | escape }}">{{ section.settings.cta_label | default: "Keşfet" | escape }}</a>
@@ -969,7 +969,7 @@ export const FORMULA_GENERAL_SHOWCASE = `<section class="formula-showcase{% if s
 
 export const FORMULA_FAQ = `<section class="formula-faq{% if section.settings.layout_style == 'two_columns' %} formula-faq--two-columns{% elsif section.settings.layout_style == 'categorized' %} formula-faq--categorized{% endif %}${revealAnimationClass()}">
   <div class="formula-section-head">
-    <h2>{{ section.settings.title | default: "Sıkça Sorulan Sorular" | escape }}</h2>
+    {% if section.settings.title != blank %}<h2>{{ section.settings.title | escape }}</h2>{% endif %}
   </div>
   {% if section.settings.layout_style == 'categorized' %}
     <div class="formula-faq__tabs" role="tablist" aria-label="SSS kategorileri">
@@ -1460,7 +1460,7 @@ export const FORMULA_404 = `<section class="formula-404${revealAnimationClass()}
  */
 export const FORMULA_INGREDIENT_SPOTLIGHT = `<section class="formula-ingredients${revealAnimationClass()}">
   <div class="formula-section-head">
-    <h2>{{ section.settings.title | default: "Aktif İçerikler" | escape }}</h2>
+    {% if section.settings.title != blank %}<h2>{{ section.settings.title | escape }}</h2>{% endif %}
   </div>
   {% if section.settings.subtitle != blank %}<p class="formula-ingredients__sub">{{ section.settings.subtitle | escape }}</p>{% endif %}
   <div class="formula-ingredients__grid">
@@ -1513,7 +1513,7 @@ export const FORMULA_INGREDIENT_SPOTLIGHT = `<section class="formula-ingredients
 
 export const FORMULA_ROUTINE_STEPS = `<section class="formula-routine${revealAnimationClass()}">
   <div class="formula-section-head">
-    <h2>{{ section.settings.title | default: "Günlük Rutin" | escape }}</h2>
+    {% if section.settings.title != blank %}<h2>{{ section.settings.title | escape }}</h2>{% endif %}
   </div>
   {% if section.settings.subtitle != blank %}<p class="formula-routine__sub">{{ section.settings.subtitle | escape }}</p>{% endif %}
   <div class="formula-routine__list">
@@ -1652,7 +1652,7 @@ export const FORMULA_VIDEO_BANNER = `<section class="formula-video${revealAnimat
 
 export const FORMULA_JOURNAL_TEASER = `<section class="formula-journal{% if section.settings.layout_style == 'featured' %} formula-journal--featured{% elsif section.settings.layout_style == 'carousel' %} formula-journal--carousel{% elsif section.settings.layout_style == 'compact' %} formula-journal--compact{% endif %}${revealAnimationClass()}">
   <div class="formula-section-head">
-    <h2>{{ section.settings.title | default: "Dergi" | escape }}</h2>
+    {% if section.settings.title != blank %}<h2>{{ section.settings.title | escape }}</h2>{% endif %}
     <a href="{{ section.settings.view_all_url | default: '/' | escape }}">{{ section.settings.view_all_label | default: "Tümünü Oku" | escape }}</a>
   </div>
   <div class="formula-journal__grid">
@@ -1718,7 +1718,7 @@ export const FORMULA_JOURNAL_TEASER = `<section class="formula-journal{% if sect
 
 export const FORMULA_COMPARISON_TABLE = `<section class="formula-compare{% if section.settings.layout_style == 'cards' %} formula-compare--cards{% endif %}${revealAnimationClass()}">
   <div class="formula-section-head">
-    <h2>{{ section.settings.title | default: "Ürünleri Karşılaştır" | escape }}</h2>
+    {% if section.settings.title != blank %}<h2>{{ section.settings.title | escape }}</h2>{% endif %}
   </div>
   {% if section.settings.layout_style == 'cards' %}
     <div class="formula-compare__cards">
@@ -1847,7 +1847,7 @@ export const FORMULA_COMPARISON_TABLE = `<section class="formula-compare{% if se
 export const FORMULA_NEWSLETTER = `<section class="formula-newsletter${revealAnimationClass()}">
   <div class="formula-newsletter__inner">
     {% if section.settings.eyebrow != blank %}<p class="formula-newsletter__eyebrow">{{ section.settings.eyebrow | escape }}</p>{% endif %}
-    <h2 class="formula-newsletter__title">{{ section.settings.title | default: "Bültenimize Katıl" | escape }}</h2>
+    {% if section.settings.title != blank %}<h2 class="formula-newsletter__title">{{ section.settings.title | escape }}</h2>{% endif %}
     {% if section.settings.subtitle != blank %}<p class="formula-newsletter__sub">{{ section.settings.subtitle | escape }}</p>{% endif %}
     <form class="formula-newsletter__form" data-formula-newsletter-form>
       <input class="formula-newsletter__input" type="email" name="email" placeholder="{{ section.settings.placeholder | default: 'E-posta adresin' | escape }}" required />
@@ -1894,7 +1894,7 @@ export const FORMULA_NEWSLETTER = `<section class="formula-newsletter${revealAni
  * scoping-gotchas`'a eklenmesi gereken yeni bir motor tuzağı. */
 export const FORMULA_COLLAGE = `<section class="formula-collage${revealAnimationClass()}">
   <div class="formula-section-head">
-    <h2>{{ section.settings.title | default: "Koleksiyon" | escape }}</h2>
+    {% if section.settings.title != blank %}<h2>{{ section.settings.title | escape }}</h2>{% endif %}
   </div>
   <div class="formula-collage__grid">
     {% for block in section.blocks %}
@@ -2026,7 +2026,7 @@ export const FORMULA_MULTIROW = `<section class="formula-multirow${revealAnimati
  * input olduğu için ekstra bir şey gerekmedi. */
 export const FORMULA_BEFORE_AFTER = `<section class="formula-before-after${revealAnimationClass()}">
   <div class="formula-section-head">
-    <h2>{{ section.settings.title | default: "Öncesi / Sonrası" | escape }}</h2>
+    {% if section.settings.title != blank %}<h2>{{ section.settings.title | escape }}</h2>{% endif %}
   </div>
   <div class="formula-ba" style="--ba-pos: 50%; aspect-ratio: {{ section.settings.aspect_ratio | default: '4/3' }}">
     <div class="formula-ba__layer formula-ba__layer--after">
@@ -2084,7 +2084,7 @@ export const FORMULA_BEFORE_AFTER = `<section class="formula-before-after${revea
  */
 export const FORMULA_RECENTLY_VIEWED = `<section class="formula-recently-viewed{% if section.settings.layout_style == 'carousel' %} formula-recently-viewed--carousel{% elsif section.settings.layout_style == 'compact' %} formula-recently-viewed--compact{% endif %}${revealAnimationClass()}" style="--formula-recently-viewed-cols: {{ section.settings.columns | default: 4 }}">
   <div class="formula-section-head">
-    <h2>{{ section.settings.title | default: "Son Baktıkların" | escape }}</h2>
+    {% if section.settings.title != blank %}<h2>{{ section.settings.title | escape }}</h2>{% endif %}
   </div>
   <div class="formula-recently-viewed__grid" data-formula-recently-viewed data-limit="{{ section.settings.limit | default: 4 }}" data-card-style="{{ section.settings.card_style | default: 'minimal' }}"></div>
 </section>
@@ -2130,7 +2130,7 @@ export const FORMULA_RECENTLY_VIEWED = `<section class="formula-recently-viewed{
 export const FORMULA_RELATED_PRODUCTS = `<section{% if recommendations.performed %} class="formula-related{% if section.settings.layout_style == 'carousel' %} formula-related--carousel{% elsif section.settings.layout_style == 'compact' %} formula-related--compact{% endif %}${revealAnimationClass()}" style="--formula-related-cols: {{ section.settings.columns | default: 4 }}"{% endif %}>
   {% if recommendations.performed %}
   <div class="formula-section-head">
-    <h2>{{ section.settings.title | default: "Bunları da Beğenebilirsin" | escape }}</h2>
+    {% if section.settings.title != blank %}<h2>{{ section.settings.title | escape }}</h2>{% endif %}
   </div>
   <div class="formula-related__grid">
     {% for p in recommendations.products %}
@@ -2195,7 +2195,7 @@ export const FORMULA_RELATED_PRODUCTS = `<section{% if recommendations.performed
 export const FORMULA_CONTACT_FORM = `<section data-section-id="{{ section.id }}" style="padding:64px 24px;background:{{ section.settings.bg | default: '#ffffff' }}">
   <div style="width:min(100%,{{ section.settings.max_width | default: 640 }}px);margin:0 auto;text-align:{{ section.settings.align | default: 'left' }}">
     {% if section.settings.eyebrow != blank %}<p style="font-size:12px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:{{ section.settings.accent | default: '#2563eb' }};margin:0 0 10px">{{ section.settings.eyebrow | escape }}</p>{% endif %}
-    <h2 style="font-size:clamp(24px,4vw,34px);font-weight:900;letter-spacing:-.03em;margin:0 0 12px;color:{{ section.settings.text | default: '#0f172a' }}">{{ section.settings.title | default: "Bize Ulaşın" | escape }}</h2>
+    {% if section.settings.title != blank %}<h2 style="font-size:clamp(24px,4vw,34px);font-weight:900;letter-spacing:-.03em;margin:0 0 12px;color:{{ section.settings.text | default: '#0f172a' }}">{{ section.settings.title | escape }}</h2>{% endif %}
     {% if section.settings.subtitle != blank %}<p style="font-size:15px;line-height:1.7;color:{{ section.settings.muted | default: '#64748b' }};margin:0 0 28px">{{ section.settings.subtitle | escape }}</p>{% endif %}
     <form data-eidea-contact-form data-success-message="{{ section.settings.success_message | default: 'Mesajın alındı, en kısa sürede dönüş yapacağız.' | escape }}" style="display:grid;gap:12px;text-align:left">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
@@ -2311,7 +2311,7 @@ export const FORMULA_CONTACT_FORM = `<section data-section-id="{{ section.id }}"
  */
 export const FORMULA_BRANDS_SLIDER = `<section class="formula-brands-slider${revealAnimationClass()}">
   <div class="formula-section-head">
-    <h2>{{ section.settings.title | default: "Markalarımız" | escape }}</h2>
+    {% if section.settings.title != blank %}<h2>{{ section.settings.title | escape }}</h2>{% endif %}
     {% if section.settings.show_arrows %}
       <div class="formula-brands-slider__nav">
         <button type="button" aria-label="Önceki" onclick="this.closest('.formula-brands-slider').querySelector('.formula-brands-slider__track').scrollBy({left:-240,behavior:'smooth'})">←</button>
@@ -2439,12 +2439,118 @@ export const FORMULA_COUNTDOWN_PROMOTION = `<section class="formula-countdown${r
 }
 {% endschema %}`;
 
+/** Alışveriş Yapılabilir Görsel (2026-08-24, Codex'in `shoppable-image`
+ * önerisi) — büyük bir görsel üzerinde ürün noktaları (hotspot), tıklanınca
+ * küçük bir kart (görsel/ad/fiyat/rozet/link) açılır. `comparison-table`'ın
+ * "product" bloğuyla AYNI desen: gerçek connector ürün bağlantısı YOK
+ * (ei-engine'in `{"type":"product"}` şema alanı var ama renderer'da
+ * (`ecommerceContext.ts`) hiç çözümlenmiyor — araştırıldı, kullanılmadı),
+ * bunun yerine manuel ad/fiyat/URL alanları. Kart açma/kapama TEK
+ * self-contained script (`document.currentScript.closest`, FAQ/countdown'la
+ * aynı desen), dışarı tıklayınca kapanır. */
+export const FORMULA_SHOPPABLE_IMAGE = `<section class="formula-shoppable-image{% if section.settings.image_ratio == 'portrait' %} formula-shoppable-image--portrait{% elsif section.settings.image_ratio == 'landscape' %} formula-shoppable-image--landscape{% endif %}${revealAnimationClass()}" style="{% if section.settings.bg_color != blank %}background:{{ section.settings.bg_color }};{% endif %}{% if section.settings.text_color != blank %}color:{{ section.settings.text_color }};{% endif %}">
+  {% if section.settings.title != blank %}<h2 class="formula-shoppable-image__title">{{ section.settings.title | escape }}</h2>{% endif %}
+  <div class="formula-shoppable-image__stage">
+    {% if section.settings.image != blank %}
+      <img class="formula-shoppable-image__media" src="{{ section.settings.image | img_url: '1400x' }}" alt="{{ section.settings.title | default: '' | escape }}" loading="lazy" />
+    {% endif %}
+    {% for block in section.blocks %}
+      {% if block.type == "hotspot" %}
+        <button type="button" class="formula-shoppable-image__dot" style="left:{{ block.settings.position_x | default: 50 }}%;top:{{ block.settings.position_y | default: 50 }}%;{% if section.settings.dot_color != blank %}background:{{ section.settings.dot_color }};{% endif %}" data-hotspot-toggle aria-expanded="false" aria-label="{{ block.settings.name | escape }}">
+          <span class="formula-shoppable-image__dot-pulse" style="{% if section.settings.dot_color != blank %}background:{{ section.settings.dot_color }};{% endif %}"></span>
+        </button>
+        <div class="formula-shoppable-image__card" style="left:{{ block.settings.position_x | default: 50 }}%;top:{{ block.settings.position_y | default: 50 }}%" data-hotspot-card hidden>
+          {% if block.settings.image != blank %}<img class="formula-shoppable-image__card-media" src="{{ block.settings.image | img_url: '160x' }}" alt="{{ block.settings.name | escape }}" loading="lazy" />{% endif %}
+          <div class="formula-shoppable-image__card-body">
+            {% if block.settings.badge != blank %}<span class="formula-shoppable-image__card-badge">{{ block.settings.badge | escape }}</span>{% endif %}
+            <p class="formula-shoppable-image__card-name">{{ block.settings.name | escape }}</p>
+            {% if block.settings.price != blank %}<p class="formula-shoppable-image__card-price">{{ block.settings.price | escape }}</p>{% endif %}
+            <a class="formula-shoppable-image__card-link" href="{{ block.settings.url | default: '#' | escape }}">Ürünü Gör</a>
+          </div>
+        </div>
+      {% endif %}
+    {% endfor %}
+  </div>
+  <script>
+    (function () {
+      var root = document.currentScript.closest(".formula-shoppable-image");
+      if (!root) return;
+      var stage = root.querySelector(".formula-shoppable-image__stage");
+      if (!stage) return;
+      var toggles = stage.querySelectorAll("[data-hotspot-toggle]");
+      function closeAll(except) {
+        toggles.forEach(function (btn) {
+          if (btn === except) return;
+          btn.setAttribute("aria-expanded", "false");
+          var card = btn.nextElementSibling;
+          if (card) card.hidden = true;
+        });
+      }
+      toggles.forEach(function (btn) {
+        btn.addEventListener("click", function (e) {
+          e.stopPropagation();
+          var card = btn.nextElementSibling;
+          var isOpen = btn.getAttribute("aria-expanded") === "true";
+          closeAll(btn);
+          if (card) card.hidden = isOpen;
+          btn.setAttribute("aria-expanded", isOpen ? "false" : "true");
+        });
+      });
+      document.addEventListener("click", function () { closeAll(null); });
+    })();
+  </script>
+</section>
+
+{% schema %}
+{
+  "name": "Formula Alışveriş Yapılabilir Görsel",
+  "settings": [
+    { "type": "text", "id": "title", "label": "Başlık (ops.)", "default": "Görünümü Satın Al" },
+    { "type": "image_picker", "id": "image", "label": "Ana Görsel" },
+    { "type": "select", "id": "image_ratio", "label": "Görsel Oranı", "default": "square",
+      "options": [
+        { "label": "Kare", "value": "square" },
+        { "label": "Dikey (portre)", "value": "portrait" },
+        { "label": "Yatay", "value": "landscape" }
+      ]
+    },
+    { "type": "color", "id": "bg_color", "label": "Arka plan (boş = tema rengi)" },
+    { "type": "color", "id": "text_color", "label": "Metin rengi (boş = tema rengi)" },
+    { "type": "color", "id": "dot_color", "label": "Nokta rengi", "default": "#111111" },${revealAnimationSchemaField()}
+  ],
+  "blocks": [
+    {
+      "type": "hotspot",
+      "name": "Ürün Noktası",
+      "settings": [
+        { "type": "range", "id": "position_x", "label": "Yatay Konum (%)", "min": 0, "max": 100, "step": 1, "default": 50 },
+        { "type": "range", "id": "position_y", "label": "Dikey Konum (%)", "min": 0, "max": 100, "step": 1, "default": 50 },
+        { "type": "image_picker", "id": "image", "label": "Küçük Görsel (ops.)" },
+        { "type": "text", "id": "name", "label": "Ürün Adı", "default": "Ürün Adı" },
+        { "type": "text", "id": "price", "label": "Fiyat", "default": "₺349" },
+        { "type": "text", "id": "badge", "label": "Rozet (ops.)", "default": "" },
+        { "type": "url", "id": "url", "label": "Ürün URL", "default": "#" }
+      ]
+    }
+  ],
+  "max_blocks": 8,
+  "presets": [{
+    "name": "Formula Alışveriş Yapılabilir Görsel",
+    "blocks": [
+      { "type": "hotspot", "settings": { "position_x": 32, "position_y": 45, "name": "Niasinamid Serum", "price": "₺349" } },
+      { "type": "hotspot", "settings": { "position_x": 68, "position_y": 62, "name": "Nazik Temizleyici Jel", "price": "₺249" } }
+    ]
+  }]
+}
+{% endschema %}`;
+
 /** `StudioShell.tsx`'in `addCatalog`'una `templateId === "formula"` iken
  * eklenen sabit kütüphane girdileri — sayfada henüz var olmasalar bile her
  * zaman teklif edilirler (bkz. `custom-html`'in aynı deseni). */
 export const FORMULA_LIBRARY_SECTIONS: { type: string; content: string }[] = [
   { type: "announcement-bar", content: FORMULA_ANNOUNCEMENT_BAR },
   { type: "countdown-promotion", content: FORMULA_COUNTDOWN_PROMOTION },
+  { type: "shoppable-image", content: FORMULA_SHOPPABLE_IMAGE },
   { type: "brand-marquee", content: FORMULA_MARQUEE },
   { type: "brands-slider", content: FORMULA_BRANDS_SLIDER },
   { type: "collection-list", content: FORMULA_COLLECTION_LIST },
@@ -2918,6 +3024,25 @@ export const FORMULA_LIBRARY_SECTIONS_CSS = `
 .formula-countdown__unit label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; opacity: .7; margin-top: 6px; }
 .formula-countdown__expired { font-size: 15px; margin: 0 0 20px; }
 @media (max-width: 600px) { .formula-countdown { padding: 36px 20px; } .formula-countdown__timer { gap: 10px; } .formula-countdown__unit { min-width: 46px; } }
+
+/* Alışveriş Yapılabilir Görsel (2026-08-24) */
+.formula-shoppable-image { padding: 64px 40px; }
+.formula-shoppable-image__title { font-family: var(--font-heading); font-size: clamp(22px, 2.8vw, 32px); font-weight: 600; text-align: center; margin: 0 0 28px; }
+.formula-shoppable-image__stage { position: relative; max-width: 720px; margin: 0 auto; aspect-ratio: 1 / 1; border-radius: 12px; overflow: hidden; background: var(--color-surface); }
+.formula-shoppable-image--portrait .formula-shoppable-image__stage { aspect-ratio: 3 / 4; }
+.formula-shoppable-image--landscape .formula-shoppable-image__stage { aspect-ratio: 16 / 9; max-width: 960px; }
+.formula-shoppable-image__media { width: 100%; height: 100%; object-fit: cover; display: block; }
+.formula-shoppable-image__dot { position: absolute; width: 26px; height: 26px; border-radius: 50%; background: #111111; border: 3px solid #ffffff; box-shadow: 0 1px 6px rgba(0,0,0,.35); transform: translate(-50%, -50%); cursor: pointer; padding: 0; z-index: 2; }
+.formula-shoppable-image__dot-pulse { position: absolute; inset: -6px; border-radius: 50%; background: #111111; opacity: .45; animation: formula-shoppable-pulse 2.2s ease-out infinite; }
+@keyframes formula-shoppable-pulse { 0% { transform: scale(.6); opacity: .5; } 100% { transform: scale(1.7); opacity: 0; } }
+.formula-shoppable-image__card { position: absolute; transform: translate(-50%, calc(-100% - 20px)); width: 200px; background: #ffffff; border-radius: 10px; box-shadow: 0 8px 28px rgba(0,0,0,.18); padding: 12px; display: flex; gap: 10px; z-index: 3; text-align: left; }
+.formula-shoppable-image__card-media { width: 52px; height: 52px; border-radius: 6px; object-fit: cover; flex-shrink: 0; }
+.formula-shoppable-image__card-body { min-width: 0; }
+.formula-shoppable-image__card-badge { display: inline-block; font-size: 10px; text-transform: uppercase; letter-spacing: 0.04em; background: var(--color-primary); color: #ffffff; padding: 2px 6px; border-radius: 4px; margin-bottom: 4px; }
+.formula-shoppable-image__card-name { font-size: 13px; font-weight: 600; color: #111111; margin: 0 0 2px; line-height: 1.3; }
+.formula-shoppable-image__card-price { font-size: 13px; color: #6b7280; margin: 0 0 6px; }
+.formula-shoppable-image__card-link { font-size: 12px; font-weight: 600; color: var(--color-primary); text-decoration: underline; text-underline-offset: 2px; }
+@media (max-width: 600px) { .formula-shoppable-image { padding: 40px 20px; } .formula-shoppable-image__card { width: 168px; } }
 
 /* 404 (2026-08-19) */
 .formula-404 { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 96px 24px; min-height: 50vh; }
