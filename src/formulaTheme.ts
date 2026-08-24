@@ -123,15 +123,16 @@ export const FORMULA_NAV_HEADER = `<section class="formula-nav">
       {% endif %}
     {% endfor %}
   </nav>
-  <div class="formula-nav__actions">
+  <div class="formula-nav__actions" data-nav-actions>
     {% if section.settings.quiz_label != blank %}<a href="{{ section.settings.quiz_url | default: '/pages/cilt-analizi' | escape }}" class="formula-nav__quiz">{{ section.settings.quiz_label | escape }}</a>{% endif %}
     {%- if section.settings.search_style == 'expandable' -%}
       <div class="formula-nav__search" data-nav-search>
         <button type="button" class="formula-nav__search-toggle" aria-label="Ara" aria-expanded="false" data-nav-search-toggle>${navIconSvg("search")}</button>
         <form action="/search" method="get" class="formula-nav__search-form" data-nav-search-form>
-          <input type="search" name="q" placeholder="Ara…" class="formula-nav__search-input" aria-label="Arama sorgusu" />
+          <input type="search" name="q" placeholder="{{ section.settings.search_placeholder | default: 'Ara…' | escape }}" class="formula-nav__search-input" aria-label="Arama sorgusu" autocomplete="off" />
           <button type="button" class="formula-nav__search-close" aria-label="Aramayı kapat" data-nav-search-close>&times;</button>
         </form>
+        <div class="formula-nav__search-results" data-nav-search-results></div>
       </div>
     {%- else -%}
       <a href="/search" aria-label="Ara">${navIconSvg("search")}</a>
@@ -146,25 +147,80 @@ export const FORMULA_NAV_HEADER = `<section class="formula-nav">
       if (!root) return;
       var wrap = root.querySelector("[data-nav-search]");
       if (!wrap) return;
+      var actionsRow = root.querySelector("[data-nav-actions]");
       var toggle = wrap.querySelector("[data-nav-search-toggle]");
       var form = wrap.querySelector("[data-nav-search-form]");
       var input = form ? form.querySelector("input") : null;
       var closeBtn = wrap.querySelector("[data-nav-search-close]");
+      var resultsEl = wrap.querySelector("[data-nav-search-results]");
       if (!toggle || !form) return;
+      function escapeHtml(s) {
+        return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+          return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+        });
+      }
+      function formatMoney(n) {
+        try { return new Intl.NumberFormat("tr-TR", { style: "currency", currency: "TRY" }).format(Number(n) || 0); }
+        catch (e) { return "₺" + n; }
+      }
+      function clearResults() {
+        if (resultsEl) resultsEl.innerHTML = "";
+        wrap.classList.remove("has-results");
+      }
       function close() {
         wrap.classList.remove("is-open");
+        if (actionsRow) actionsRow.classList.remove("formula-nav__actions--search-open");
         toggle.setAttribute("aria-expanded", "false");
+        clearResults();
       }
       toggle.addEventListener("click", function (e) {
         e.stopPropagation();
         var open = wrap.classList.toggle("is-open");
+        if (actionsRow) actionsRow.classList.toggle("formula-nav__actions--search-open", open);
         toggle.setAttribute("aria-expanded", open ? "true" : "false");
-        if (open && input) input.focus();
+        if (open) { if (input) input.focus(); } else { clearResults(); }
       });
       if (closeBtn) closeBtn.addEventListener("click", function (e) { e.stopPropagation(); e.preventDefault(); close(); });
       form.addEventListener("click", function (e) { e.stopPropagation(); });
       document.addEventListener("click", close);
       document.addEventListener("keydown", function (e) { if (e.key === "Escape") close(); });
+      // Eşzamanlı (typeahead) arama — kullanıcı raporu: "altta değil, header
+      // içinde ve eşzamanlı arasın". /search.json GERÇEK ürün sonuçlarını
+      // (title/description substring, main-search ile AYNI sorgu) döner.
+      var debounceTimer = null;
+      var lastRequestedQuery = "";
+      if (input && resultsEl) {
+        input.addEventListener("input", function () {
+          var q = input.value.trim();
+          if (debounceTimer) clearTimeout(debounceTimer);
+          if (q.length < 2) { clearResults(); return; }
+          debounceTimer = setTimeout(function () {
+            lastRequestedQuery = q;
+            fetch("/search.json?q=" + encodeURIComponent(q))
+              .then(function (r) { return r.json(); })
+              .then(function (data) {
+                if (lastRequestedQuery !== q || input.value.trim() !== q) return;
+                var items = data.results || [];
+                if (!items.length) {
+                  resultsEl.innerHTML = '<div class="formula-nav__search-empty">Sonuç bulunamadı</div>';
+                  wrap.classList.add("has-results");
+                  return;
+                }
+                resultsEl.innerHTML = items.map(function (p) {
+                  var imgUrl = escapeHtml(p.featured_image || "");
+                  var img = imgUrl
+                    ? '<img src="' + imgUrl + '" alt="" />'
+                    : '<span class="formula-nav__search-result-placeholder"></span>';
+                  return '<a class="formula-nav__search-result" href="' + escapeHtml(p.url || "#") + '">' + img +
+                    '<span><span class="formula-nav__search-result-title">' + escapeHtml(p.title) + '</span>' +
+                    '<span class="formula-nav__search-result-price">' + formatMoney(p.price) + '</span></span></a>';
+                }).join("");
+                wrap.classList.add("has-results");
+              })
+              .catch(function () { /* sessiz — Enter'la tam /search sayfasına her zaman gidilebilir */ });
+          }, 250);
+        });
+      }
     })();
   </script>
   {%- endif -%}
@@ -190,9 +246,11 @@ export const FORMULA_NAV_HEADER = `<section class="formula-nav">
       "info": "Arama ikonuna tıklanınca ne olacağını belirler.",
       "options": [
         { "label": "Arama Sayfasına Git", "value": "icon" },
-        { "label": "Açılır Kutu (Header İçinde)", "value": "expandable" }
+        { "label": "Açılır Kutu (Header İçinde, eşzamanlı sonuçlarla)", "value": "expandable" }
       ]
-    }
+    },
+    { "type": "text", "id": "search_placeholder", "label": "Arama Kutusu Yer Tutucu Metni", "default": "Ara…",
+      "info": "Yalnızca Açılır Kutu seçiliyken görünür." }
   ],
   "blocks": [
     {
@@ -268,15 +326,16 @@ export const FORMULA_NAV_HEADER_CENTERED = `<section class="formula-nav formula-
       {% endif %}
     {% endfor %}
   </nav>
-  <div class="formula-nav__actions">
+  <div class="formula-nav__actions" data-nav-actions>
     {% if section.settings.quiz_label != blank %}<a href="{{ section.settings.quiz_url | default: '/pages/cilt-analizi' | escape }}" class="formula-nav__quiz">{{ section.settings.quiz_label | escape }}</a>{% endif %}
     {%- if section.settings.search_style == 'expandable' -%}
       <div class="formula-nav__search" data-nav-search>
         <button type="button" class="formula-nav__search-toggle" aria-label="Ara" aria-expanded="false" data-nav-search-toggle>${navIconSvg("search")}</button>
         <form action="/search" method="get" class="formula-nav__search-form" data-nav-search-form>
-          <input type="search" name="q" placeholder="Ara…" class="formula-nav__search-input" aria-label="Arama sorgusu" />
+          <input type="search" name="q" placeholder="{{ section.settings.search_placeholder | default: 'Ara…' | escape }}" class="formula-nav__search-input" aria-label="Arama sorgusu" autocomplete="off" />
           <button type="button" class="formula-nav__search-close" aria-label="Aramayı kapat" data-nav-search-close>&times;</button>
         </form>
+        <div class="formula-nav__search-results" data-nav-search-results></div>
       </div>
     {%- else -%}
       <a href="/search" aria-label="Ara">${navIconSvg("search")}</a>
@@ -291,25 +350,80 @@ export const FORMULA_NAV_HEADER_CENTERED = `<section class="formula-nav formula-
       if (!root) return;
       var wrap = root.querySelector("[data-nav-search]");
       if (!wrap) return;
+      var actionsRow = root.querySelector("[data-nav-actions]");
       var toggle = wrap.querySelector("[data-nav-search-toggle]");
       var form = wrap.querySelector("[data-nav-search-form]");
       var input = form ? form.querySelector("input") : null;
       var closeBtn = wrap.querySelector("[data-nav-search-close]");
+      var resultsEl = wrap.querySelector("[data-nav-search-results]");
       if (!toggle || !form) return;
+      function escapeHtml(s) {
+        return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+          return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+        });
+      }
+      function formatMoney(n) {
+        try { return new Intl.NumberFormat("tr-TR", { style: "currency", currency: "TRY" }).format(Number(n) || 0); }
+        catch (e) { return "₺" + n; }
+      }
+      function clearResults() {
+        if (resultsEl) resultsEl.innerHTML = "";
+        wrap.classList.remove("has-results");
+      }
       function close() {
         wrap.classList.remove("is-open");
+        if (actionsRow) actionsRow.classList.remove("formula-nav__actions--search-open");
         toggle.setAttribute("aria-expanded", "false");
+        clearResults();
       }
       toggle.addEventListener("click", function (e) {
         e.stopPropagation();
         var open = wrap.classList.toggle("is-open");
+        if (actionsRow) actionsRow.classList.toggle("formula-nav__actions--search-open", open);
         toggle.setAttribute("aria-expanded", open ? "true" : "false");
-        if (open && input) input.focus();
+        if (open) { if (input) input.focus(); } else { clearResults(); }
       });
       if (closeBtn) closeBtn.addEventListener("click", function (e) { e.stopPropagation(); e.preventDefault(); close(); });
       form.addEventListener("click", function (e) { e.stopPropagation(); });
       document.addEventListener("click", close);
       document.addEventListener("keydown", function (e) { if (e.key === "Escape") close(); });
+      // Eşzamanlı (typeahead) arama — kullanıcı raporu: "altta değil, header
+      // içinde ve eşzamanlı arasın". /search.json GERÇEK ürün sonuçlarını
+      // (title/description substring, main-search ile AYNI sorgu) döner.
+      var debounceTimer = null;
+      var lastRequestedQuery = "";
+      if (input && resultsEl) {
+        input.addEventListener("input", function () {
+          var q = input.value.trim();
+          if (debounceTimer) clearTimeout(debounceTimer);
+          if (q.length < 2) { clearResults(); return; }
+          debounceTimer = setTimeout(function () {
+            lastRequestedQuery = q;
+            fetch("/search.json?q=" + encodeURIComponent(q))
+              .then(function (r) { return r.json(); })
+              .then(function (data) {
+                if (lastRequestedQuery !== q || input.value.trim() !== q) return;
+                var items = data.results || [];
+                if (!items.length) {
+                  resultsEl.innerHTML = '<div class="formula-nav__search-empty">Sonuç bulunamadı</div>';
+                  wrap.classList.add("has-results");
+                  return;
+                }
+                resultsEl.innerHTML = items.map(function (p) {
+                  var imgUrl = escapeHtml(p.featured_image || "");
+                  var img = imgUrl
+                    ? '<img src="' + imgUrl + '" alt="" />'
+                    : '<span class="formula-nav__search-result-placeholder"></span>';
+                  return '<a class="formula-nav__search-result" href="' + escapeHtml(p.url || "#") + '">' + img +
+                    '<span><span class="formula-nav__search-result-title">' + escapeHtml(p.title) + '</span>' +
+                    '<span class="formula-nav__search-result-price">' + formatMoney(p.price) + '</span></span></a>';
+                }).join("");
+                wrap.classList.add("has-results");
+              })
+              .catch(function () { /* sessiz — Enter'la tam /search sayfasına her zaman gidilebilir */ });
+          }, 250);
+        });
+      }
     })();
   </script>
   {%- endif -%}
@@ -335,9 +449,11 @@ export const FORMULA_NAV_HEADER_CENTERED = `<section class="formula-nav formula-
       "info": "Arama ikonuna tıklanınca ne olacağını belirler.",
       "options": [
         { "label": "Arama Sayfasına Git", "value": "icon" },
-        { "label": "Açılır Kutu (Header İçinde)", "value": "expandable" }
+        { "label": "Açılır Kutu (Header İçinde, eşzamanlı sonuçlarla)", "value": "expandable" }
       ]
-    }
+    },
+    { "type": "text", "id": "search_placeholder", "label": "Arama Kutusu Yer Tutucu Metni", "default": "Ara…",
+      "info": "Yalnızca Açılır Kutu seçiliyken görünür." }
   ],
   "blocks": [
     {
@@ -3580,17 +3696,29 @@ a { color: inherit; }
    referans alıp ikondan kopuk duruyordu. */
 .formula-nav__actions a { text-decoration: none; color: var(--color-text); display: flex; align-items: center; position: relative; }
 .formula-nav__actions a:hover { color: var(--color-primary); }
-/* Açılır arama kutusu (2026-08-24, "Arama Şekli" ayarı) — [[feedback-navbar-must-fit]]
-   sert kuralı gereği form her zaman position:absolute, nav'ın kendi
-   genişliğini/hizasını ASLA etkilemiyor, sadece üzerine bindiriliyor. */
+/* Açılır arama kutusu (2026-08-24, "Arama Şekli" ayarı) — kullanıcı raporu:
+   "header içinde olsun, altta açılmasın, eşzamanlı arama yapsın". Input
+   artık header'ın KENDİ satırında (position:absolute DEĞİL) genişliyor —
+   [[feedback-navbar-must-fit]] sert kuralı gereği taşma riskini önlemek
+   için açılınca kardeş ikonlar (hesap/sepet/quiz) GİZLENİYOR (bkz.
+   formula-nav__actions--search-open). Sadece SONUÇ listesi (kullanıcının
+   "altta açılmasın" dediği asıl input değil) position:absolute bindirme. */
 .formula-nav__search { position: relative; display: flex; align-items: center; }
-.formula-nav__search-toggle { background: none; border: none; cursor: pointer; padding: 0; display: flex; color: inherit; }
-.formula-nav__search-form { position: absolute; right: 0; top: calc(100% + 12px); width: 0; overflow: hidden; opacity: 0; pointer-events: none; display: flex; align-items: center; background: var(--color-background); border: 1px solid var(--color-border); border-radius: 10px; box-shadow: 0 18px 44px rgba(15,23,42,.12); transition: width .2s ease, opacity .2s ease; z-index: 30; }
-.formula-nav__search.is-open .formula-nav__search-form { width: 280px; opacity: 1; pointer-events: auto; padding: 4px; }
-.formula-nav__search-input { flex: 1; min-width: 0; box-sizing: border-box; border: none; outline: none; padding: 10px 12px; font-size: 14px; background: transparent; color: var(--color-text); }
-.formula-nav__search-close { flex-shrink: 0; background: none; border: none; cursor: pointer; font-size: 20px; line-height: 1; padding: 0 10px; color: var(--color-muted); }
+.formula-nav__search-toggle { background: none; border: none; cursor: pointer; padding: 0; display: flex; color: inherit; flex-shrink: 0; }
+.formula-nav__search-form { display: flex; align-items: center; width: 0; overflow: hidden; opacity: 0; transition: width .2s ease, opacity .2s ease; }
+.formula-nav__search.is-open .formula-nav__search-form { width: clamp(160px, 32vw, 240px); opacity: 1; margin-left: 8px; }
+.formula-nav__search-input { flex: 1; min-width: 0; box-sizing: border-box; border: 1px solid var(--color-border); border-radius: 999px; padding: 8px 14px; font-size: 13px; background: var(--color-surface); color: var(--color-text); }
+.formula-nav__search-close { flex-shrink: 0; background: none; border: none; cursor: pointer; font-size: 18px; line-height: 1; margin-left: 4px; color: var(--color-muted); }
 .formula-nav__search-close:hover { color: var(--color-text); }
-@media (max-width: 767.98px) { .formula-nav__search.is-open .formula-nav__search-form { position: fixed; left: 12px; right: 12px; top: 64px; width: auto; } }
+.formula-nav__actions--search-open > a { display: none; }
+.formula-nav__search-results { display: none; position: absolute; top: calc(100% + 10px); right: 0; width: min(300px, 88vw); max-height: 360px; overflow-y: auto; background: var(--color-background); border: 1px solid var(--color-border); border-radius: 10px; box-shadow: 0 18px 44px rgba(15,23,42,.12); z-index: 30; }
+.formula-nav__search.has-results .formula-nav__search-results { display: block; }
+.formula-nav__search-result { display: flex; align-items: center; gap: 10px; padding: 10px 12px; text-decoration: none; color: var(--color-text); border-bottom: 1px solid var(--color-border); }
+.formula-nav__search-result:last-child { border-bottom: none; }
+.formula-nav__search-result img, .formula-nav__search-result-placeholder { width: 40px; height: 40px; object-fit: cover; border-radius: 6px; background: var(--color-surface); flex-shrink: 0; display: block; }
+.formula-nav__search-result-title { display: block; font-size: 13px; }
+.formula-nav__search-result-price { display: block; font-size: 12px; color: var(--color-muted); margin-top: 2px; }
+.formula-nav__search-empty { padding: 14px; font-size: 13px; color: var(--color-muted); text-align: center; }
 .formula-nav__icon { width: 19px; height: 19px; display: block; }
 .formula-nav__quiz { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 999px; padding: 7px 14px; color: var(--color-primary) !important; font-weight: 500; }
 @media (max-width: 767.98px) { .formula-nav__links { display: none; } .formula-nav { padding: 14px 20px; } }
