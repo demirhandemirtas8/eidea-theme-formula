@@ -88,16 +88,45 @@ function revealAnimationClass(): string {
  * ağ isteği yok, `currentColor` ile mevcut link renginden miras alır.
  * `formula-nav__icon` sınıfı boyut/hizalamayı CSS'te tek yerden kontrol eder.
  */
-function navIconSvg(kind: "search" | "account" | "cart"): string {
+function navIconSvg(kind: "search" | "account" | "cart" | "close" | "heart" | "menu"): string {
   const paths: Record<typeof kind, string> = {
     search: `<circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/>`,
     account: `<circle cx="12" cy="8" r="4"/><path d="M4 20c0-4.4 3.6-7 8-7s8 2.6 8 7"/>`,
     cart: `<circle cx="9" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.5 3h2l2.4 12.3a2 2 0 0 0 2 1.7h8.2a2 2 0 0 0 2-1.6L21 8H6"/>`,
+    close: `<path d="M6 6l12 12M18 6L6 18"/>`,
+    heart: `<path d="M12 20.5s-7.5-4.6-10-9.3C.4 7.6 2.4 4 6 4c2 0 3.6 1.1 6 3.6C14.4 5.1 16 4 18 4c3.6 0 5.6 3.6 4 7.2-2.5 4.7-10 9.3-10 9.3Z"/>`,
+    menu: `<path d="M3 6h18M3 12h18M3 18h18"/>`,
   };
   return `<svg class="formula-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths[kind]}</svg>`;
 }
 
-export const FORMULA_NAV_HEADER = `<section class="formula-nav">
+/**
+ * 2026-08-24 — kullanıcı raporu: "footera eklenen sosyal medyalar ikonlu
+ * olsun" (önceden platform adı düz metin link olarak basılıyordu — ör.
+ * "INSTAGRAM"). Platform Liquid runtime'da (block.settings.platform) bilinen
+ * bir değer olduğu için TS seviyesinde tek bir SVG seçilemiyor — bunun yerine
+ * her platform için bir `{% when %}` dalı üreten bir Liquid case/when bloğu
+ * TS'te BİR KEZ inşa edilip section markup'ına gömülüyor.
+ */
+const FORMULA_SOCIAL_ICON_PATHS: Record<string, string> = {
+  Instagram: `<rect x="3" y="3" width="18" height="18" rx="5" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="17.3" cy="6.7" r="1.1" fill="currentColor"/>`,
+  Facebook: `<path d="M13.5 21v-7.6h2.6l.4-3h-3v-1.9c0-.9.2-1.5 1.5-1.5h1.6V4.2C15.9 4.1 15 4 14 4c-2.5 0-4.2 1.5-4.2 4.3v2.1H7.2v3h2.6V21h3.7Z" fill="currentColor"/>`,
+  TikTok: `<path d="M14.7 3c.3 2 1.7 3.5 3.6 3.8v2.5c-1.4 0-2.6-.4-3.6-1.1v6c0 3.1-2.5 5.4-5.5 5.2-2.8-.2-4.9-2.5-4.8-5.4.1-2.7 2.3-4.9 5.1-4.9.3 0 .5 0 .8.1v2.6a2.6 2.6 0 1 0 1.9 2.5V3h2.5Z" fill="currentColor"/>`,
+  YouTube: `<rect x="2.5" y="5.5" width="19" height="13" rx="3.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M10.3 9.6l5 2.4-5 2.4V9.6Z" fill="currentColor"/>`,
+  X: `<path d="M4 4l7 8.4L4.4 20H6.6l5.7-6.4L16.8 20H20l-7.4-8.9L19.8 4h-2.2l-5.2 5.9L8.3 4H4Z" fill="currentColor"/>`,
+  Pinterest: `<circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M9.5 19c.5-1.8 1.4-5.5 1.4-5.5m0 0c-.3-.6-.4-1.9.3-2.9.9-1.3 3-1 3.3.6.2 1-.4 2.3-1 3.1-.6.8.1 1.8 1 1.8 1.7 0 2.9-2.2 2.9-4.2 0-2.2-1.7-3.9-4.2-3.9-3 0-4.7 2.1-4.7 4.4 0 .8.3 1.6.7 2.1" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>`,
+  WhatsApp: `<path d="M12 3a9 9 0 0 0-7.8 13.4L3 21l4.7-1.2A9 9 0 1 0 12 3Zm5.2 12.7c-.2.6-1.2 1.1-1.7 1.2-.4.1-1 .1-1.6-.1-.4-.1-.9-.3-1.5-.6-2.7-1.2-4.4-3.9-4.5-4.1-.1-.2-1.1-1.4-1.1-2.7 0-1.3.7-1.9.9-2.1.2-.2.5-.3.6-.3h.5c.2 0 .4 0 .6.4.2.5.7 1.8.8 1.9.1.1.1.3 0 .5-.1.2-.2.3-.3.5-.2.2-.3.3-.5.5-.2.2-.3.4-.1.7.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.4 2.5 1.5.3.1.5.1.6-.1.2-.2.7-.8.9-1 .2-.3.4-.2.6-.1.2.1 1.5.7 1.8.8.3.1.4.2.5.3 0 .1 0 .6-.2 1.2Z" fill="currentColor"/>`,
+};
+const FORMULA_SOCIAL_ICON_FALLBACK = `<circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M9 12h6M12 9v6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>`;
+const FORMULA_SOCIAL_ICON_CASE =
+  `{% case block.settings.platform %}` +
+  Object.entries(FORMULA_SOCIAL_ICON_PATHS)
+    .map(([platform, path]) => `{% when "${platform}" %}<svg class="formula-footer__social-icon" viewBox="0 0 24 24" aria-hidden="true">${path}</svg>`)
+    .join("") +
+  `{% else %}<svg class="formula-footer__social-icon" viewBox="0 0 24 24" aria-hidden="true">${FORMULA_SOCIAL_ICON_FALLBACK}</svg>{% endcase %}`;
+
+export const FORMULA_NAV_HEADER = `<section class="formula-nav{% if section.settings.sticky_header %} formula-nav--sticky{% endif %}">
+  <button type="button" class="formula-nav__mobile-toggle" aria-label="Menü" aria-expanded="false" data-nav-mobile-toggle>${navIconSvg("menu")}</button>
   <a class="formula-nav__logo" href="/">
     {% if settings.logo != blank %}
       <img src="{{ settings.logo | img_url: '160x' }}" alt="{{ section.settings.logo_text | default: shop.name | escape }}" style="height:{{ settings.logo_width | default: 40 }}px;width:auto;display:block" />
@@ -123,37 +152,120 @@ export const FORMULA_NAV_HEADER = `<section class="formula-nav">
       {% endif %}
     {% endfor %}
   </nav>
+  {%- assign search_style = section.settings.search_style | default: 'icon' -%}
+  {%- if search_style == 'bar' -%}
+    <div class="formula-nav__search formula-nav__search--bar" data-nav-search data-search-mode="bar" style="--formula-search-width: {{ section.settings.search_box_width | default: 240 }}px" data-search-result-count="{{ section.settings.search_result_count | default: 5 }}" data-search-show-price="{{ section.settings.search_show_price | default: true }}">
+      <span class="formula-nav__search-bar-icon">${navIconSvg("search")}</span>
+      <input type="search" name="q" placeholder="{{ section.settings.search_placeholder | default: 'Ara…' | escape }}" class="formula-nav__search-input" aria-label="Arama sorgusu" autocomplete="off" />
+      <div class="formula-nav__search-results" data-nav-search-results></div>
+    </div>
+  {%- endif -%}
   <div class="formula-nav__actions" data-nav-actions>
     {% if section.settings.quiz_label != blank %}<a href="{{ section.settings.quiz_url | default: '/pages/cilt-analizi' | escape }}" class="formula-nav__quiz">{{ section.settings.quiz_label | escape }}</a>{% endif %}
-    {%- if section.settings.search_style == 'expandable' -%}
-      <div class="formula-nav__search" data-nav-search style="--formula-search-width: {{ section.settings.search_box_width | default: 240 }}px" data-search-result-count="{{ section.settings.search_result_count | default: 5 }}" data-search-show-price="{{ section.settings.search_show_price | default: true }}">
+    {%- if search_style == 'expandable' -%}
+      <div class="formula-nav__search" data-nav-search data-search-mode="expandable" style="--formula-search-width: {{ section.settings.search_box_width | default: 240 }}px" data-search-result-count="{{ section.settings.search_result_count | default: 5 }}" data-search-show-price="{{ section.settings.search_show_price | default: true }}">
         <button type="button" class="formula-nav__search-toggle" aria-label="Ara" aria-expanded="false" data-nav-search-toggle>${navIconSvg("search")}</button>
         <form action="/search" method="get" class="formula-nav__search-form" data-nav-search-form>
           <input type="search" name="q" placeholder="{{ section.settings.search_placeholder | default: 'Ara…' | escape }}" class="formula-nav__search-input" aria-label="Arama sorgusu" autocomplete="off" />
-          <button type="button" class="formula-nav__search-close" aria-label="Aramayı kapat" data-nav-search-close>&times;</button>
+          <button type="button" class="formula-nav__search-close" aria-label="Aramayı kapat" data-nav-search-close>${navIconSvg("close")}</button>
         </form>
         <div class="formula-nav__search-results" data-nav-search-results></div>
       </div>
+    {%- elsif search_style == 'modal' -%}
+      <button type="button" class="formula-nav__search-toggle" aria-label="Ara" aria-expanded="false" data-nav-search-modal-toggle>${navIconSvg("search")}</button>
+    {%- elsif search_style == 'bar' -%}
     {%- else -%}
       <a href="/search" aria-label="Ara">${navIconSvg("search")}</a>
     {%- endif -%}
+    {% if section.settings.show_wishlist %}<a href="/account#favorites" aria-label="Favorilerim">${navIconSvg("heart")}</a>{% endif %}
     <a href="/account" aria-label="Hesabım">${navIconSvg("account")}</a>
     <a href="/cart" aria-label="Sepet" data-cart-open-mode="{{ section.settings.cart_open_mode | default: 'page' }}">${navIconSvg("cart")}</a>
   </div>
-  {%- if section.settings.search_style == 'expandable' -%}
+  {%- if search_style == 'modal' -%}
+    <div class="formula-nav__search-modal-backdrop" data-nav-search-backdrop></div>
+    <div class="formula-nav__search formula-nav__search--modal" data-nav-search data-search-mode="modal" style="--formula-search-width: {{ section.settings.search_box_width | default: 240 }}px" data-search-result-count="{{ section.settings.search_result_count | default: 5 }}" data-search-show-price="{{ section.settings.search_show_price | default: true }}" aria-hidden="true">
+      <div class="formula-nav__search-modal-box">
+        <div class="formula-nav__search-modal-row">
+          <span class="formula-nav__search-modal-icon">${navIconSvg("search")}</span>
+          <input type="search" name="q" placeholder="{{ section.settings.search_placeholder | default: 'Ara…' | escape }}" class="formula-nav__search-input" aria-label="Arama sorgusu" autocomplete="off" />
+          <button type="button" class="formula-nav__search-close" aria-label="Aramayı kapat" data-nav-search-close>${navIconSvg("close")}</button>
+        </div>
+        <div class="formula-nav__search-results" data-nav-search-results></div>
+      </div>
+    </div>
+  {%- endif -%}
+  <div class="formula-nav__mobile-backdrop" data-nav-mobile-backdrop></div>
+  <div class="formula-nav__mobile-drawer" data-nav-mobile-drawer aria-hidden="true">
+    <div class="formula-nav__mobile-drawer-head">
+      <a class="formula-nav__logo" href="/">
+        {% if settings.logo != blank %}
+          <img src="{{ settings.logo | img_url: '120x' }}" alt="{{ section.settings.logo_text | default: shop.name | escape }}" style="height:32px;width:auto;display:block" />
+        {% else %}
+          {{ section.settings.logo_text | default: shop.name | escape }}
+        {% endif %}
+      </a>
+      <button type="button" class="formula-nav__search-close" aria-label="Menüyü kapat" data-nav-mobile-close>${navIconSvg("close")}</button>
+    </div>
+    <nav class="formula-nav__mobile-links">
+      {% for block in section.blocks %}
+        {% if block.type == "menu_item" %}
+          <a href="{{ block.settings.url | escape }}">{{ block.settings.label | escape }}</a>
+          {% for child in block.blocks %}
+            {% if child.type == "submenu_item" %}<a class="formula-nav__mobile-sublink" href="{{ child.settings.url | escape }}">{{ child.settings.label | escape }}</a>{% endif %}
+          {% endfor %}
+        {% endif %}
+      {% endfor %}
+    </nav>
+    <div class="formula-nav__mobile-drawer-foot">
+      {% if section.settings.show_wishlist %}<a href="/account#favorites">${navIconSvg("heart")}<span>Favorilerim</span></a>{% endif %}
+      <a href="/account">${navIconSvg("account")}<span>Hesabım</span></a>
+      <a href="/cart">${navIconSvg("cart")}<span>Sepetim</span></a>
+    </div>
+  </div>
+  <script>
+    (function () {
+      var navSection = document.currentScript.closest(".formula-nav");
+      if (!navSection) return;
+      var mToggle = navSection.querySelector("[data-nav-mobile-toggle]");
+      var mDrawer = navSection.querySelector("[data-nav-mobile-drawer]");
+      var mBackdrop = navSection.querySelector("[data-nav-mobile-backdrop]");
+      var mClose = navSection.querySelector("[data-nav-mobile-close]");
+      if (mToggle && mDrawer) {
+        var closeMenu = function () {
+          mDrawer.classList.remove("is-open");
+          mDrawer.setAttribute("aria-hidden", "true");
+          if (mBackdrop) mBackdrop.classList.remove("is-open");
+          mToggle.setAttribute("aria-expanded", "false");
+          document.body.classList.remove("formula-mobile-menu-open");
+        };
+        var openMenu = function () {
+          mDrawer.classList.add("is-open");
+          mDrawer.setAttribute("aria-hidden", "false");
+          if (mBackdrop) mBackdrop.classList.add("is-open");
+          mToggle.setAttribute("aria-expanded", "true");
+          document.body.classList.add("formula-mobile-menu-open");
+        };
+        mToggle.addEventListener("click", function (e) {
+          e.stopPropagation();
+          if (mDrawer.classList.contains("is-open")) { closeMenu(); } else { openMenu(); }
+        });
+        if (mClose) mClose.addEventListener("click", closeMenu);
+        if (mBackdrop) mBackdrop.addEventListener("click", closeMenu);
+        document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeMenu(); });
+      }
+    })();
+  </script>
+  {%- if search_style != 'icon' -%}
   <script>
     (function () {
       var root = document.currentScript.closest(".formula-nav");
       if (!root) return;
       var wrap = root.querySelector("[data-nav-search]");
       if (!wrap) return;
-      var actionsRow = root.querySelector("[data-nav-actions]");
-      var toggle = wrap.querySelector("[data-nav-search-toggle]");
-      var form = wrap.querySelector("[data-nav-search-form]");
-      var input = form ? form.querySelector("input") : null;
-      var closeBtn = wrap.querySelector("[data-nav-search-close]");
+      var mode = wrap.getAttribute("data-search-mode");
+      var input = wrap.querySelector("input");
       var resultsEl = wrap.querySelector("[data-nav-search-results]");
-      if (!toggle || !form) return;
+      var closeBtn = wrap.querySelector("[data-nav-search-close]");
       function escapeHtml(s) {
         return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
           return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
@@ -167,26 +279,9 @@ export const FORMULA_NAV_HEADER = `<section class="formula-nav">
         if (resultsEl) resultsEl.innerHTML = "";
         wrap.classList.remove("has-results");
       }
-      function close() {
-        wrap.classList.remove("is-open");
-        if (actionsRow) actionsRow.classList.remove("formula-nav__actions--search-open");
-        toggle.setAttribute("aria-expanded", "false");
-        clearResults();
-      }
-      toggle.addEventListener("click", function (e) {
-        e.stopPropagation();
-        var open = wrap.classList.toggle("is-open");
-        if (actionsRow) actionsRow.classList.toggle("formula-nav__actions--search-open", open);
-        toggle.setAttribute("aria-expanded", open ? "true" : "false");
-        if (open) { if (input) input.focus(); } else { clearResults(); }
-      });
-      if (closeBtn) closeBtn.addEventListener("click", function (e) { e.stopPropagation(); e.preventDefault(); close(); });
-      form.addEventListener("click", function (e) { e.stopPropagation(); });
-      document.addEventListener("click", close);
-      document.addEventListener("keydown", function (e) { if (e.key === "Escape") close(); });
-      // Eşzamanlı (typeahead) arama — kullanıcı raporu: "altta değil, header
-      // içinde ve eşzamanlı arasın". /search.json GERÇEK ürün sonuçlarını
-      // (title/description substring, main-search ile AYNI sorgu) döner.
+      // Eşzamanlı (typeahead) arama — TÜM modlarda aynı: /search.json GERÇEK
+      // ürün sonuçlarını (title/description substring, main-search ile AYNI
+      // sorgu) döner.
       var debounceTimer = null;
       var lastRequestedQuery = "";
       var resultCount = Math.max(1, Number(wrap.getAttribute("data-search-result-count")) || 5);
@@ -225,6 +320,57 @@ export const FORMULA_NAV_HEADER = `<section class="formula-nav">
           }, 250);
         });
       }
+      if (mode === "expandable") {
+        var actionsRow = root.querySelector("[data-nav-actions]");
+        var toggle = wrap.querySelector("[data-nav-search-toggle]");
+        var form = wrap.querySelector("[data-nav-search-form]");
+        if (!toggle || !form) return;
+        function close() {
+          wrap.classList.remove("is-open");
+          if (actionsRow) actionsRow.classList.remove("formula-nav__actions--search-open");
+          toggle.setAttribute("aria-expanded", "false");
+          clearResults();
+        }
+        toggle.addEventListener("click", function (e) {
+          e.stopPropagation();
+          var open = wrap.classList.toggle("is-open");
+          if (actionsRow) actionsRow.classList.toggle("formula-nav__actions--search-open", open);
+          toggle.setAttribute("aria-expanded", open ? "true" : "false");
+          if (open) { if (input) input.focus(); } else { clearResults(); }
+        });
+        if (closeBtn) closeBtn.addEventListener("click", function (e) { e.stopPropagation(); e.preventDefault(); close(); });
+        form.addEventListener("click", function (e) { e.stopPropagation(); });
+        document.addEventListener("click", close);
+        document.addEventListener("keydown", function (e) { if (e.key === "Escape") close(); });
+      } else if (mode === "modal") {
+        var toggle2 = root.querySelector("[data-nav-search-modal-toggle]");
+        var backdrop = root.querySelector("[data-nav-search-backdrop]");
+        if (!toggle2) return;
+        function closeModal() {
+          wrap.classList.remove("is-open");
+          wrap.setAttribute("aria-hidden", "true");
+          if (backdrop) backdrop.classList.remove("is-open");
+          toggle2.setAttribute("aria-expanded", "false");
+          clearResults();
+          document.body.classList.remove("formula-search-modal-open");
+        }
+        function openModal() {
+          wrap.classList.add("is-open");
+          wrap.setAttribute("aria-hidden", "false");
+          if (backdrop) backdrop.classList.add("is-open");
+          toggle2.setAttribute("aria-expanded", "true");
+          document.body.classList.add("formula-search-modal-open");
+          if (input) input.focus();
+        }
+        toggle2.addEventListener("click", function (e) {
+          e.stopPropagation();
+          if (wrap.classList.contains("is-open")) { closeModal(); } else { openModal(); }
+        });
+        if (closeBtn) closeBtn.addEventListener("click", closeModal);
+        if (backdrop) backdrop.addEventListener("click", closeModal);
+        wrap.addEventListener("click", function (e) { e.stopPropagation(); });
+        document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeModal(); });
+      }
     })();
   </script>
   {%- endif -%}
@@ -250,7 +396,9 @@ export const FORMULA_NAV_HEADER = `<section class="formula-nav">
       "info": "Arama ikonuna tıklanınca ne olacağını belirler.",
       "options": [
         { "label": "Arama Sayfasına Git", "value": "icon" },
-        { "label": "Açılır Kutu (Header İçinde, eşzamanlı sonuçlarla)", "value": "expandable" }
+        { "label": "Açılır Kutu (Sağda, header içinde)", "value": "expandable" },
+        { "label": "Ortada Açılır Pencere", "value": "modal" },
+        { "label": "Ortada Her Zaman Görünür Çubuk", "value": "bar" }
       ]
     },
     { "type": "text", "id": "search_placeholder", "label": "Arama Kutusu Yer Tutucu Metni", "default": "Ara…",
@@ -258,7 +406,10 @@ export const FORMULA_NAV_HEADER = `<section class="formula-nav">
     { "type": "range", "id": "search_result_count", "label": "Eşzamanlı Sonuç Sayısı", "min": 3, "max": 10, "step": 1, "default": 5,
       "info": "Yazarken anında gösterilecek maksimum ürün sayısı." },
     { "type": "range", "id": "search_box_width", "label": "Kutu Genişliği (px)", "min": 160, "max": 360, "step": 10, "default": 240 },
-    { "type": "checkbox", "id": "search_show_price", "label": "Sonuçlarda Fiyat Göster", "default": true }
+    { "type": "checkbox", "id": "search_show_price", "label": "Sonuçlarda Fiyat Göster", "default": true },
+    { "type": "checkbox", "id": "sticky_header", "label": "Kaydırınca Header Sabit Kalsın", "default": false,
+      "info": "Açıkken sayfa aşağı kaydırılsa da header ekranın üstünde sabit kalır." },
+    { "type": "checkbox", "id": "show_wishlist", "label": "Favoriler İkonu Göster", "default": true }
   ],
   "blocks": [
     {
@@ -308,7 +459,8 @@ export const FORMULA_NAV_HEADER = `<section class="formula-nav">
  * kullanıp `formula-nav--centered` modifier'ıyla dikey/ortalı bir düzene
  * geçiyor (CSS: `FORMULA_THEME_CSS`, `.formula-nav--centered`).
  */
-export const FORMULA_NAV_HEADER_CENTERED = `<section class="formula-nav formula-nav--centered">
+export const FORMULA_NAV_HEADER_CENTERED = `<section class="formula-nav formula-nav--centered{% if section.settings.sticky_header %} formula-nav--sticky{% endif %}">
+  <button type="button" class="formula-nav__mobile-toggle" aria-label="Menü" aria-expanded="false" data-nav-mobile-toggle>${navIconSvg("menu")}</button>
   <a class="formula-nav__logo" href="/">
     {% if settings.logo != blank %}
       <img src="{{ settings.logo | img_url: '160x' }}" alt="{{ section.settings.logo_text | default: shop.name | escape }}" style="height:{{ settings.logo_width | default: 40 }}px;width:auto;display:block;margin:0 auto" />
@@ -334,37 +486,120 @@ export const FORMULA_NAV_HEADER_CENTERED = `<section class="formula-nav formula-
       {% endif %}
     {% endfor %}
   </nav>
+  {%- assign search_style = section.settings.search_style | default: 'icon' -%}
+  {%- if search_style == 'bar' -%}
+    <div class="formula-nav__search formula-nav__search--bar" data-nav-search data-search-mode="bar" style="--formula-search-width: {{ section.settings.search_box_width | default: 240 }}px" data-search-result-count="{{ section.settings.search_result_count | default: 5 }}" data-search-show-price="{{ section.settings.search_show_price | default: true }}">
+      <span class="formula-nav__search-bar-icon">${navIconSvg("search")}</span>
+      <input type="search" name="q" placeholder="{{ section.settings.search_placeholder | default: 'Ara…' | escape }}" class="formula-nav__search-input" aria-label="Arama sorgusu" autocomplete="off" />
+      <div class="formula-nav__search-results" data-nav-search-results></div>
+    </div>
+  {%- endif -%}
   <div class="formula-nav__actions" data-nav-actions>
     {% if section.settings.quiz_label != blank %}<a href="{{ section.settings.quiz_url | default: '/pages/cilt-analizi' | escape }}" class="formula-nav__quiz">{{ section.settings.quiz_label | escape }}</a>{% endif %}
-    {%- if section.settings.search_style == 'expandable' -%}
-      <div class="formula-nav__search" data-nav-search style="--formula-search-width: {{ section.settings.search_box_width | default: 240 }}px" data-search-result-count="{{ section.settings.search_result_count | default: 5 }}" data-search-show-price="{{ section.settings.search_show_price | default: true }}">
+    {%- if search_style == 'expandable' -%}
+      <div class="formula-nav__search" data-nav-search data-search-mode="expandable" style="--formula-search-width: {{ section.settings.search_box_width | default: 240 }}px" data-search-result-count="{{ section.settings.search_result_count | default: 5 }}" data-search-show-price="{{ section.settings.search_show_price | default: true }}">
         <button type="button" class="formula-nav__search-toggle" aria-label="Ara" aria-expanded="false" data-nav-search-toggle>${navIconSvg("search")}</button>
         <form action="/search" method="get" class="formula-nav__search-form" data-nav-search-form>
           <input type="search" name="q" placeholder="{{ section.settings.search_placeholder | default: 'Ara…' | escape }}" class="formula-nav__search-input" aria-label="Arama sorgusu" autocomplete="off" />
-          <button type="button" class="formula-nav__search-close" aria-label="Aramayı kapat" data-nav-search-close>&times;</button>
+          <button type="button" class="formula-nav__search-close" aria-label="Aramayı kapat" data-nav-search-close>${navIconSvg("close")}</button>
         </form>
         <div class="formula-nav__search-results" data-nav-search-results></div>
       </div>
+    {%- elsif search_style == 'modal' -%}
+      <button type="button" class="formula-nav__search-toggle" aria-label="Ara" aria-expanded="false" data-nav-search-modal-toggle>${navIconSvg("search")}</button>
+    {%- elsif search_style == 'bar' -%}
     {%- else -%}
       <a href="/search" aria-label="Ara">${navIconSvg("search")}</a>
     {%- endif -%}
+    {% if section.settings.show_wishlist %}<a href="/account#favorites" aria-label="Favorilerim">${navIconSvg("heart")}</a>{% endif %}
     <a href="/account" aria-label="Hesabım">${navIconSvg("account")}</a>
     <a href="/cart" aria-label="Sepet" data-cart-open-mode="{{ section.settings.cart_open_mode | default: 'page' }}">${navIconSvg("cart")}</a>
   </div>
-  {%- if section.settings.search_style == 'expandable' -%}
+  {%- if search_style == 'modal' -%}
+    <div class="formula-nav__search-modal-backdrop" data-nav-search-backdrop></div>
+    <div class="formula-nav__search formula-nav__search--modal" data-nav-search data-search-mode="modal" style="--formula-search-width: {{ section.settings.search_box_width | default: 240 }}px" data-search-result-count="{{ section.settings.search_result_count | default: 5 }}" data-search-show-price="{{ section.settings.search_show_price | default: true }}" aria-hidden="true">
+      <div class="formula-nav__search-modal-box">
+        <div class="formula-nav__search-modal-row">
+          <span class="formula-nav__search-modal-icon">${navIconSvg("search")}</span>
+          <input type="search" name="q" placeholder="{{ section.settings.search_placeholder | default: 'Ara…' | escape }}" class="formula-nav__search-input" aria-label="Arama sorgusu" autocomplete="off" />
+          <button type="button" class="formula-nav__search-close" aria-label="Aramayı kapat" data-nav-search-close>${navIconSvg("close")}</button>
+        </div>
+        <div class="formula-nav__search-results" data-nav-search-results></div>
+      </div>
+    </div>
+  {%- endif -%}
+  <div class="formula-nav__mobile-backdrop" data-nav-mobile-backdrop></div>
+  <div class="formula-nav__mobile-drawer" data-nav-mobile-drawer aria-hidden="true">
+    <div class="formula-nav__mobile-drawer-head">
+      <a class="formula-nav__logo" href="/">
+        {% if settings.logo != blank %}
+          <img src="{{ settings.logo | img_url: '120x' }}" alt="{{ section.settings.logo_text | default: shop.name | escape }}" style="height:32px;width:auto;display:block" />
+        {% else %}
+          {{ section.settings.logo_text | default: shop.name | escape }}
+        {% endif %}
+      </a>
+      <button type="button" class="formula-nav__search-close" aria-label="Menüyü kapat" data-nav-mobile-close>${navIconSvg("close")}</button>
+    </div>
+    <nav class="formula-nav__mobile-links">
+      {% for block in section.blocks %}
+        {% if block.type == "menu_item" %}
+          <a href="{{ block.settings.url | escape }}">{{ block.settings.label | escape }}</a>
+          {% for child in block.blocks %}
+            {% if child.type == "submenu_item" %}<a class="formula-nav__mobile-sublink" href="{{ child.settings.url | escape }}">{{ child.settings.label | escape }}</a>{% endif %}
+          {% endfor %}
+        {% endif %}
+      {% endfor %}
+    </nav>
+    <div class="formula-nav__mobile-drawer-foot">
+      {% if section.settings.show_wishlist %}<a href="/account#favorites">${navIconSvg("heart")}<span>Favorilerim</span></a>{% endif %}
+      <a href="/account">${navIconSvg("account")}<span>Hesabım</span></a>
+      <a href="/cart">${navIconSvg("cart")}<span>Sepetim</span></a>
+    </div>
+  </div>
+  <script>
+    (function () {
+      var navSection = document.currentScript.closest(".formula-nav");
+      if (!navSection) return;
+      var mToggle = navSection.querySelector("[data-nav-mobile-toggle]");
+      var mDrawer = navSection.querySelector("[data-nav-mobile-drawer]");
+      var mBackdrop = navSection.querySelector("[data-nav-mobile-backdrop]");
+      var mClose = navSection.querySelector("[data-nav-mobile-close]");
+      if (mToggle && mDrawer) {
+        var closeMenu = function () {
+          mDrawer.classList.remove("is-open");
+          mDrawer.setAttribute("aria-hidden", "true");
+          if (mBackdrop) mBackdrop.classList.remove("is-open");
+          mToggle.setAttribute("aria-expanded", "false");
+          document.body.classList.remove("formula-mobile-menu-open");
+        };
+        var openMenu = function () {
+          mDrawer.classList.add("is-open");
+          mDrawer.setAttribute("aria-hidden", "false");
+          if (mBackdrop) mBackdrop.classList.add("is-open");
+          mToggle.setAttribute("aria-expanded", "true");
+          document.body.classList.add("formula-mobile-menu-open");
+        };
+        mToggle.addEventListener("click", function (e) {
+          e.stopPropagation();
+          if (mDrawer.classList.contains("is-open")) { closeMenu(); } else { openMenu(); }
+        });
+        if (mClose) mClose.addEventListener("click", closeMenu);
+        if (mBackdrop) mBackdrop.addEventListener("click", closeMenu);
+        document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeMenu(); });
+      }
+    })();
+  </script>
+  {%- if search_style != 'icon' -%}
   <script>
     (function () {
       var root = document.currentScript.closest(".formula-nav");
       if (!root) return;
       var wrap = root.querySelector("[data-nav-search]");
       if (!wrap) return;
-      var actionsRow = root.querySelector("[data-nav-actions]");
-      var toggle = wrap.querySelector("[data-nav-search-toggle]");
-      var form = wrap.querySelector("[data-nav-search-form]");
-      var input = form ? form.querySelector("input") : null;
-      var closeBtn = wrap.querySelector("[data-nav-search-close]");
+      var mode = wrap.getAttribute("data-search-mode");
+      var input = wrap.querySelector("input");
       var resultsEl = wrap.querySelector("[data-nav-search-results]");
-      if (!toggle || !form) return;
+      var closeBtn = wrap.querySelector("[data-nav-search-close]");
       function escapeHtml(s) {
         return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
           return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
@@ -378,26 +613,9 @@ export const FORMULA_NAV_HEADER_CENTERED = `<section class="formula-nav formula-
         if (resultsEl) resultsEl.innerHTML = "";
         wrap.classList.remove("has-results");
       }
-      function close() {
-        wrap.classList.remove("is-open");
-        if (actionsRow) actionsRow.classList.remove("formula-nav__actions--search-open");
-        toggle.setAttribute("aria-expanded", "false");
-        clearResults();
-      }
-      toggle.addEventListener("click", function (e) {
-        e.stopPropagation();
-        var open = wrap.classList.toggle("is-open");
-        if (actionsRow) actionsRow.classList.toggle("formula-nav__actions--search-open", open);
-        toggle.setAttribute("aria-expanded", open ? "true" : "false");
-        if (open) { if (input) input.focus(); } else { clearResults(); }
-      });
-      if (closeBtn) closeBtn.addEventListener("click", function (e) { e.stopPropagation(); e.preventDefault(); close(); });
-      form.addEventListener("click", function (e) { e.stopPropagation(); });
-      document.addEventListener("click", close);
-      document.addEventListener("keydown", function (e) { if (e.key === "Escape") close(); });
-      // Eşzamanlı (typeahead) arama — kullanıcı raporu: "altta değil, header
-      // içinde ve eşzamanlı arasın". /search.json GERÇEK ürün sonuçlarını
-      // (title/description substring, main-search ile AYNI sorgu) döner.
+      // Eşzamanlı (typeahead) arama — TÜM modlarda aynı: /search.json GERÇEK
+      // ürün sonuçlarını (title/description substring, main-search ile AYNI
+      // sorgu) döner.
       var debounceTimer = null;
       var lastRequestedQuery = "";
       var resultCount = Math.max(1, Number(wrap.getAttribute("data-search-result-count")) || 5);
@@ -436,6 +654,57 @@ export const FORMULA_NAV_HEADER_CENTERED = `<section class="formula-nav formula-
           }, 250);
         });
       }
+      if (mode === "expandable") {
+        var actionsRow = root.querySelector("[data-nav-actions]");
+        var toggle = wrap.querySelector("[data-nav-search-toggle]");
+        var form = wrap.querySelector("[data-nav-search-form]");
+        if (!toggle || !form) return;
+        function close() {
+          wrap.classList.remove("is-open");
+          if (actionsRow) actionsRow.classList.remove("formula-nav__actions--search-open");
+          toggle.setAttribute("aria-expanded", "false");
+          clearResults();
+        }
+        toggle.addEventListener("click", function (e) {
+          e.stopPropagation();
+          var open = wrap.classList.toggle("is-open");
+          if (actionsRow) actionsRow.classList.toggle("formula-nav__actions--search-open", open);
+          toggle.setAttribute("aria-expanded", open ? "true" : "false");
+          if (open) { if (input) input.focus(); } else { clearResults(); }
+        });
+        if (closeBtn) closeBtn.addEventListener("click", function (e) { e.stopPropagation(); e.preventDefault(); close(); });
+        form.addEventListener("click", function (e) { e.stopPropagation(); });
+        document.addEventListener("click", close);
+        document.addEventListener("keydown", function (e) { if (e.key === "Escape") close(); });
+      } else if (mode === "modal") {
+        var toggle2 = root.querySelector("[data-nav-search-modal-toggle]");
+        var backdrop = root.querySelector("[data-nav-search-backdrop]");
+        if (!toggle2) return;
+        function closeModal() {
+          wrap.classList.remove("is-open");
+          wrap.setAttribute("aria-hidden", "true");
+          if (backdrop) backdrop.classList.remove("is-open");
+          toggle2.setAttribute("aria-expanded", "false");
+          clearResults();
+          document.body.classList.remove("formula-search-modal-open");
+        }
+        function openModal() {
+          wrap.classList.add("is-open");
+          wrap.setAttribute("aria-hidden", "false");
+          if (backdrop) backdrop.classList.add("is-open");
+          toggle2.setAttribute("aria-expanded", "true");
+          document.body.classList.add("formula-search-modal-open");
+          if (input) input.focus();
+        }
+        toggle2.addEventListener("click", function (e) {
+          e.stopPropagation();
+          if (wrap.classList.contains("is-open")) { closeModal(); } else { openModal(); }
+        });
+        if (closeBtn) closeBtn.addEventListener("click", closeModal);
+        if (backdrop) backdrop.addEventListener("click", closeModal);
+        wrap.addEventListener("click", function (e) { e.stopPropagation(); });
+        document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeModal(); });
+      }
     })();
   </script>
   {%- endif -%}
@@ -461,7 +730,9 @@ export const FORMULA_NAV_HEADER_CENTERED = `<section class="formula-nav formula-
       "info": "Arama ikonuna tıklanınca ne olacağını belirler.",
       "options": [
         { "label": "Arama Sayfasına Git", "value": "icon" },
-        { "label": "Açılır Kutu (Header İçinde, eşzamanlı sonuçlarla)", "value": "expandable" }
+        { "label": "Açılır Kutu (Sağda, header içinde)", "value": "expandable" },
+        { "label": "Ortada Açılır Pencere", "value": "modal" },
+        { "label": "Ortada Her Zaman Görünür Çubuk", "value": "bar" }
       ]
     },
     { "type": "text", "id": "search_placeholder", "label": "Arama Kutusu Yer Tutucu Metni", "default": "Ara…",
@@ -469,7 +740,10 @@ export const FORMULA_NAV_HEADER_CENTERED = `<section class="formula-nav formula-
     { "type": "range", "id": "search_result_count", "label": "Eşzamanlı Sonuç Sayısı", "min": 3, "max": 10, "step": 1, "default": 5,
       "info": "Yazarken anında gösterilecek maksimum ürün sayısı." },
     { "type": "range", "id": "search_box_width", "label": "Kutu Genişliği (px)", "min": 160, "max": 360, "step": 10, "default": 240 },
-    { "type": "checkbox", "id": "search_show_price", "label": "Sonuçlarda Fiyat Göster", "default": true }
+    { "type": "checkbox", "id": "search_show_price", "label": "Sonuçlarda Fiyat Göster", "default": true },
+    { "type": "checkbox", "id": "sticky_header", "label": "Kaydırınca Header Sabit Kalsın", "default": false,
+      "info": "Açıkken sayfa aşağı kaydırılsa da header ekranın üstünde sabit kalır." },
+    { "type": "checkbox", "id": "show_wishlist", "label": "Favoriler İkonu Göster", "default": true }
   ],
   "blocks": [
     {
@@ -783,7 +1057,7 @@ export const FORMULA_FOOTER_MENU = `<section class="formula-footer">
       <div class="formula-footer__social">
         {% for block in section.blocks %}
           {% if block.type == "social_link" and block.settings.url != blank %}
-            <a href="{{ block.settings.url | escape }}" target="_blank" rel="noopener">{{ block.settings.platform | default: "Bağlantı" | escape }}</a>
+            <a href="{{ block.settings.url | escape }}" target="_blank" rel="noopener" aria-label="{{ block.settings.platform | default: 'Sosyal medya' | escape }}" title="{{ block.settings.platform | default: 'Sosyal medya' | escape }}">${FORMULA_SOCIAL_ICON_CASE}</a>
           {% endif %}
         {% endfor %}
       </div>
@@ -3726,8 +4000,16 @@ a { color: inherit; }
 .formula-nav__search.is-open .formula-nav__search-form { width: clamp(160px, 32vw, var(--formula-search-width, 240px)); opacity: 1; margin-left: 8px; }
 .formula-nav__search-input { flex: 1; min-width: 0; box-sizing: border-box; height: 38px; border: 1px solid var(--color-border); border-radius: 999px; padding: 0 14px; font-size: 13px; background: var(--color-surface); color: var(--color-text); transition: border-color .15s, box-shadow .15s; }
 .formula-nav__search-input:focus { outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 18%, transparent); }
-.formula-nav__search-close { flex-shrink: 0; background: none; border: none; cursor: pointer; font-size: 18px; line-height: 1; margin-left: 4px; color: var(--color-muted); transition: color .15s; }
-.formula-nav__search-close:hover { color: var(--color-text); }
+/* Tarayıcının kendi input[type=search] "temizle" X'i KAPATILIYOR — bizim
+   kendi kapatma butonumuzla YAN YANA görünüp "2 tane X var" izlenimi
+   veriyordu (kullanıcı raporu 2026-08-24). */
+.formula-nav__search-input::-webkit-search-decoration,
+.formula-nav__search-input::-webkit-search-cancel-button,
+.formula-nav__search-input::-webkit-search-results-button,
+.formula-nav__search-input::-webkit-search-results-decoration { -webkit-appearance: none; appearance: none; }
+.formula-nav__search-close { flex-shrink: 0; display: flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 50%; background: none; border: none; cursor: pointer; margin-left: 4px; color: var(--color-muted); transition: color .15s, background .15s; }
+.formula-nav__search-close svg { width: 15px; height: 15px; }
+.formula-nav__search-close:hover { color: var(--color-text); background: var(--color-surface); }
 .formula-nav__actions--search-open > a { display: none; }
 .formula-nav__search-results { display: none; position: absolute; top: calc(100% + 10px); right: 0; width: min(320px, 90vw); max-height: 380px; overflow-y: auto; background: var(--color-background); border: 1px solid var(--color-border); border-radius: 12px; box-shadow: 0 20px 48px rgba(15,23,42,.14); z-index: 30; }
 .formula-nav__search.has-results .formula-nav__search-results { display: block; }
@@ -3740,13 +4022,70 @@ a { color: inherit; }
 .formula-nav__search-empty { padding: 16px; font-size: 13px; color: var(--color-muted); text-align: center; }
 .formula-nav__search-viewall { display: block; text-align: center; padding: 11px; font-size: 12px; font-weight: 600; color: var(--color-primary); text-decoration: none; border-top: 1px solid var(--color-border); }
 .formula-nav__search-viewall:hover { background: var(--color-surface); }
+/* Ortada her zaman görünür çubuk (2026-08-24, "Arama Şekli" — "Ortada Her
+   Zaman Görünür Çubuk"). Sabit genişlik yerine flex item'ın kendi kalan
+   boşlukta ortalanmasına güveniliyor (margin:auto) — nav'ı grid'e çevirmek
+   gibi daha büyük bir yeniden yapılanma gerekmeden gerçek ortalama etkisi. */
+.formula-nav__search--bar { flex: 1 1 auto; max-width: var(--formula-search-width, 240px); margin: 0 auto; gap: 8px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 999px; padding: 0 14px; height: 38px; }
+.formula-nav__search--bar .formula-nav__search-input { border: none; background: none; padding: 0; height: auto; }
+.formula-nav__search--bar .formula-nav__search-input:focus { box-shadow: none; }
+.formula-nav__search--bar .formula-nav__search-bar-icon { display: flex; color: var(--color-muted); flex-shrink: 0; }
+.formula-nav__search--bar .formula-nav__search-results { left: 0; right: 0; width: 100%; }
+@media (max-width: 767.98px) { .formula-nav__search--bar { max-width: none; } }
+/* Ortada açılır pencere (modal/spotlight-stili). */
+.formula-nav__search-modal-backdrop { position: fixed; inset: 0; background: rgba(15,23,42,.45); opacity: 0; pointer-events: none; transition: opacity .18s ease; z-index: 60; }
+.formula-nav__search-modal-backdrop.is-open { opacity: 1; pointer-events: auto; }
+.formula-nav__search--modal { position: fixed; top: 12vh; left: 50%; transform: translateX(-50%) translateY(-10px) scale(.98); width: min(600px, 92vw); opacity: 0; pointer-events: none; transition: opacity .18s ease, transform .18s ease; z-index: 61; display: block; }
+.formula-nav__search--modal.is-open { opacity: 1; pointer-events: auto; transform: translateX(-50%) translateY(0) scale(1); }
+.formula-nav__search-modal-box { background: var(--color-background); border-radius: 16px; border: 1px solid var(--color-border); box-shadow: 0 30px 80px rgba(15,23,42,.28); overflow: hidden; }
+.formula-nav__search-modal-row { display: flex; align-items: center; gap: 10px; padding: 18px 20px; border-bottom: 1px solid var(--color-border); }
+.formula-nav__search-modal-icon { display: flex; align-items: center; color: var(--color-muted); flex-shrink: 0; }
+.formula-nav__search-modal-icon svg { width: 19px; height: 19px; }
+.formula-nav__search--modal .formula-nav__search-input { flex: 1; height: 46px; border: none; background: none; padding: 0; font-size: 16px; }
+.formula-nav__search--modal .formula-nav__search-input:focus { box-shadow: none; }
+.formula-nav__search--modal .formula-nav__search-close { width: 34px; height: 34px; }
+.formula-nav__search--modal .formula-nav__search-close svg { width: 16px; height: 16px; }
+.formula-nav__search--modal .formula-nav__search-results { display: block; position: static; width: 100%; max-height: 50vh; overflow-y: auto; border: none; box-shadow: none; border-radius: 0; }
+.formula-nav__search--modal .formula-nav__search-result { padding: 12px 20px; }
+.formula-nav__search--modal .formula-nav__search-viewall { border-top: 1px solid var(--color-border); padding: 13px; }
+.formula-nav__search--modal .formula-nav__search-empty { padding: 28px 20px; }
+body.formula-search-modal-open { overflow: hidden; }
 .formula-nav__icon { width: 19px; height: 19px; display: block; }
 .formula-nav__quiz { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 999px; padding: 7px 14px; color: var(--color-primary) !important; font-weight: 500; }
-@media (max-width: 767.98px) { .formula-nav__links { display: none; } .formula-nav { padding: 14px 20px; } }
+/* Kaydırınca sabit header ("Kaydırınca Header Sabit Kalsın" ayarı, 2026-08-24). */
+.formula-nav--sticky { position: sticky; top: 0; z-index: 40; }
+/* Mobil hamburger menü (2026-08-24 — kullanıcı raporu: "header'ı geliştir,
+   e-ticaret sitesinde ne olması gerekiyorsa" — 768px altında .formula-nav__links
+   TAMAMEN kayboluyordu, YERİNE HİÇBİR ŞEY konulmamıştı; mobil ziyaretçi
+   navigasyona hiç erişemiyordu). Sol taraftan açılan panel, alt menüler
+   düz liste olarak (accordion YOK — basitlik + ek JS state gerektirmeden
+   doğru çalışma tercih edildi). */
+.formula-nav__mobile-toggle { display: none; background: none; border: none; cursor: pointer; padding: 4px; margin: -4px; border-radius: 50%; color: var(--color-text); flex-shrink: 0; transition: background .15s; }
+.formula-nav__mobile-toggle:hover { background: var(--color-surface); }
+.formula-nav__mobile-backdrop { position: fixed; inset: 0; background: rgba(15,23,42,.45); opacity: 0; pointer-events: none; transition: opacity .18s ease; z-index: 70; }
+.formula-nav__mobile-backdrop.is-open { opacity: 1; pointer-events: auto; }
+.formula-nav__mobile-drawer { position: fixed; top: 0; left: 0; bottom: 0; width: min(320px, 84vw); background: var(--color-background); box-shadow: 8px 0 40px rgba(15,23,42,.18); transform: translateX(-100%); transition: transform .22s ease; z-index: 71; display: flex; flex-direction: column; overflow-y: auto; }
+.formula-nav__mobile-drawer.is-open { transform: translateX(0); }
+.formula-nav__mobile-drawer-head { display: flex; align-items: center; justify-content: space-between; padding: 16px 18px; border-bottom: 1px solid var(--color-border); flex-shrink: 0; }
+.formula-nav__mobile-links { display: flex; flex-direction: column; padding: 10px 0; }
+.formula-nav__mobile-links a { padding: 12px 18px; font-size: 14px; text-decoration: none; color: var(--color-text); text-transform: uppercase; letter-spacing: .04em; border-bottom: 1px solid var(--color-border); }
+.formula-nav__mobile-links a.formula-nav__mobile-sublink { padding-left: 32px; font-size: 13px; text-transform: none; letter-spacing: normal; color: var(--color-muted); }
+.formula-nav__mobile-drawer-foot { margin-top: auto; display: flex; flex-direction: column; border-top: 1px solid var(--color-border); padding: 8px 0; flex-shrink: 0; }
+.formula-nav__mobile-drawer-foot a { display: flex; align-items: center; gap: 10px; padding: 12px 18px; font-size: 14px; text-decoration: none; color: var(--color-text); }
+.formula-nav__mobile-drawer-foot a:hover { color: var(--color-primary); }
+.formula-nav__mobile-drawer-foot a svg { width: 18px; height: 18px; }
+body.formula-mobile-menu-open { overflow: hidden; }
+@media (max-width: 767.98px) {
+  .formula-nav__links { display: none; }
+  .formula-nav { padding: 14px 20px; }
+  .formula-nav__mobile-toggle { display: flex; }
+  .formula-nav__quiz { display: none; }
+}
 /* "Ortalı Logo" tasarım varyantı (2026-08-19) — logo üstte ortalı, altında
    linkler, aksiyonlar (ara/hesap/sepet) sağ üst köşede mutlak konumlanır. */
 .formula-nav--centered { flex-direction: column; justify-content: center; text-align: center; position: relative; padding-top: 16px; padding-bottom: 14px; }
 .formula-nav--centered .formula-nav__actions { position: absolute; right: 40px; top: 50%; transform: translateY(-50%); }
+.formula-nav--centered .formula-nav__mobile-toggle { position: absolute; left: 20px; top: 18px; }
 @media (max-width: 767.98px) { .formula-nav--centered .formula-nav__actions { position: static; transform: none; justify-content: center; margin-top: 2px; } }
 
 /* Hero */
@@ -3825,9 +4164,10 @@ a { color: inherit; }
 .formula-footer__links a { font-size: 13px; text-decoration: none; color: var(--color-text); }
 .formula-footer__copy { font-size: 12px; color: var(--color-muted); border-top: 1px solid var(--color-border); padding-top: 20px; margin: 0; }
 /* 2026-08-23 — 20.08-revizeler.md madde 2: sosyal ikonlar + çok sütunlu footer */
-.formula-footer__social { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 14px; }
-.formula-footer__social a { font-size: 12px; font-weight: 600; text-decoration: none; color: var(--color-muted); text-transform: uppercase; letter-spacing: 0.04em; }
-.formula-footer__social a:hover { color: var(--color-text); }
+.formula-footer__social { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+.formula-footer__social a { display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--color-border); color: var(--color-muted); transition: color .15s, border-color .15s, background .15s; }
+.formula-footer__social a:hover { color: var(--color-text); border-color: var(--color-text); background: var(--color-surface); }
+.formula-footer__social-icon { width: 17px; height: 17px; display: block; }
 .formula-footer__column { min-width: 140px; }
 .formula-footer__column-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 12px; color: var(--color-text); }
 .formula-footer__column-links { display: flex; flex-direction: column; gap: 10px; }
