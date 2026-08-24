@@ -279,30 +279,51 @@ export const FORMULA_NAV_HEADER_CENTERED = `<section class="formula-nav formula-
 }
 {% endschema %}`;
 
-export const FORMULA_HERO = `<section class="formula-hero${revealAnimationClass()}">
-  <div class="formula-hero__copy">
-    <p class="formula-hero__eyebrow">{{ section.settings.eyebrow | default: "Az bileşen, yüksek standart" | escape }}</p>
+// 2026-08-24 — Formula tema genişletmesi. Üç görsel varyant (split/overlay/
+// centered) TEK section dosyasında bir "layout_style" ayarıyla dallanıyor —
+// hero'nun ei-engine'de rolü yok (bkz. sectionDesigns.ts başlık yorumu),
+// role-tabanlı section.swapDesign mekanizması bu yüzden kullanılamıyor;
+// Shopify temalarının da yaygın deseni budur (ayrı dosya yerine section
+// içi "style" ayarı). Split = mevcut varsayılan davranış (BİREBİR korundu,
+// mevcut projelerde görsel değişiklik YOK). Overlay = tam-genişlik görsel +
+// üzerine bindirilmiş metin (kampanya/lansman için). Centered = görselsiz,
+// ortalanmış metin+CTA (duyuru/kampanya band'i için, düz veya gradyan zemin).
+export const FORMULA_HERO = `<section class="formula-hero{% if section.settings.layout_style == 'overlay' %} formula-hero--overlay{% elsif section.settings.layout_style == 'centered' %} formula-hero--centered{% endif %}{% if section.settings.image_side == 'right' and section.settings.layout_style == 'split' %} formula-hero--reverse{% endif %}${revealAnimationClass()}" style="{% if section.settings.bg_color != blank %}background:{{ section.settings.bg_color }};{% endif %}{% if section.settings.min_height %}min-height:{{ section.settings.min_height }}px;{% endif %}">
+  <div class="formula-hero__copy" style="{% if section.settings.text_color != blank %}color:{{ section.settings.text_color }};{% endif %}text-align:{{ section.settings.content_align | default: 'left' }}">
+    {% if section.settings.eyebrow != blank %}<p class="formula-hero__eyebrow"{% if section.settings.eyebrow_color != blank %} style="color:{{ section.settings.eyebrow_color }}"{% endif %}>{{ section.settings.eyebrow | escape }}</p>{% endif %}
     <h1 class="formula-hero__title">{{ section.settings.title | default: "Cildin ne istiyorsa, sadece o." | escape }}</h1>
-    <p class="formula-hero__sub">{{ section.settings.subtitle | default: "Şeffaf formüller, kanıtlanmış aktifler. Her ürünün etiketinde ne olduğunu, neden orada olduğunu görürsün." | escape }}</p>
-    <div class="formula-hero__actions">
-      <a class="formula-btn formula-btn--solid" href="{{ section.settings.cta_url | default: '/products' | escape }}">{{ section.settings.cta_label | default: "Ürünleri Keşfet" | escape }}</a>
-      <a class="formula-btn formula-btn--ghost" href="{{ section.settings.quiz_url | default: '/pages/cilt-analizi' | escape }}">{{ section.settings.quiz_label | default: "Cildini Tanı →" | escape }}</a>
+    {% if section.settings.subtitle != blank %}<p class="formula-hero__sub">{{ section.settings.subtitle | escape }}</p>{% endif %}
+    <div class="formula-hero__actions" style="justify-content:{% if section.settings.content_align == 'center' %}center{% else %}flex-start{% endif %}">
+      {% if section.settings.cta_label != blank %}<a class="formula-btn formula-btn--solid" href="{{ section.settings.cta_url | default: '/products' | escape }}">{{ section.settings.cta_label | escape }}</a>{% endif %}
+      {% if section.settings.quiz_label != blank %}<a class="formula-btn formula-btn--ghost" href="{{ section.settings.quiz_url | default: '/pages/cilt-analizi' | escape }}">{{ section.settings.quiz_label | escape }}</a>{% endif %}
     </div>
   </div>
+  {% unless section.settings.layout_style == 'centered' %}
   <div class="formula-hero__media">
     {% if section.settings.image != blank %}
       <img src="{{ section.settings.image | img_url: '1200x' }}" alt="{{ section.settings.title | escape }}" loading="eager" style="object-position: {{ section.settings.image_position | default: 'center' }};${imageEffectStyle("section.settings")}" />
     {% else %}
       <div class="formula-hero__placeholder" aria-hidden="true"></div>
     {% endif %}
+    {% if section.settings.layout_style == 'overlay' %}
+      <div class="formula-hero__scrim" style="background:linear-gradient(to top, rgba(0,0,0,{{ section.settings.overlay_opacity | default: 45 | divided_by: 100.0 }}), rgba(0,0,0,0) 60%);"></div>
+    {% endif %}
     ${imageEffectOverlay("section.settings")}
   </div>
+  {% endunless %}
 </section>
 
 {% schema %}
 {
   "name": "Formula Hero",
   "settings": [
+    { "type": "select", "id": "layout_style", "label": "Görünüm", "default": "split",
+      "options": [
+        { "label": "Bölünmüş (görsel + metin)", "value": "split" },
+        { "label": "Tam genişlik görsel + metin üstte", "value": "overlay" },
+        { "label": "Ortalanmış metin (görselsiz)", "value": "centered" }
+      ]
+    },
     { "type": "text", "id": "eyebrow", "label": "Üst Etiket", "default": "Az bileşen, yüksek standart" },
     { "type": "text", "id": "title", "label": "Başlık", "default": "Cildin ne istiyorsa, sadece o." },
     { "type": "textarea", "id": "subtitle", "label": "Alt Metin", "default": "Şeffaf formüller, kanıtlanmış aktifler. Her ürünün etiketinde ne olduğunu, neden orada olduğunu görürsün." },
@@ -310,6 +331,7 @@ export const FORMULA_HERO = `<section class="formula-hero${revealAnimationClass(
     { "type": "url", "id": "cta_url", "label": "Ana Buton URL", "default": "/products" },
     { "type": "text", "id": "quiz_label", "label": "İkincil Buton Metni", "default": "Cildini Tanı →" },
     { "type": "url", "id": "quiz_url", "label": "İkincil Buton URL", "default": "/pages/cilt-analizi" },
+    { "type": "header", "id": "hero_media", "label": "Görsel (Bölünmüş / Tam genişlik)" },
     { "type": "image_picker", "id": "image", "label": "Görsel" },
     { "type": "select", "id": "image_position", "label": "Görsel Konumu (kırpma odağı)", "default": "center",
       "options": [
@@ -319,7 +341,19 @@ export const FORMULA_HERO = `<section class="formula-hero${revealAnimationClass(
         { "label": "Sol", "value": "left" },
         { "label": "Sağ", "value": "right" }
       ]
-    },${imageEffectSchemaFields()},${revealAnimationSchemaField()}
+    },
+    { "type": "select", "id": "image_side", "label": "Görsel Yönü (yalnız Bölünmüş)", "default": "right",
+      "options": [ { "label": "Sağda", "value": "right" }, { "label": "Solda", "value": "left" } ]
+    },
+    { "type": "range", "id": "overlay_opacity", "label": "Karartma yoğunluğu (yalnız Tam genişlik)", "min": 0, "max": 80, "step": 5, "default": 45 },
+    { "type": "header", "id": "hero_layout", "label": "Yerleşim ve Renk" },
+    { "type": "select", "id": "content_align", "label": "Metin hizası", "default": "left",
+      "options": [ { "label": "Sol", "value": "left" }, { "label": "Orta", "value": "center" } ]
+    },
+    { "type": "range", "id": "min_height", "label": "Minimum yükseklik (px)", "min": 320, "max": 900, "step": 20, "default": 560 },
+    { "type": "color", "id": "bg_color", "label": "Arka plan (boş = tema rengi)" },
+    { "type": "color", "id": "text_color", "label": "Metin rengi (boş = tema rengi)" },
+    { "type": "color", "id": "eyebrow_color", "label": "Üst etiket rengi (boş = vurgu rengi)" },${imageEffectSchemaFields()},${revealAnimationSchemaField()}
   ],
   "presets": [{ "name": "Formula Hero" }]
 }
@@ -2750,7 +2784,18 @@ a { color: inherit; }
 .formula-hero__media { position: relative; aspect-ratio: 4/5; border-radius: 18px; overflow: hidden; background: #ffffff; }
 .formula-hero__media img { width: 100%; height: 100%; object-fit: cover; }
 .formula-hero__placeholder { width: 100%; height: 100%; background: linear-gradient(155deg, var(--color-primary) 0%, var(--color-surface) 70%); opacity: .5; }
-@media (max-width: 900px) { .formula-hero { grid-template-columns: 1fr; padding: 48px 24px; text-align: center; } .formula-hero__actions { justify-content: center; } .formula-hero__sub { max-width: none; margin-left: auto; margin-right: auto; } }
+.formula-hero--reverse { grid-template-columns: 1fr 1fr; direction: rtl; }
+.formula-hero--reverse > * { direction: ltr; }
+.formula-hero--overlay { display: block; position: relative; padding: 0; min-height: 480px; }
+.formula-hero--overlay .formula-hero__copy { position: absolute; inset: 0; z-index: 2; display: flex; flex-direction: column; justify-content: flex-end; padding: 56px 40px; color: #ffffff; }
+.formula-hero--overlay .formula-hero__eyebrow { color: rgba(255,255,255,.85); }
+.formula-hero--overlay .formula-hero__media { position: absolute; inset: 0; aspect-ratio: auto; border-radius: 0; z-index: 1; }
+.formula-hero__scrim { position: absolute; inset: 0; pointer-events: none; }
+.formula-hero--centered { display: block; text-align: center; padding: 96px 40px; }
+.formula-hero--centered .formula-hero__copy { max-width: 640px; margin: 0 auto; }
+.formula-hero--centered .formula-hero__title { max-width: none; }
+.formula-hero--centered .formula-hero__sub { margin-left: auto; margin-right: auto; }
+@media (max-width: 900px) { .formula-hero { grid-template-columns: 1fr; padding: 48px 24px; text-align: center; } .formula-hero--reverse { direction: ltr; } .formula-hero__actions { justify-content: center; } .formula-hero__sub { max-width: none; margin-left: auto; margin-right: auto; } .formula-hero--overlay .formula-hero__copy, .formula-hero--centered { padding: 40px 24px; } }
 
 /* Quiz banner */
 .formula-quiz { background: var(--color-primary); color: #ffffff; text-align: center; padding: 56px 24px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
