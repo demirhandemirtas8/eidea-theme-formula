@@ -125,10 +125,46 @@ export const FORMULA_NAV_HEADER = `<section class="formula-nav">
   </nav>
   <div class="formula-nav__actions">
     {% if section.settings.quiz_label != blank %}<a href="{{ section.settings.quiz_url | default: '/pages/cilt-analizi' | escape }}" class="formula-nav__quiz">{{ section.settings.quiz_label | escape }}</a>{% endif %}
-    <a href="/search" aria-label="Ara">${navIconSvg("search")}</a>
+    {%- if section.settings.search_style == 'expandable' -%}
+      <div class="formula-nav__search" data-nav-search>
+        <button type="button" class="formula-nav__search-toggle" aria-label="Ara" aria-expanded="false" data-nav-search-toggle>${navIconSvg("search")}</button>
+        <form action="/search" method="get" class="formula-nav__search-form" data-nav-search-form>
+          <input type="search" name="q" placeholder="Ara…" class="formula-nav__search-input" aria-label="Arama sorgusu" />
+        </form>
+      </div>
+    {%- else -%}
+      <a href="/search" aria-label="Ara">${navIconSvg("search")}</a>
+    {%- endif -%}
     <a href="/account" aria-label="Hesabım">${navIconSvg("account")}</a>
     <a href="/cart" aria-label="Sepet" data-cart-open-mode="{{ section.settings.cart_open_mode | default: 'page' }}">${navIconSvg("cart")}</a>
   </div>
+  {%- if section.settings.search_style == 'expandable' -%}
+  <script>
+    (function () {
+      var root = document.currentScript.closest(".formula-nav");
+      if (!root) return;
+      var wrap = root.querySelector("[data-nav-search]");
+      if (!wrap) return;
+      var toggle = wrap.querySelector("[data-nav-search-toggle]");
+      var form = wrap.querySelector("[data-nav-search-form]");
+      var input = form ? form.querySelector("input") : null;
+      if (!toggle || !form) return;
+      function close() {
+        wrap.classList.remove("is-open");
+        toggle.setAttribute("aria-expanded", "false");
+      }
+      toggle.addEventListener("click", function (e) {
+        e.stopPropagation();
+        var open = wrap.classList.toggle("is-open");
+        toggle.setAttribute("aria-expanded", open ? "true" : "false");
+        if (open && input) input.focus();
+      });
+      form.addEventListener("click", function (e) { e.stopPropagation(); });
+      document.addEventListener("click", close);
+      document.addEventListener("keydown", function (e) { if (e.key === "Escape") close(); });
+    })();
+  </script>
+  {%- endif -%}
 </section>
 
 {% schema %}
@@ -145,6 +181,13 @@ export const FORMULA_NAV_HEADER = `<section class="formula-nav">
         { "label": "Direkt Sepet Sayfası", "value": "page" },
         { "label": "Yandan Aç (Panel)", "value": "drawer" },
         { "label": "Üstten Aç (Panel)", "value": "top" }
+      ]
+    },
+    { "type": "select", "id": "search_style", "label": "Arama Şekli", "default": "icon",
+      "info": "Arama ikonuna tıklanınca ne olacağını belirler.",
+      "options": [
+        { "label": "Arama Sayfasına Git", "value": "icon" },
+        { "label": "Açılır Kutu (Header İçinde)", "value": "expandable" }
       ]
     }
   ],
@@ -224,10 +267,46 @@ export const FORMULA_NAV_HEADER_CENTERED = `<section class="formula-nav formula-
   </nav>
   <div class="formula-nav__actions">
     {% if section.settings.quiz_label != blank %}<a href="{{ section.settings.quiz_url | default: '/pages/cilt-analizi' | escape }}" class="formula-nav__quiz">{{ section.settings.quiz_label | escape }}</a>{% endif %}
-    <a href="/search" aria-label="Ara">${navIconSvg("search")}</a>
+    {%- if section.settings.search_style == 'expandable' -%}
+      <div class="formula-nav__search" data-nav-search>
+        <button type="button" class="formula-nav__search-toggle" aria-label="Ara" aria-expanded="false" data-nav-search-toggle>${navIconSvg("search")}</button>
+        <form action="/search" method="get" class="formula-nav__search-form" data-nav-search-form>
+          <input type="search" name="q" placeholder="Ara…" class="formula-nav__search-input" aria-label="Arama sorgusu" />
+        </form>
+      </div>
+    {%- else -%}
+      <a href="/search" aria-label="Ara">${navIconSvg("search")}</a>
+    {%- endif -%}
     <a href="/account" aria-label="Hesabım">${navIconSvg("account")}</a>
     <a href="/cart" aria-label="Sepet" data-cart-open-mode="{{ section.settings.cart_open_mode | default: 'page' }}">${navIconSvg("cart")}</a>
   </div>
+  {%- if section.settings.search_style == 'expandable' -%}
+  <script>
+    (function () {
+      var root = document.currentScript.closest(".formula-nav");
+      if (!root) return;
+      var wrap = root.querySelector("[data-nav-search]");
+      if (!wrap) return;
+      var toggle = wrap.querySelector("[data-nav-search-toggle]");
+      var form = wrap.querySelector("[data-nav-search-form]");
+      var input = form ? form.querySelector("input") : null;
+      if (!toggle || !form) return;
+      function close() {
+        wrap.classList.remove("is-open");
+        toggle.setAttribute("aria-expanded", "false");
+      }
+      toggle.addEventListener("click", function (e) {
+        e.stopPropagation();
+        var open = wrap.classList.toggle("is-open");
+        toggle.setAttribute("aria-expanded", open ? "true" : "false");
+        if (open && input) input.focus();
+      });
+      form.addEventListener("click", function (e) { e.stopPropagation(); });
+      document.addEventListener("click", close);
+      document.addEventListener("keydown", function (e) { if (e.key === "Escape") close(); });
+    })();
+  </script>
+  {%- endif -%}
 </section>
 
 {% schema %}
@@ -244,6 +323,13 @@ export const FORMULA_NAV_HEADER_CENTERED = `<section class="formula-nav formula-
         { "label": "Direkt Sepet Sayfası", "value": "page" },
         { "label": "Yandan Aç (Panel)", "value": "drawer" },
         { "label": "Üstten Aç (Panel)", "value": "top" }
+      ]
+    },
+    { "type": "select", "id": "search_style", "label": "Arama Şekli", "default": "icon",
+      "info": "Arama ikonuna tıklanınca ne olacağını belirler.",
+      "options": [
+        { "label": "Arama Sayfasına Git", "value": "icon" },
+        { "label": "Açılır Kutu (Header İçinde)", "value": "expandable" }
       ]
     }
   ],
@@ -3483,6 +3569,15 @@ a { color: inherit; }
    referans alıp ikondan kopuk duruyordu. */
 .formula-nav__actions a { text-decoration: none; color: var(--color-text); display: flex; align-items: center; position: relative; }
 .formula-nav__actions a:hover { color: var(--color-primary); }
+/* Açılır arama kutusu (2026-08-24, "Arama Şekli" ayarı) — [[feedback-navbar-must-fit]]
+   sert kuralı gereği form her zaman position:absolute, nav'ın kendi
+   genişliğini/hizasını ASLA etkilemiyor, sadece üzerine bindiriliyor. */
+.formula-nav__search { position: relative; display: flex; align-items: center; }
+.formula-nav__search-toggle { background: none; border: none; cursor: pointer; padding: 0; display: flex; color: inherit; }
+.formula-nav__search-form { position: absolute; right: 0; top: calc(100% + 12px); width: 0; overflow: hidden; opacity: 0; pointer-events: none; background: var(--color-background); border: 1px solid var(--color-border); border-radius: 10px; box-shadow: 0 18px 44px rgba(15,23,42,.12); transition: width .2s ease, opacity .2s ease; z-index: 30; }
+.formula-nav__search.is-open .formula-nav__search-form { width: 260px; opacity: 1; pointer-events: auto; padding: 4px; }
+.formula-nav__search-input { width: 100%; box-sizing: border-box; border: none; outline: none; padding: 10px 12px; font-size: 14px; background: transparent; color: var(--color-text); }
+@media (max-width: 767.98px) { .formula-nav__search.is-open .formula-nav__search-form { position: fixed; left: 12px; right: 12px; top: 64px; width: auto; } }
 .formula-nav__icon { width: 19px; height: 19px; display: block; }
 .formula-nav__quiz { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 999px; padding: 7px 14px; color: var(--color-primary) !important; font-weight: 500; }
 @media (max-width: 767.98px) { .formula-nav__links { display: none; } .formula-nav { padding: 14px 20px; } }
