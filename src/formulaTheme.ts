@@ -2192,19 +2192,19 @@ export const FORMULA_RELATED_PRODUCTS = `<section{% if recommendations.performed
  * universalPages.ts) — böylece `FORMULA_LIBRARY_SECTIONS_CSS`'in eski
  * projelere patch'lenmesi gereken staleness sorununa hiç girmiyor.
  */
-export const FORMULA_CONTACT_FORM = `<section data-section-id="{{ section.id }}" style="padding:64px 24px;background:{{ section.settings.bg | default: '#ffffff' }}">
+export const FORMULA_CONTACT_FORM = `<section data-section-id="{{ section.id }}" style="padding:64px 24px;background:{{ section.settings.bg | default: 'var(--color-background)' }}">
   <div style="width:min(100%,{{ section.settings.max_width | default: 640 }}px);margin:0 auto;text-align:{{ section.settings.align | default: 'left' }}">
-    {% if section.settings.eyebrow != blank %}<p style="font-size:12px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:{{ section.settings.accent | default: '#2563eb' }};margin:0 0 10px">{{ section.settings.eyebrow | escape }}</p>{% endif %}
-    {% if section.settings.title != blank %}<h2 style="font-size:clamp(24px,4vw,34px);font-weight:900;letter-spacing:-.03em;margin:0 0 12px;color:{{ section.settings.text | default: '#0f172a' }}">{{ section.settings.title | escape }}</h2>{% endif %}
-    {% if section.settings.subtitle != blank %}<p style="font-size:15px;line-height:1.7;color:{{ section.settings.muted | default: '#64748b' }};margin:0 0 28px">{{ section.settings.subtitle | escape }}</p>{% endif %}
+    {% if section.settings.eyebrow != blank %}<p style="font-size:12px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:{{ section.settings.accent | default: 'var(--color-accent)' }};margin:0 0 10px">{{ section.settings.eyebrow | escape }}</p>{% endif %}
+    {% if section.settings.title != blank %}<h2 style="font-size:clamp(24px,4vw,34px);font-weight:900;letter-spacing:-.03em;margin:0 0 12px;color:{{ section.settings.text | default: 'var(--color-text)' }}">{{ section.settings.title | escape }}</h2>{% endif %}
+    {% if section.settings.subtitle != blank %}<p style="font-size:15px;line-height:1.7;color:{{ section.settings.muted | default: 'var(--color-muted)' }};margin:0 0 28px">{{ section.settings.subtitle | escape }}</p>{% endif %}
     <form data-eidea-contact-form data-success-message="{{ section.settings.success_message | default: 'Mesajın alındı, en kısa sürede dönüş yapacağız.' | escape }}" style="display:grid;gap:12px;text-align:left">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <label style="display:grid;gap:6px;font-size:13px;font-weight:700;color:{{ section.settings.text | default: '#0f172a' }}"><span>Ad Soyad</span><input name="name" required style="height:46px;border-radius:10px;border:1px solid {{ section.settings.border | default: '#e5e7eb' }};padding:0 14px"></label>
-        <label style="display:grid;gap:6px;font-size:13px;font-weight:700;color:{{ section.settings.text | default: '#0f172a' }}"><span>E-posta</span><input type="email" name="email" required style="height:46px;border-radius:10px;border:1px solid {{ section.settings.border | default: '#e5e7eb' }};padding:0 14px"></label>
+        <label style="display:grid;gap:6px;font-size:13px;font-weight:700;color:{{ section.settings.text | default: 'var(--color-text)' }}"><span>Ad Soyad</span><input name="name" required style="height:46px;border-radius:10px;border:1px solid {{ section.settings.border | default: '#e5e7eb' }};padding:0 14px"></label>
+        <label style="display:grid;gap:6px;font-size:13px;font-weight:700;color:{{ section.settings.text | default: 'var(--color-text)' }}"><span>E-posta</span><input type="email" name="email" required style="height:46px;border-radius:10px;border:1px solid {{ section.settings.border | default: '#e5e7eb' }};padding:0 14px"></label>
       </div>
-      {% if section.settings.show_phone %}<label style="display:grid;gap:6px;font-size:13px;font-weight:700;color:{{ section.settings.text | default: '#0f172a' }}"><span>Telefon (ops.)</span><input name="phone" type="tel" inputmode="numeric" pattern="[0-9]*" placeholder="05XX XXX XX XX" data-eidea-phone-field style="height:46px;border-radius:10px;border:1px solid {{ section.settings.border | default: '#e5e7eb' }};padding:0 14px"></label>{% endif %}
-      {% if section.settings.show_subject %}<label style="display:grid;gap:6px;font-size:13px;font-weight:700;color:{{ section.settings.text | default: '#0f172a' }}"><span>Konu (ops.)</span><input name="subject" style="height:46px;border-radius:10px;border:1px solid {{ section.settings.border | default: '#e5e7eb' }};padding:0 14px"></label>{% endif %}
-      <label style="display:grid;gap:6px;font-size:13px;font-weight:700;color:{{ section.settings.text | default: '#0f172a' }}"><span>Mesajın</span><textarea name="message" required rows="5" style="border-radius:10px;border:1px solid {{ section.settings.border | default: '#e5e7eb' }};padding:12px 14px;font-family:inherit;resize:vertical"></textarea></label>
+      {% if section.settings.show_phone %}<label style="display:grid;gap:6px;font-size:13px;font-weight:700;color:{{ section.settings.text | default: 'var(--color-text)' }}"><span>Telefon (ops.)</span><input name="phone" type="tel" inputmode="numeric" pattern="[0-9]*" placeholder="05XX XXX XX XX" data-eidea-phone-field style="height:46px;border-radius:10px;border:1px solid {{ section.settings.border | default: '#e5e7eb' }};padding:0 14px"></label>{% endif %}
+      {% if section.settings.show_subject %}<label style="display:grid;gap:6px;font-size:13px;font-weight:700;color:{{ section.settings.text | default: 'var(--color-text)' }}"><span>Konu (ops.)</span><input name="subject" style="height:46px;border-radius:10px;border:1px solid {{ section.settings.border | default: '#e5e7eb' }};padding:0 14px"></label>{% endif %}
+      <label style="display:grid;gap:6px;font-size:13px;font-weight:700;color:{{ section.settings.text | default: 'var(--color-text)' }}"><span>Mesajın</span><textarea name="message" required rows="5" style="border-radius:10px;border:1px solid {{ section.settings.border | default: '#e5e7eb' }};padding:12px 14px;font-family:inherit;resize:vertical"></textarea></label>
       {%- comment -%}
         2026-08-23 — kullanıcı isteği: Studio'dan mağaza sahibi formu
         istediği kadar özel soruyla genişletebilsin (kısa metin/uzun metin/
@@ -2214,7 +2214,7 @@ export const FORMULA_CONTACT_FORM = `<section data-section-id="{{ section.id }}"
       {%- endcomment -%}
       {% for block in section.blocks %}
         {% if block.type == "question" %}
-          <label data-eidea-contact-question data-question-id="{{ block.id }}" data-question-type="{{ block.settings.field_type | default: 'short_text' }}" data-question-label="{{ block.settings.label | default: 'Soru' | escape }}" style="display:grid;gap:6px;font-size:13px;font-weight:700;color:{{ section.settings.text | default: '#0f172a' }}">
+          <label data-eidea-contact-question data-question-id="{{ block.id }}" data-question-type="{{ block.settings.field_type | default: 'short_text' }}" data-question-label="{{ block.settings.label | default: 'Soru' | escape }}" style="display:grid;gap:6px;font-size:13px;font-weight:700;color:{{ section.settings.text | default: 'var(--color-text)' }}">
             <span>{{ block.settings.label | default: "Soru" | escape }}{% if block.settings.required %} *{% endif %}</span>
             {% if block.settings.field_type == "long_text" %}
               <textarea name="q_{{ block.id }}" rows="4" {% if block.settings.required %}required{% endif %} style="border-radius:10px;border:1px solid {{ section.settings.border | default: '#e5e7eb' }};padding:12px 14px;font-family:inherit;resize:vertical"></textarea>
@@ -2267,10 +2267,10 @@ export const FORMULA_CONTACT_FORM = `<section data-section-id="{{ section.id }}"
     { "type": "select", "id": "align", "label": "Hiza", "default": "left", "options": [{"label":"Sol","value":"left"},{"label":"Orta","value":"center"}] },
     { "type": "range", "id": "max_width", "label": "Maksimum genişlik", "min": 420, "max": 900, "step": 20, "unit": "px", "default": 640 },
     { "type": "header", "content": "Renkler" },
-    { "type": "color", "id": "bg", "label": "Arka plan", "default": "#ffffff" },
-    { "type": "color", "id": "text", "label": "Yazı", "default": "#0f172a" },
-    { "type": "color", "id": "muted", "label": "İkincil yazı", "default": "#64748b" },
-    { "type": "color", "id": "accent", "label": "Vurgu", "default": "#2563eb" },
+    { "type": "color", "id": "bg", "label": "Arka plan" },
+    { "type": "color", "id": "text", "label": "Yazı" },
+    { "type": "color", "id": "muted", "label": "İkincil yazı" },
+    { "type": "color", "id": "accent", "label": "Vurgu" },
     { "type": "color", "id": "border", "label": "Çizgi", "default": "#e5e7eb" },
     { "type": "color", "id": "button_bg", "label": "Buton arka plan", "default": "#111827" },
     { "type": "color", "id": "button_text", "label": "Buton yazı", "default": "#ffffff" }
@@ -3460,7 +3460,7 @@ a { color: inherit; }
 
 /* Nav */
 .formula-nav { display: flex; align-items: center; justify-content: space-between; padding: 18px 40px; border-bottom: 1px solid var(--color-border); background: var(--color-background); gap: 24px; }
-.formula-nav__logo { font-family: var(--font-heading); font-weight: 700; font-size: 18px; letter-spacing: -0.01em; text-decoration: none; color: var(--color-secondary); }
+.formula-nav__logo { font-family: var(--font-heading); font-weight: 700; font-size: 18px; letter-spacing: -0.01em; text-decoration: none; color: var(--color-text); }
 .formula-nav__links { display: flex; gap: 26px; }
 .formula-nav__links a { font-size: 13px; text-decoration: none; color: var(--color-text); text-transform: uppercase; letter-spacing: 0.04em; }
 /* 2026-08-23 — 20.08-revizeler.md madde 2: alt menü (dropdown) — sadece
