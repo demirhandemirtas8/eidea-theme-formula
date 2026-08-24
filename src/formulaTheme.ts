@@ -378,7 +378,7 @@ export const FORMULA_QUIZ_BANNER = `<section class="formula-quiz${revealAnimatio
 }
 {% endschema %}`;
 
-export const FORMULA_BESTSELLERS = `<section class="formula-bestsellers${revealAnimationClass()}">
+export const FORMULA_BESTSELLERS = `<section class="formula-bestsellers{% if section.settings.layout_style == 'carousel' %} formula-bestsellers--carousel{% elsif section.settings.layout_style == 'featured' %} formula-bestsellers--featured{% endif %}${revealAnimationClass()}">
   <div class="formula-section-head">
     <h2>{{ section.settings.title | default: "Çok satanlar" | escape }}</h2>
     <a href="{{ section.settings.view_all_url | default: '/products' | escape }}">{{ section.settings.view_all_label | default: "Tümünü Gör" | escape }}</a>
@@ -408,6 +408,7 @@ export const FORMULA_BESTSELLERS = `<section class="formula-bestsellers${revealA
 {
   "name": "Formula Çok Satanlar",
   "settings": [
+    { "type": "select", "id": "layout_style", "label": "Yerleşim", "default": "grid", "options": [{"label":"Grid","value":"grid"},{"label":"Carousel","value":"carousel"},{"label":"Öne çıkan","value":"featured"}] },
     { "type": "text", "id": "title", "label": "Başlık", "default": "Çok satanlar" },
     { "type": "text", "id": "view_all_label", "label": "Tümünü Gör Metni", "default": "Tümünü Gör" },
     { "type": "url", "id": "view_all_url", "label": "Tümünü Gör URL", "default": "/products" },${revealAnimationSchemaField()}
@@ -959,26 +960,53 @@ export const FORMULA_GENERAL_SHOWCASE = `<section class="formula-showcase{% if s
  * blok deseniyle veya (story dizisinde) yeni `collection` alanıyla aynı çizgide.
  */
 
-export const FORMULA_FAQ = `<section class="formula-faq${revealAnimationClass()}">
+export const FORMULA_FAQ = `<section class="formula-faq{% if section.settings.layout_style == 'two_columns' %} formula-faq--two-columns{% elsif section.settings.layout_style == 'categorized' %} formula-faq--categorized{% endif %}${revealAnimationClass()}">
   <div class="formula-section-head">
     <h2>{{ section.settings.title | default: "Sıkça Sorulan Sorular" | escape }}</h2>
   </div>
+  {% if section.settings.layout_style == 'categorized' %}
+    <div class="formula-faq__tabs" role="tablist" aria-label="SSS kategorileri">
+      <button type="button" class="formula-faq__tab is-active" data-faq-tab="all" aria-selected="true">Tümü</button>
+      {% for block in section.blocks %}{% if block.type == "question" and block.settings.category != blank %}<button type="button" class="formula-faq__tab" data-faq-tab="{{ block.settings.category | escape }}" aria-selected="false">{{ block.settings.category | escape }}</button>{% endif %}{% endfor %}
+    </div>
+  {% endif %}
   <div class="formula-faq__list">
     {% for block in section.blocks %}
       {% if block.type == "question" %}
-        <details class="formula-faq__item">
+        <details class="formula-faq__item"{% if section.settings.layout_style == 'categorized' %} data-faq-category="{{ block.settings.category | default: 'Genel' | escape }}"{% endif %}>
+          {% if section.settings.layout_style == 'categorized' and block.settings.category != blank %}<span class="formula-faq__category">{{ block.settings.category | escape }}</span>{% endif %}
           <summary class="formula-faq__question">{{ block.settings.question | default: "Soru" | escape }}<span class="formula-faq__chevron" aria-hidden="true">⌄</span></summary>
           <p class="formula-faq__answer">{{ block.settings.answer | default: "Cevap" | escape }}</p>
         </details>
       {% endif %}
     {% endfor %}
   </div>
+  {% if section.settings.layout_style == 'categorized' %}
+    <script>
+      (function () {
+        var root = document.currentScript.closest('.formula-faq');
+        if (!root) return;
+        var tabs = root.querySelectorAll('[data-faq-tab]');
+        var items = root.querySelectorAll('[data-faq-category]');
+        var seen = new Set(['all']);
+        tabs.forEach(function (tab) { var key = tab.getAttribute('data-faq-tab'); if (seen.has(key)) tab.hidden = true; else seen.add(key); });
+        tabs.forEach(function (tab) {
+          tab.addEventListener('click', function () {
+            var category = tab.getAttribute('data-faq-tab');
+            tabs.forEach(function (candidate) { var active = candidate === tab; candidate.classList.toggle('is-active', active); candidate.setAttribute('aria-selected', active ? 'true' : 'false'); });
+            items.forEach(function (item) { item.hidden = category !== 'all' && item.getAttribute('data-faq-category') !== category; });
+          });
+        });
+      })();
+    </script>
+  {% endif %}
 </section>
 
 {% schema %}
 {
   "name": "Formula SSS",
   "settings": [
+    { "type": "select", "id": "layout_style", "label": "Yerleşim", "default": "single", "options": [{"label":"Tek kolon accordion","value":"single"},{"label":"İki kolon accordion","value":"two_columns"},{"label":"Kategori sekmeli","value":"categorized"}] },
     { "type": "text", "id": "title", "label": "Başlık", "default": "Sıkça Sorulan Sorular" },${revealAnimationSchemaField()}
   ],
   "blocks": [
@@ -987,7 +1015,8 @@ export const FORMULA_FAQ = `<section class="formula-faq${revealAnimationClass()}
       "name": "Soru",
       "settings": [
         { "type": "text", "id": "question", "label": "Soru", "default": "Kargo ne kadar sürer?" },
-        { "type": "textarea", "id": "answer", "label": "Cevap", "default": "Siparişler 1-3 iş günü içinde kargoya verilir." }
+        { "type": "textarea", "id": "answer", "label": "Cevap", "default": "Siparişler 1-3 iş günü içinde kargoya verilir." },
+        { "type": "text", "id": "category", "label": "Kategori", "default": "Genel" }
       ]
     }
   ],
@@ -1273,7 +1302,7 @@ export const FORMULA_TEXT_COLUMNS = `<section class="formula-text-columns${revea
 }
 {% endschema %}`;
 
-export const FORMULA_TESTIMONIAL = `<section class="formula-testimonial${revealAnimationClass()}">
+export const FORMULA_TESTIMONIAL = `<section class="formula-testimonial{% if section.settings.layout_style == 'focus' %} formula-testimonial--focus{% elsif section.settings.layout_style == 'carousel' %} formula-testimonial--carousel{% endif %}${revealAnimationClass()}">
   {% if section.settings.title != blank %}<div class="formula-section-head"><h2>{{ section.settings.title | escape }}</h2></div>{% endif %}
   <div class="formula-testimonial__grid">
     {% for block in section.blocks %}
@@ -1299,6 +1328,7 @@ export const FORMULA_TESTIMONIAL = `<section class="formula-testimonial${revealA
 {
   "name": "Formula Alıntı / Referans",
   "settings": [
+    { "type": "select", "id": "layout_style", "label": "Yerleşim", "default": "grid", "options": [{"label":"Çoklu kart grid","value":"grid"},{"label":"Tek odak alıntı","value":"focus"},{"label":"Carousel","value":"carousel"}] },
     { "type": "text", "id": "title", "label": "Başlık (ops.)", "default": "Müşterilerimiz Ne Diyor" },${revealAnimationSchemaField()}
   ],
   "blocks": [
@@ -2259,11 +2289,106 @@ export const FORMULA_BRANDS_SLIDER = `<section class="formula-brands-slider${rev
 }
 {% endschema %}`;
 
+// 2026-08-24 — Formula tema genişletmesi, Codex'in önerdiği yeni section
+// tiplerinden ilki (bkz. 24.08-formula-genisletme-codex-fikirleri.md madde 4,
+// "en basit/izole — yeni veri modeli gerektirmiyor" notu). Geri sayım
+// istemci tarafında saniye başı güncelleniyor (SSR sadece bitiş zamanını
+// data-attribute olarak taşır) — diğer section'lardaki inline <script>
+// deseniyle (ör. FORMULA_BRANDS_SLIDER'ın onclick'i, reviews'ün star-picker'ı)
+// tutarlı, ekstra bağımlılık yok. `end_at` boşsa veya geçersizse sayaç hiç
+// gösterilmez (sessizce bozuk görünmek yerine).
+export const FORMULA_COUNTDOWN_PROMOTION = `<section class="formula-countdown${revealAnimationClass()}" data-countdown-end="{{ section.settings.end_at | escape }}" data-countdown-behavior="{{ section.settings.expired_behavior | default: 'message' }}" style="{% if section.settings.bg_color != blank %}background:{{ section.settings.bg_color }};{% endif %}{% if section.settings.text_color != blank %}color:{{ section.settings.text_color }};{% endif %}">
+  <div class="formula-countdown__inner">
+    {% if section.settings.heading != blank %}<p class="formula-countdown__heading">{{ section.settings.heading | escape }}</p>{% endif %}
+    {% if section.settings.subtitle != blank %}<p class="formula-countdown__sub">{{ section.settings.subtitle | escape }}</p>{% endif %}
+    <div class="formula-countdown__timer" data-countdown-timer>
+      <div class="formula-countdown__unit"><span data-countdown-days>00</span><label>Gün</label></div>
+      <div class="formula-countdown__unit"><span data-countdown-hours>00</span><label>Saat</label></div>
+      <div class="formula-countdown__unit"><span data-countdown-minutes>00</span><label>Dk</label></div>
+      <div class="formula-countdown__unit"><span data-countdown-seconds>00</span><label>Sn</label></div>
+    </div>
+    <p class="formula-countdown__expired" data-countdown-expired hidden>{{ section.settings.expired_message | default: "Kampanya sona erdi." | escape }}</p>
+    {% if section.settings.cta_label != blank %}
+      <a class="formula-btn{% if section.settings.accent_color != blank %} formula-btn--solid{% else %} formula-btn--solid{% endif %}" href="{{ section.settings.cta_url | default: '/products' | escape }}"{% if section.settings.accent_color != blank %} style="background:{{ section.settings.accent_color }};border-color:{{ section.settings.accent_color }}"{% endif %}>{{ section.settings.cta_label | escape }}</a>
+    {% endif %}
+  </div>
+  <script>
+    (function () {
+      var root = document.currentScript.closest(".formula-countdown");
+      if (!root) return;
+      var endRaw = root.getAttribute("data-countdown-end");
+      var end = endRaw ? new Date(endRaw).getTime() : NaN;
+      var timerEl = root.querySelector("[data-countdown-timer]");
+      var expiredEl = root.querySelector("[data-countdown-expired]");
+      if (!end || isNaN(end)) {
+        if (timerEl) timerEl.hidden = true;
+        return;
+      }
+      var daysEl = root.querySelector("[data-countdown-days]");
+      var hoursEl = root.querySelector("[data-countdown-hours]");
+      var minutesEl = root.querySelector("[data-countdown-minutes]");
+      var secondsEl = root.querySelector("[data-countdown-seconds]");
+      var pad = function (n) { return String(n).length < 2 ? "0" + n : String(n); };
+      var intervalId;
+      function tick() {
+        var diff = end - Date.now();
+        if (diff <= 0) {
+          clearInterval(intervalId);
+          if (timerEl) timerEl.hidden = true;
+          var behavior = root.getAttribute("data-countdown-behavior");
+          if (behavior === "hide") {
+            root.style.display = "none";
+          } else if (expiredEl) {
+            expiredEl.hidden = false;
+          }
+          return;
+        }
+        var d = Math.floor(diff / 86400000);
+        var h = Math.floor((diff % 86400000) / 3600000);
+        var m = Math.floor((diff % 3600000) / 60000);
+        var s = Math.floor((diff % 60000) / 1000);
+        if (daysEl) daysEl.textContent = pad(d);
+        if (hoursEl) hoursEl.textContent = pad(h);
+        if (minutesEl) minutesEl.textContent = pad(m);
+        if (secondsEl) secondsEl.textContent = pad(s);
+      }
+      tick();
+      intervalId = setInterval(tick, 1000);
+    })();
+  </script>
+</section>
+
+{% schema %}
+{
+  "name": "Formula Kampanya Geri Sayımı",
+  "settings": [
+    { "type": "text", "id": "heading", "label": "Başlık", "default": "Kampanya bitmeden yakala" },
+    { "type": "text", "id": "subtitle", "label": "Alt Metin", "default": "Sınırlı süreli fırsat" },
+    { "type": "text", "id": "end_at", "label": "Bitiş Tarihi/Saati (ör. 2026-12-31T23:59)", "default": "" },
+    { "type": "select", "id": "expired_behavior", "label": "Süre Dolunca", "default": "message",
+      "options": [
+        { "label": "Mesaj göster", "value": "message" },
+        { "label": "Section'ı gizle", "value": "hide" }
+      ]
+    },
+    { "type": "text", "id": "expired_message", "label": "Süre Dolunca Mesajı", "default": "Kampanya sona erdi." },
+    { "type": "text", "id": "cta_label", "label": "Buton Metni", "default": "Şimdi Al" },
+    { "type": "url", "id": "cta_url", "label": "Buton URL", "default": "/products" },
+    { "type": "header", "id": "countdown_design", "label": "Tasarım" },
+    { "type": "color", "id": "bg_color", "label": "Arka plan (boş = tema rengi)" },
+    { "type": "color", "id": "text_color", "label": "Metin rengi (boş = tema rengi)" },
+    { "type": "color", "id": "accent_color", "label": "Buton rengi (boş = tema vurgu rengi)" },${revealAnimationSchemaField()}
+  ],
+  "presets": [{ "name": "Formula Kampanya Geri Sayımı" }]
+}
+{% endschema %}`;
+
 /** `StudioShell.tsx`'in `addCatalog`'una `templateId === "formula"` iken
  * eklenen sabit kütüphane girdileri — sayfada henüz var olmasalar bile her
  * zaman teklif edilirler (bkz. `custom-html`'in aynı deseni). */
 export const FORMULA_LIBRARY_SECTIONS: { type: string; content: string }[] = [
   { type: "announcement-bar", content: FORMULA_ANNOUNCEMENT_BAR },
+  { type: "countdown-promotion", content: FORMULA_COUNTDOWN_PROMOTION },
   { type: "brand-marquee", content: FORMULA_MARQUEE },
   { type: "brands-slider", content: FORMULA_BRANDS_SLIDER },
   { type: "collection-list", content: FORMULA_COLLECTION_LIST },
@@ -2412,7 +2537,17 @@ export const FORMULA_LIBRARY_SECTIONS_CSS = `
 .formula-faq__chevron { color: var(--color-muted); transition: transform .2s; flex-shrink: 0; }
 .formula-faq__item[open] .formula-faq__chevron { transform: rotate(180deg); }
 .formula-faq__answer { margin: 12px 0 0; color: var(--color-muted); line-height: 1.6; font-size: 14px; }
+.formula-faq--two-columns { max-width:1100px; }
+.formula-faq--two-columns .formula-faq__list { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:40px;align-items:start; }
+.formula-faq--categorized { max-width:1000px; }
+.formula-faq__tabs { display:flex;gap:8px;overflow-x:auto;margin:0 0 24px;padding-bottom:4px; }
+.formula-faq__tab { flex:0 0 auto;border:1px solid var(--color-border);border-radius:999px;background:transparent;color:var(--color-text);padding:9px 16px;font:inherit;font-size:13px;cursor:pointer; }
+.formula-faq__tab.is-active { background:var(--color-text);border-color:var(--color-text);color:var(--color-background); }
+.formula-faq--categorized .formula-faq__list { display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px; }
+.formula-faq--categorized .formula-faq__item { border:1px solid var(--color-border);border-radius:14px;padding:18px; }
+.formula-faq__category { display:inline-flex;margin-bottom:10px;padding:5px 10px;border-radius:999px;background:var(--color-surface);color:var(--color-muted);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em; }
 @media (max-width: 700px) { .formula-faq { padding: 44px 20px; } }
+@media (max-width: 700px) { .formula-faq--two-columns .formula-faq__list { grid-template-columns:1fr; } }
 
 /* Instagram-story tipi hızlı koleksiyonlar */
 .formula-story-row { padding: 32px 40px; }
@@ -2490,6 +2625,14 @@ export const FORMULA_LIBRARY_SECTIONS_CSS = `
 .formula-testimonial__avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
 .formula-testimonial__name { font-size: 13px; font-weight: 600; margin: 0; color: var(--color-text); }
 .formula-testimonial__role { font-size: 12px; margin: 2px 0 0; color: var(--color-muted); }
+.formula-testimonial--focus { max-width:900px;margin:0 auto;text-align:center; }
+.formula-testimonial--focus .formula-testimonial__grid { display:block; }
+.formula-testimonial--focus .formula-testimonial__card { display:none;border:0;background:transparent;padding:24px; }
+.formula-testimonial--focus .formula-testimonial__card:first-child { display:block; }
+.formula-testimonial--focus .formula-testimonial__quote { font-size:clamp(24px,4vw,42px);line-height:1.3; }
+.formula-testimonial--focus .formula-testimonial__author { justify-content:center; }
+.formula-testimonial--carousel .formula-testimonial__grid { display:flex;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:12px; }
+.formula-testimonial--carousel .formula-testimonial__card { flex:0 0 min(82vw,380px);scroll-snap-align:start; }
 @media (max-width: 700px) { .formula-testimonial { padding: 44px 20px; } }
 
 /* Numaralı Liste / Adımlar (2026-08-19 devamı) */
@@ -2805,6 +2948,11 @@ a { color: inherit; }
 /* Bestsellers / product cards */
 .formula-bestsellers, .formula-concerns, .formula-philosophy { padding: 64px 40px; }
 .formula-bestsellers__grid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 24px; }
+.formula-bestsellers--carousel .formula-bestsellers__grid { display:flex;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:12px; }
+.formula-bestsellers--carousel .formula-product-card { flex:0 0 min(78vw,300px);scroll-snap-align:start; }
+.formula-bestsellers--featured .formula-bestsellers__grid { grid-template-columns:repeat(3,minmax(0,1fr)); }
+.formula-bestsellers--featured .formula-product-card:first-child { grid-column:span 2;grid-row:span 2; }
+.formula-bestsellers--featured .formula-product-card:first-child .formula-product-card__media { aspect-ratio:1; }
 .formula-product-card { text-decoration: none; color: var(--color-text); display: block; }
 .formula-product-card__media { position: relative; aspect-ratio: 3/4; background: var(--color-surface); border-radius: 14px; overflow: hidden; margin-bottom: 14px; }
 .formula-product-card__media img { width: 100%; height: 100%; object-fit: cover; }
