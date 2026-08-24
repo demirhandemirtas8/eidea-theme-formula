@@ -21,6 +21,7 @@ import {
   FORMULA_PHILOSOPHY,
   FORMULA_FOOTER_MENU,
   FORMULA_404,
+  FORMULA_CHECKOUT_SUCCESS,
   FORMULA_THEME_CSS,
   FORMULA_LIBRARY_SECTIONS,
 } from "./formulaTheme.js";
@@ -245,10 +246,20 @@ export function buildFormulaPages(): ThemePageSpec[] {
   const notFoundPage = utilityPage("404", "Sayfa Bulunamadı", "/404", "404", {
     id: "main-404", type: "main-404", name: "404", src: "sections/main-404.ei", settings: {},
   });
+  // 2026-08-24 — kullanıcı raporu: "siparişiniz alındı sayfası formula
+  // temasına özelleştirilmemiş" — `/checkout/success` hiç tema sistemine
+  // bağlı değildi (bkz. FORMULA_CHECKOUT_SUCCESS yorumu, formulaTheme.ts).
+  // `template: "page"` — EipgTemplate enum'unda "checkout-success" diye bir
+  // değer yok, `ecommerceContext.ts` diğer statik sayfalar gibi (brands,
+  // search) `page.slug === "checkout-success"` ile dallanıyor.
+  const checkoutSuccessPage = utilityPage("checkout-success", "Sipariş Onayı", "/checkout/success", "page", {
+    id: "main-checkout-success", type: "main-checkout-success", name: "Sipariş Onayı", src: "sections/main-checkout-success.ei", settings: {},
+  });
 
   return [
     homePage, productsPage, collectionPage, brandsPage, searchPage, productPage,
     cartPage, checkoutPage, accountPage, registerPage, loginPage, ordersPage, notFoundPage,
+    checkoutSuccessPage,
   ];
 }
 
@@ -273,6 +284,7 @@ export function formulaSectionFiles(): Record<string, string> {
     "sections/account-dashboard.ei": ACCOUNT_DASHBOARD_CONTENT,
     "sections/account-orders.ei": ACCOUNT_ORDERS_CONTENT,
     "sections/main-404.ei": FORMULA_404,
+    "sections/main-checkout-success.ei": FORMULA_CHECKOUT_SUCCESS,
   };
 }
 
@@ -401,6 +413,50 @@ export function patchMissingFormula404Page(pages: EiPage[], templateId: string |
     name: "404 Sayfası",
     path: "pages/404.eipg",
     template: "404",
+    locale: source.locale,
+    requires: [],
+    sections,
+    sectionOrder: sections.map((s) => s.id),
+    dirty: true,
+  };
+  return [...pages, page];
+}
+
+/**
+ * 2026-08-24 — kullanıcı raporu: "siparişiniz alındı sayfası formula
+ * temasına özelleştirilmemiş" — `patchMissingFormula404Page` ile BİREBİR
+ * aynı gerekçe/desen: `/checkout/success` daha önce hiçbir formula
+ * projesinde tema-scaffold edilmiş bir sayfa olarak var olmadı (route hep
+ * renderer.ts'in hardcoded fallback'ine düşüyordu), bu yüzden zaten var
+ * olan (donmuş) projelere bu sayfayı geriye dönük eklemek gerekiyor.
+ */
+export function patchMissingFormulaCheckoutSuccessPage(pages: EiPage[], templateId: string | null | undefined): EiPage[] {
+  if (templateId !== "formula") return pages;
+  if (pages.some((p) => p.slug === "checkout-success")) return pages;
+  const source = pages.find((p) => p.slug === "home") ?? pages[0];
+  if (!source) return pages;
+
+  const clone = (s: EiSection): EiSection => ({ ...s, id: `section-${crypto.randomUUID().slice(0, 8)}`, sourcePath: null, ownedByPage: false });
+  const header = source.sections.filter((s) => sectionSlot(resolveSectionInstanceRole(s)) === "header").map(clone);
+  const footer = source.sections.filter((s) => sectionSlot(resolveSectionInstanceRole(s)) === "footer").map(clone);
+  const mainSection: EiSection = {
+    id: `section-${crypto.randomUUID().slice(0, 8)}`,
+    type: "main-checkout-success",
+    name: "Sipariş Onayı",
+    enabled: true,
+    settings: {},
+    schema: [],
+    blocks: [],
+    content: FORMULA_CHECKOUT_SUCCESS,
+    sourcePath: null,
+    ownedByPage: false,
+  };
+  const sections = [...header, mainSection, ...footer];
+  const page: EiPage = {
+    slug: "checkout-success",
+    name: "Sipariş Onayı",
+    path: "pages/checkout-success.eipg",
+    template: "page",
     locale: source.locale,
     requires: [],
     sections,

@@ -1956,6 +1956,89 @@ export const FORMULA_404 = `<section class="formula-404${revealAnimationClass()}
 {% endschema %}`;
 
 /**
+ * 2026-08-24 — kullanıcı raporu: "siparişiniz alındı sayfası formula
+ * temasına özelleştirilmemiş". Kök neden: `/checkout/success` hiç Studio'nun
+ * theme sistemine bağlı DEĞİLDİ — `apps/renderer/src/templates/checkout.ts`'in
+ * (tema-öncesi) tamamen hardcoded, inline-style `checkoutSuccess()`
+ * fonksiyonu render ediyordu. Bu section o boşluğu dolduruyor —
+ * `ecommerceContext.ts`'in `page.slug === "checkout-success"` dalı gerçek
+ * siparişi (`?orderId=` query param, projectId eşleşmesi doğrulanarak) çözüp
+ * `order`/`bank_accounts` context'ini dolduruyor. Sipariş bulunamazsa
+ * (yanlış/eksik orderId) `{% else %}` dalı jenerik bir "devam et" mesajı
+ * gösterir — hata sayfası değil, kullanıcı deneyimini bozmaz.
+ *
+ * Sepeti temizleme (2026-08-24 kullanıcı raporu: "siparişi tamamlanan
+ * müşterinin sepeti boşaltılır") BURADA, sayfa yüklenince — checkout'un
+ * KENDİSİNDE değil, çünkü ödeme akışının birden fazla çıkış yolu var
+ * (kapıda ödeme direkt, kart/iyzico redirect sonrası) ve hepsi SONUNDA bu
+ * sayfaya düşüyor — tek, güvenilir "sipariş GERÇEKTEN tamamlandı" noktası.
+ */
+export const FORMULA_CHECKOUT_SUCCESS = `<section class="formula-order-result${revealAnimationClass()}">
+  <div class="formula-order-result__box">
+    {% if order %}
+      <div class="formula-order-result__icon formula-order-result__icon--success" aria-hidden="true">✓</div>
+      <h1 class="formula-order-result__title">{{ section.settings.success_title | default: "Siparişiniz Alındı!" | escape }}</h1>
+      <p class="formula-order-result__sub">{% if bank_accounts %}{{ section.settings.bank_text | default: "Siparişiniz oluşturuldu — ödemeyi aşağıdaki hesaba göndermeniz gerekiyor." | escape }}{% else %}{{ section.settings.success_text | default: "Ödemeniz başarıyla tamamlandı. Sipariş onayı e-posta adresine gönderilecek." | escape }}{% endif %}</p>
+      <p class="formula-order-result__number">{{ section.settings.order_number_label | default: "Sipariş No:" | escape }} <strong>{{ order.number }}</strong></p>
+      {% if bank_accounts %}
+        <div class="formula-order-result__bank">
+          <p class="formula-order-result__bank-title">Havale/EFT ile ödeme yapın</p>
+          {% for account in bank_accounts %}
+            <div class="formula-order-result__bank-row">
+              <p class="formula-order-result__bank-name">{{ account.bankName | escape }} — {{ account.accountName | escape }}</p>
+              <p class="formula-order-result__bank-iban">{{ account.iban | escape }} · {{ account.currency | escape }}</p>
+            </div>
+          {% endfor %}
+          {% if bank_reference %}<p class="formula-order-result__bank-ref">Açıklamaya <strong>{{ bank_reference | escape }}</strong> referans kodunu yazmayı unutma.</p>{% endif %}
+        </div>
+      {% endif %}
+      {% if order.items.size > 0 %}
+        <div class="formula-order-result__items">
+          {% for item in order.items %}
+            <div class="formula-order-result__item">
+              <span class="formula-order-result__item-title">{{ item.title | escape }} <span class="formula-order-result__item-qty">× {{ item.quantity }}</span></span>
+              <span class="formula-order-result__item-price">{{ item.price | money }}</span>
+            </div>
+          {% endfor %}
+          <div class="formula-order-result__total"><span>{{ section.settings.total_label | default: "Toplam" | escape }}</span><span>{{ order.total | money }}</span></div>
+        </div>
+      {% endif %}
+      <a class="formula-btn formula-btn--solid" href="{{ section.settings.cta_url | default: '/' | escape }}">{{ section.settings.cta_label | default: "Alışverişe Devam Et" | escape }}</a>
+    {% else %}
+      <div class="formula-order-result__icon" aria-hidden="true">?</div>
+      <h1 class="formula-order-result__title">{{ section.settings.notfound_title | default: "Sipariş bulunamadı" | escape }}</h1>
+      <p class="formula-order-result__sub">{{ section.settings.notfound_text | default: "Bu sipariş bağlantısı geçersiz veya süresi dolmuş olabilir." | escape }}</p>
+      <a class="formula-btn formula-btn--solid" href="/">{{ section.settings.cta_label | default: "Alışverişe Devam Et" | escape }}</a>
+    {% endif %}
+  </div>
+  {% if order %}
+  <script>
+    (function () {
+      fetch('/cart/clear', { method: 'POST' }).catch(function () {});
+    })();
+  </script>
+  {% endif %}
+</section>
+
+{% schema %}
+{
+  "name": "Formula Sipariş Sonucu",
+  "settings": [
+    { "type": "text", "id": "success_title", "label": "Başlık", "default": "Siparişiniz Alındı!" },
+    { "type": "textarea", "id": "success_text", "label": "Açıklama (kart/kapıda ödeme)", "default": "Ödemeniz başarıyla tamamlandı. Sipariş onayı e-posta adresine gönderilecek." },
+    { "type": "textarea", "id": "bank_text", "label": "Açıklama (havale/EFT)", "default": "Siparişiniz oluşturuldu — ödemeyi aşağıdaki hesaba göndermeniz gerekiyor." },
+    { "type": "text", "id": "order_number_label", "label": "Sipariş No Etiketi", "default": "Sipariş No:" },
+    { "type": "text", "id": "total_label", "label": "Toplam Etiketi", "default": "Toplam" },
+    { "type": "text", "id": "cta_label", "label": "Buton Metni", "default": "Alışverişe Devam Et" },
+    { "type": "url", "id": "cta_url", "label": "Buton URL", "default": "/" },
+    { "type": "text", "id": "notfound_title", "label": "Sipariş Bulunamadı Başlığı", "default": "Sipariş bulunamadı" },
+    { "type": "textarea", "id": "notfound_text", "label": "Sipariş Bulunamadı Metni", "default": "Bu sipariş bağlantısı geçersiz veya süresi dolmuş olabilir." },${revealAnimationSchemaField()}
+  ],
+  "presets": [{ "name": "Formula Sipariş Sonucu" }]
+}
+{% endschema %}`;
+
+/**
  * 2026-08-20 — kullanıcı: "5 section daha ekleyelim, temanın sonlarına
  * yaklaşalım", 7 fikir sunuldu ve "hepsini inşa edelim" onayı geldi. Marka
  * felsefesindeki ("aktif oranlarının öne çıkarılması", bkz. dosya başı
@@ -3919,6 +4002,27 @@ export const FORMULA_LIBRARY_SECTIONS_CSS = `
 .formula-404__title { font-family: var(--font-heading); font-size: clamp(22px, 2.6vw, 32px); margin: 12px 0 8px; }
 .formula-404__sub { color: var(--color-muted); max-width: 42ch; margin: 0 0 32px; line-height: 1.6; }
 .formula-404__actions { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+
+/* Sipariş Sonucu (2026-08-24) */
+.formula-order-result { display: flex; align-items: center; justify-content: center; padding: 80px 24px; min-height: 60vh; }
+.formula-order-result__box { max-width: 480px; width: 100%; text-align: center; }
+.formula-order-result__icon { width: 64px; height: 64px; margin: 0 auto 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 700; background: var(--color-surface); color: var(--color-muted); }
+.formula-order-result__icon--success { background: #16a34a1a; color: #16a34a; }
+.formula-order-result__title { font-family: var(--font-heading); font-size: clamp(22px, 2.6vw, 30px); margin: 0 0 10px; }
+.formula-order-result__sub { color: var(--color-muted); line-height: 1.6; margin: 0 0 16px; }
+.formula-order-result__number { font-size: 14px; color: var(--color-muted); margin: 0 0 28px; }
+.formula-order-result__number strong { color: var(--color-text); }
+.formula-order-result__bank { text-align: left; border-top: 1px solid var(--color-border); border-bottom: 1px solid var(--color-border); margin: 0 0 28px; padding: 20px 0; }
+.formula-order-result__bank-title { font-weight: 700; font-size: 14px; margin: 0 0 12px; }
+.formula-order-result__bank-row { background: var(--color-surface); border-radius: 8px; padding: 12px 14px; margin-bottom: 8px; }
+.formula-order-result__bank-name { font-weight: 600; font-size: 13px; margin: 0; }
+.formula-order-result__bank-iban { font-family: monospace; font-size: 13px; color: var(--color-muted); margin: 4px 0 0; }
+.formula-order-result__bank-ref { font-size: 12px; color: var(--color-muted); margin: 8px 0 0; }
+.formula-order-result__items { text-align: left; margin: 0 0 28px; }
+.formula-order-result__item { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--color-border); font-size: 14px; }
+.formula-order-result__item-qty { color: var(--color-muted); }
+.formula-order-result__total { display: flex; justify-content: space-between; font-weight: 700; padding-top: 14px; font-size: 15px; }
+@media (max-width: 600px) { .formula-order-result { padding: 56px 20px; } }
 
 /* Görünürken animasyon (2026-08-19) — varsayılan "none", HİÇBİR ek boya/
    layout maliyeti yok (bkz. revealAnimationSchemaField() yorumu). Gerçek
