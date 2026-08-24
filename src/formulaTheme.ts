@@ -758,25 +758,25 @@ export const FORMULA_MARQUEE = `<section class="formula-marquee${revealAnimation
  * `FORMULA_GENERAL_SHOWCASE`) — bu section BİLİNÇLİ olarak koleksiyona kilitli
  * kalıyor.
  */
-export const FORMULA_COLLECTION_LIST = `<section class="formula-collection-list formula-collection-list--hover-{{ section.settings.hover_effect | default: 'zoom' }}${revealAnimationClass()}">
+export const FORMULA_COLLECTION_LIST = `<section class="formula-collection-list formula-collection-list--hover-{{ section.settings.hover_effect | default: 'zoom' }}{% if section.settings.layout_style == 'carousel' %} formula-collection-list--carousel{% elsif section.settings.layout_style == 'circles' %} formula-collection-list--circles{% endif %}${revealAnimationClass()}">
   <div class="formula-section-head">
     <h2>{{ section.settings.title | default: "Koleksiyonlar" | escape }}</h2>
   </div>
   <div class="formula-collection-list__grid" style="--formula-collection-cols: {{ section.settings.columns | default: 3 }}; --formula-collection-gap: {{ section.settings.gap | default: 24 }}px">
     {% for block in section.blocks %}
       {% if block.type == "collection" and block.settings.collection != blank %}
-        <a class="formula-collection-card formula-collection-card--{{ section.settings.card_style | default: 'below' }}" href="{{ block.settings.collection.url | escape }}">
-          <div class="formula-collection-card__media" style="border-radius: {{ section.settings.image_shape | default: 14 }}px">
+        <a class="formula-collection-card formula-collection-card--{% if section.settings.layout_style == 'circles' %}circle{% else %}{{ section.settings.card_style | default: 'below' }}{% endif %}" href="{{ block.settings.collection.url | escape }}">
+          <div class="formula-collection-card__media" style="border-radius: {% if section.settings.layout_style == 'circles' %}999{% else %}{{ section.settings.image_shape | default: 14 }}{% endif %}px">
             {% if block.settings.collection.image != blank %}
               <img src="{{ block.settings.collection.image | img_url: '900x' }}" alt="{{ block.settings.collection.title | escape }}" loading="lazy" />
             {% else %}
               <div class="formula-collection-card__placeholder" aria-hidden="true"></div>
             {% endif %}
-            {% if section.settings.card_style == 'overlay' %}<div class="formula-collection-card__scrim" aria-hidden="true"></div>{% endif %}
+            {% if section.settings.card_style == 'overlay' and section.settings.layout_style != 'circles' %}<div class="formula-collection-card__scrim" aria-hidden="true"></div>{% endif %}
           </div>
           <div class="formula-collection-card__copy">
             <p class="formula-collection-card__title">{{ block.settings.collection.title | escape }}</p>
-            {% if block.settings.collection.description != blank %}<p class="formula-collection-card__sub">{{ block.settings.collection.description | escape }}</p>{% endif %}
+            {% if block.settings.collection.description != blank and section.settings.layout_style != 'circles' %}<p class="formula-collection-card__sub">{{ block.settings.collection.description | escape }}</p>{% endif %}
           </div>
         </a>
       {% endif %}
@@ -788,6 +788,13 @@ export const FORMULA_COLLECTION_LIST = `<section class="formula-collection-list 
 {
   "name": "Formula Koleksiyon Listesi",
   "settings": [
+    { "type": "select", "id": "layout_style", "label": "Yerleşim", "default": "grid",
+      "options": [
+        { "label": "Grid", "value": "grid" },
+        { "label": "Carousel", "value": "carousel" },
+        { "label": "Dairesel ikonlar", "value": "circles" }
+      ]
+    },
     { "type": "text", "id": "title", "label": "Başlık", "default": "Koleksiyonlar" },
     { "type": "select", "id": "columns", "label": "Sütun Sayısı (masaüstü)", "default": "3",
       "options": [
@@ -1643,7 +1650,7 @@ export const FORMULA_VIDEO_BANNER = `<section class="formula-video${revealAnimat
 }
 {% endschema %}`;
 
-export const FORMULA_JOURNAL_TEASER = `<section class="formula-journal${revealAnimationClass()}">
+export const FORMULA_JOURNAL_TEASER = `<section class="formula-journal{% if section.settings.layout_style == 'featured' %} formula-journal--featured{% elsif section.settings.layout_style == 'carousel' %} formula-journal--carousel{% elsif section.settings.layout_style == 'compact' %} formula-journal--compact{% endif %}${revealAnimationClass()}">
   <div class="formula-section-head">
     <h2>{{ section.settings.title | default: "Dergi" | escape }}</h2>
     <a href="{{ section.settings.view_all_url | default: '/' | escape }}">{{ section.settings.view_all_label | default: "Tümünü Oku" | escape }}</a>
@@ -1672,6 +1679,14 @@ export const FORMULA_JOURNAL_TEASER = `<section class="formula-journal${revealAn
 {
   "name": "Formula Dergi Vitrini",
   "settings": [
+    { "type": "select", "id": "layout_style", "label": "Yerleşim", "default": "grid",
+      "options": [
+        { "label": "Eşit kart grid'i", "value": "grid" },
+        { "label": "Öne çıkan + küçükler", "value": "featured" },
+        { "label": "Carousel", "value": "carousel" },
+        { "label": "Kompakt liste", "value": "compact" }
+      ]
+    },
     { "type": "text", "id": "title", "label": "Başlık", "default": "Dergi" },
     { "type": "text", "id": "view_all_label", "label": "Tümünü Gör Metni", "default": "Tümünü Oku" },
     { "type": "url", "id": "view_all_url", "label": "Tümünü Gör URL", "default": "/" },${revealAnimationSchemaField()}
@@ -1701,57 +1716,84 @@ export const FORMULA_JOURNAL_TEASER = `<section class="formula-journal${revealAn
 }
 {% endschema %}`;
 
-export const FORMULA_COMPARISON_TABLE = `<section class="formula-compare${revealAnimationClass()}">
+export const FORMULA_COMPARISON_TABLE = `<section class="formula-compare{% if section.settings.layout_style == 'cards' %} formula-compare--cards{% endif %}${revealAnimationClass()}">
   <div class="formula-section-head">
     <h2>{{ section.settings.title | default: "Ürünleri Karşılaştır" | escape }}</h2>
   </div>
-  <div class="formula-compare__scroll">
-    <div class="formula-compare__table" style="--formula-compare-cols: {{ section.blocks.size }}">
-      <div class="formula-compare__row formula-compare__row--head">
-        <div class="formula-compare__cell formula-compare__cell--label"></div>
-        {% for block in section.blocks %}
-          {% if block.type == "product" %}
-            <a class="formula-compare__cell formula-compare__cell--product" href="{{ block.settings.url | default: '#' | escape }}">
-              {% if block.settings.image != blank %}
-                <img src="{{ block.settings.image | img_url: '300x' }}" alt="{{ block.settings.name | escape }}" loading="lazy" />
-              {% endif %}
-              <p>{{ block.settings.name | default: "Ürün" | escape }}</p>
-            </a>
-          {% endif %}
-        {% endfor %}
-      </div>
-      {% if section.settings.feature1_label != blank %}
-        <div class="formula-compare__row">
-          <div class="formula-compare__cell formula-compare__cell--label">{{ section.settings.feature1_label | escape }}</div>
-          {% for block in section.blocks %}{% if block.type == "product" %}<div class="formula-compare__cell">{{ block.settings.feature1_value | default: "—" | escape }}</div>{% endif %}{% endfor %}
-        </div>
-      {% endif %}
-      {% if section.settings.feature2_label != blank %}
-        <div class="formula-compare__row">
-          <div class="formula-compare__cell formula-compare__cell--label">{{ section.settings.feature2_label | escape }}</div>
-          {% for block in section.blocks %}{% if block.type == "product" %}<div class="formula-compare__cell">{{ block.settings.feature2_value | default: "—" | escape }}</div>{% endif %}{% endfor %}
-        </div>
-      {% endif %}
-      {% if section.settings.feature3_label != blank %}
-        <div class="formula-compare__row">
-          <div class="formula-compare__cell formula-compare__cell--label">{{ section.settings.feature3_label | escape }}</div>
-          {% for block in section.blocks %}{% if block.type == "product" %}<div class="formula-compare__cell">{{ block.settings.feature3_value | default: "—" | escape }}</div>{% endif %}{% endfor %}
-        </div>
-      {% endif %}
-      {% if section.settings.feature4_label != blank %}
-        <div class="formula-compare__row">
-          <div class="formula-compare__cell formula-compare__cell--label">{{ section.settings.feature4_label | escape }}</div>
-          {% for block in section.blocks %}{% if block.type == "product" %}<div class="formula-compare__cell">{{ block.settings.feature4_value | default: "—" | escape }}</div>{% endif %}{% endfor %}
-        </div>
-      {% endif %}
+  {% if section.settings.layout_style == 'cards' %}
+    <div class="formula-compare__cards">
+      {% for block in section.blocks %}
+        {% if block.type == "product" %}
+          <a class="formula-compare-card" href="{{ block.settings.url | default: '#' | escape }}">
+            {% if block.settings.image != blank %}
+              <div class="formula-compare-card__media"><img src="{{ block.settings.image | img_url: '500x' }}" alt="{{ block.settings.name | escape }}" loading="lazy" /></div>
+            {% endif %}
+            <p class="formula-compare-card__name">{{ block.settings.name | default: "Ürün" | escape }}</p>
+            <dl class="formula-compare-card__specs">
+              {% if section.settings.feature1_label != blank %}<div><dt>{{ section.settings.feature1_label | escape }}</dt><dd>{{ block.settings.feature1_value | default: "—" | escape }}</dd></div>{% endif %}
+              {% if section.settings.feature2_label != blank %}<div><dt>{{ section.settings.feature2_label | escape }}</dt><dd>{{ block.settings.feature2_value | default: "—" | escape }}</dd></div>{% endif %}
+              {% if section.settings.feature3_label != blank %}<div><dt>{{ section.settings.feature3_label | escape }}</dt><dd>{{ block.settings.feature3_value | default: "—" | escape }}</dd></div>{% endif %}
+              {% if section.settings.feature4_label != blank %}<div><dt>{{ section.settings.feature4_label | escape }}</dt><dd>{{ block.settings.feature4_value | default: "—" | escape }}</dd></div>{% endif %}
+            </dl>
+          </a>
+        {% endif %}
+      {% endfor %}
     </div>
-  </div>
+  {% else %}
+    <div class="formula-compare__scroll">
+      <div class="formula-compare__table" style="--formula-compare-cols: {{ section.blocks.size }}">
+        <div class="formula-compare__row formula-compare__row--head">
+          <div class="formula-compare__cell formula-compare__cell--label"></div>
+          {% for block in section.blocks %}
+            {% if block.type == "product" %}
+              <a class="formula-compare__cell formula-compare__cell--product" href="{{ block.settings.url | default: '#' | escape }}">
+                {% if block.settings.image != blank %}
+                  <img src="{{ block.settings.image | img_url: '300x' }}" alt="{{ block.settings.name | escape }}" loading="lazy" />
+                {% endif %}
+                <p>{{ block.settings.name | default: "Ürün" | escape }}</p>
+              </a>
+            {% endif %}
+          {% endfor %}
+        </div>
+        {% if section.settings.feature1_label != blank %}
+          <div class="formula-compare__row">
+            <div class="formula-compare__cell formula-compare__cell--label">{{ section.settings.feature1_label | escape }}</div>
+            {% for block in section.blocks %}{% if block.type == "product" %}<div class="formula-compare__cell">{{ block.settings.feature1_value | default: "—" | escape }}</div>{% endif %}{% endfor %}
+          </div>
+        {% endif %}
+        {% if section.settings.feature2_label != blank %}
+          <div class="formula-compare__row">
+            <div class="formula-compare__cell formula-compare__cell--label">{{ section.settings.feature2_label | escape }}</div>
+            {% for block in section.blocks %}{% if block.type == "product" %}<div class="formula-compare__cell">{{ block.settings.feature2_value | default: "—" | escape }}</div>{% endif %}{% endfor %}
+          </div>
+        {% endif %}
+        {% if section.settings.feature3_label != blank %}
+          <div class="formula-compare__row">
+            <div class="formula-compare__cell formula-compare__cell--label">{{ section.settings.feature3_label | escape }}</div>
+            {% for block in section.blocks %}{% if block.type == "product" %}<div class="formula-compare__cell">{{ block.settings.feature3_value | default: "—" | escape }}</div>{% endif %}{% endfor %}
+          </div>
+        {% endif %}
+        {% if section.settings.feature4_label != blank %}
+          <div class="formula-compare__row">
+            <div class="formula-compare__cell formula-compare__cell--label">{{ section.settings.feature4_label | escape }}</div>
+            {% for block in section.blocks %}{% if block.type == "product" %}<div class="formula-compare__cell">{{ block.settings.feature4_value | default: "—" | escape }}</div>{% endif %}{% endfor %}
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  {% endif %}
 </section>
 
 {% schema %}
 {
   "name": "Formula Karşılaştırma Tablosu",
   "settings": [
+    { "type": "select", "id": "layout_style", "label": "Yerleşim", "default": "table",
+      "options": [
+        { "label": "Klasik tablo", "value": "table" },
+        { "label": "Ürün kartları (mobil dostu)", "value": "cards" }
+      ]
+    },
     { "type": "text", "id": "title", "label": "Başlık", "default": "Ürünleri Karşılaştır" },
     { "type": "text", "id": "feature1_label", "label": "1. Satır Etiketi", "default": "Cilt Tipi" },
     { "type": "text", "id": "feature2_label", "label": "2. Satır Etiketi", "default": "Ana Aktif" },
@@ -2040,7 +2082,7 @@ export const FORMULA_BEFORE_AFTER = `<section class="formula-before-after${revea
  * gerçek gezinme sonrası dolar; aynı cart-badge/checkout gibi "sadece
  * published'ta çalışır" sınıfı (bkz. formulaPages.ts'in cart runtime notu).
  */
-export const FORMULA_RECENTLY_VIEWED = `<section class="formula-recently-viewed${revealAnimationClass()}" style="--formula-recently-viewed-cols: {{ section.settings.columns | default: 4 }}">
+export const FORMULA_RECENTLY_VIEWED = `<section class="formula-recently-viewed{% if section.settings.layout_style == 'carousel' %} formula-recently-viewed--carousel{% elsif section.settings.layout_style == 'compact' %} formula-recently-viewed--compact{% endif %}${revealAnimationClass()}" style="--formula-recently-viewed-cols: {{ section.settings.columns | default: 4 }}">
   <div class="formula-section-head">
     <h2>{{ section.settings.title | default: "Son Baktıkların" | escape }}</h2>
   </div>
@@ -2051,6 +2093,13 @@ export const FORMULA_RECENTLY_VIEWED = `<section class="formula-recently-viewed$
 {
   "name": "Formula Son Bakılanlar",
   "settings": [
+    { "type": "select", "id": "layout_style", "label": "Yerleşim", "default": "grid",
+      "options": [
+        { "label": "Grid", "value": "grid" },
+        { "label": "Carousel", "value": "carousel" },
+        { "label": "Kompakt yatay satır", "value": "compact" }
+      ]
+    },
     { "type": "text", "id": "title", "label": "Başlık", "default": "Son Baktıkların" },
     { "type": "range", "id": "limit", "label": "Gösterilecek Ürün Sayısı", "min": 2, "max": 8, "step": 1, "default": 4 },
     { "type": "range", "id": "columns", "label": "Sütun Sayısı", "min": 2, "max": 6, "step": 1, "default": 4 },
@@ -2078,7 +2127,7 @@ export const FORMULA_RECENTLY_VIEWED = `<section class="formula-recently-viewed$
  * her sayfada anlamlı olacağı anlamına gelmez, sadece HER ZAMAN teklif
  * edilen ortak kataloğun (`AddSectionPanel`) bir parçası.
  */
-export const FORMULA_RELATED_PRODUCTS = `<section{% if recommendations.performed %} class="formula-related${revealAnimationClass()}" style="--formula-related-cols: {{ section.settings.columns | default: 4 }}"{% endif %}>
+export const FORMULA_RELATED_PRODUCTS = `<section{% if recommendations.performed %} class="formula-related{% if section.settings.layout_style == 'carousel' %} formula-related--carousel{% elsif section.settings.layout_style == 'compact' %} formula-related--compact{% endif %}${revealAnimationClass()}" style="--formula-related-cols: {{ section.settings.columns | default: 4 }}"{% endif %}>
   {% if recommendations.performed %}
   <div class="formula-section-head">
     <h2>{{ section.settings.title | default: "Bunları da Beğenebilirsin" | escape }}</h2>
@@ -2106,6 +2155,13 @@ export const FORMULA_RELATED_PRODUCTS = `<section{% if recommendations.performed
 {
   "name": "Formula İlgili Ürünler",
   "settings": [
+    { "type": "select", "id": "layout_style", "label": "Yerleşim", "default": "grid",
+      "options": [
+        { "label": "Grid", "value": "grid" },
+        { "label": "Carousel", "value": "carousel" },
+        { "label": "Kompakt yatay satır", "value": "compact" }
+      ]
+    },
     { "type": "text", "id": "title", "label": "Başlık", "default": "Bunları da Beğenebilirsin" },
     { "type": "range", "id": "columns", "label": "Sütun Sayısı", "min": 2, "max": 5, "step": 1, "default": 4 },
     { "type": "select", "id": "card_style", "label": "Kart Stili", "default": "minimal",
@@ -2491,6 +2547,13 @@ export const FORMULA_LIBRARY_SECTIONS_CSS = `
 .formula-collection-card__scrim { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,.7), transparent 60%); pointer-events: none; }
 @media (max-width: 900px) { .formula-collection-list__grid { grid-template-columns: repeat(2, minmax(0,1fr)); } .formula-collection-list { padding: 44px 20px; } }
 @media (max-width: 560px) { .formula-collection-list__grid { grid-template-columns: 1fr; } }
+.formula-collection-list--carousel .formula-collection-list__grid { display:flex;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:12px;grid-template-columns:none; }
+.formula-collection-list--carousel .formula-collection-card { flex:0 0 min(70vw,320px);scroll-snap-align:start; }
+.formula-collection-list--circles .formula-collection-list__grid { grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:20px; }
+.formula-collection-list--circles .formula-collection-card { text-align:center; }
+.formula-collection-list--circles .formula-collection-card__media { aspect-ratio:1;max-width:120px;margin:0 auto; }
+.formula-collection-list--circles .formula-collection-card__copy { margin-top:10px; }
+.formula-collection-list--circles .formula-collection-card__title { font-size:13px; }
 
 /* Koleksiyon vitrini — 2026-08-19: --reverse (görsel sağda), --align-center
    metni ortalar (koleksiyonun kendi görselini büyük/kampanya-tarzı
@@ -2699,6 +2762,17 @@ export const FORMULA_LIBRARY_SECTIONS_CSS = `
 .formula-journal-card__title { font-family: var(--font-heading); font-size: 17px; font-weight: 600; margin: 0 0 6px; letter-spacing: -0.01em; }
 .formula-journal-card__excerpt { color: var(--color-muted); font-size: 13px; line-height: 1.6; margin: 0; }
 @media (max-width: 700px) { .formula-journal { padding: 44px 20px; } }
+.formula-journal--featured .formula-journal__grid { grid-template-columns: repeat(3, minmax(0,1fr)); }
+.formula-journal--featured .formula-journal-card:first-child { grid-column: span 2; grid-row: span 2; }
+.formula-journal--featured .formula-journal-card:first-child .formula-journal-card__media { aspect-ratio: 16/10; }
+.formula-journal--featured .formula-journal-card:first-child .formula-journal-card__title { font-size: 22px; }
+.formula-journal--carousel .formula-journal__grid { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 12px; grid-template-columns: none; }
+.formula-journal--carousel .formula-journal-card { flex: 0 0 min(78vw, 300px); scroll-snap-align: start; }
+.formula-journal--compact .formula-journal__grid { display: flex; flex-direction: column; gap: 0; }
+.formula-journal--compact .formula-journal-card { display: flex; align-items: center; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--color-border); }
+.formula-journal--compact .formula-journal-card__media { width: 88px; height: 88px; aspect-ratio: auto; flex-shrink: 0; margin-bottom: 0; border-radius: 10px; }
+.formula-journal--compact .formula-journal-card__excerpt { display: none; }
+.formula-journal--compact .formula-journal-card__title { font-size: 14px; }
 
 /* Karşılaştırma Tablosu (2026-08-20) — display:contents ile grid hücreleri
    satır-wrapper'larını "görünmez" kılıyor, gerçek bir table yerine CSS
@@ -2715,6 +2789,15 @@ export const FORMULA_LIBRARY_SECTIONS_CSS = `
 .formula-compare__cell--product img { width: 64px; height: 64px; object-fit: cover; border-radius: 10px; background: var(--color-surface); }
 .formula-compare__cell--product p { margin: 0; font-family: var(--font-heading); font-weight: 600; color: var(--color-text); font-size: 13px; }
 @media (max-width: 700px) { .formula-compare { padding: 44px 20px; } }
+.formula-compare--cards .formula-compare__cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; }
+.formula-compare-card { display: block; text-decoration: none; color: var(--color-text); border: 1px solid var(--color-border); border-radius: 16px; padding: 20px; }
+.formula-compare-card__media { aspect-ratio: 1; border-radius: 10px; overflow: hidden; background: var(--color-surface); margin-bottom: 14px; }
+.formula-compare-card__media img { width: 100%; height: 100%; object-fit: cover; }
+.formula-compare-card__name { font-family: var(--font-heading); font-weight: 700; font-size: 16px; margin: 0 0 14px; }
+.formula-compare-card__specs { margin: 0; }
+.formula-compare-card__specs > div { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-top: 1px solid var(--color-border); font-size: 13px; }
+.formula-compare-card__specs dt { color: var(--color-muted); margin: 0; }
+.formula-compare-card__specs dd { margin: 0; font-weight: 600; text-align: right; }
 
 /* Bülten Kaydı (2026-08-20) — gerçek fetch akışı cartRuntimeClient.ts'te,
    bu section sadece markup+state class'ları sağlıyor. */
@@ -2801,6 +2884,11 @@ export const FORMULA_LIBRARY_SECTIONS_CSS = `
 .formula-recently-viewed__card--shadow .formula-recently-viewed__media { box-shadow: 0 18px 44px rgba(15,23,42,.10); }
 @media (max-width: 700px) { .formula-recently-viewed__grid { grid-template-columns: repeat(2, minmax(0,1fr)); } }
 @media (max-width: 700px) { .formula-recently-viewed { padding: 44px 20px; } }
+.formula-recently-viewed--carousel .formula-recently-viewed__grid { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 12px; grid-template-columns: none; }
+.formula-recently-viewed--carousel .formula-recently-viewed__card { flex: 0 0 min(46vw, 200px); scroll-snap-align: start; }
+.formula-recently-viewed--compact .formula-recently-viewed__grid { display: flex; flex-direction: column; gap: 0; }
+.formula-recently-viewed--compact .formula-recently-viewed__card { display: flex; align-items: center; gap: 14px; padding: 10px 0; border-bottom: 1px solid var(--color-border); }
+.formula-recently-viewed--compact .formula-recently-viewed__media { width: 56px; height: 56px; aspect-ratio: auto; flex-shrink: 0; margin-bottom: 0; }
 
 /* İlgili Ürünler (2026-08-20) — .formula-product-card/__grid deseni
    FORMULA_BESTSELLERS ile PAYLAŞILIYOR.
@@ -2811,6 +2899,11 @@ export const FORMULA_LIBRARY_SECTIONS_CSS = `
 .formula-related { padding: 64px 40px; }
 .formula-related__grid { display: grid; grid-template-columns: repeat(var(--formula-related-cols, 4), minmax(0,1fr)); gap: 24px; }
 @media (max-width: 900px) { .formula-related__grid { grid-template-columns: repeat(2, minmax(0,1fr)); } .formula-related { padding: 44px 20px; } }
+.formula-related--carousel .formula-related__grid { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 12px; grid-template-columns: none; }
+.formula-related--carousel .formula-product-card { flex: 0 0 min(60vw, 240px); scroll-snap-align: start; }
+.formula-related--compact .formula-related__grid { display: flex; flex-direction: column; gap: 0; }
+.formula-related--compact .formula-product-card { display: flex; align-items: center; gap: 14px; padding: 10px 0; border-bottom: 1px solid var(--color-border); }
+.formula-related--compact .formula-product-card__media { width: 56px; height: 56px; aspect-ratio: auto; flex-shrink: 0; margin-bottom: 0; }
 
 /* 404 (2026-08-19) */
 .formula-404 { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 96px 24px; min-height: 50vh; }
