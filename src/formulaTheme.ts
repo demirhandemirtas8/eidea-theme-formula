@@ -2544,6 +2544,213 @@ export const FORMULA_SHOPPABLE_IMAGE = `<section class="formula-shoppable-image{
 }
 {% endschema %}`;
 
+/** Sabit paket v1: connector ürün seçicisi Liquid'de çözülmediği için ürün ve
+ * varyant kimlikleri açıkça girilir. İstek yine storefront'un kanonik
+ * `/cart/add` endpoint'ine gider; fiyat hiçbir zaman client'tan gönderilmez. */
+export const FORMULA_BUNDLE_BUILDER = `<section class="formula-bundle${revealAnimationClass()}" data-bundle-root>
+  <div class="formula-section-head">
+    {% if section.settings.eyebrow != blank %}<p class="formula-bundle__eyebrow">{{ section.settings.eyebrow | escape }}</p>{% endif %}
+    {% if section.settings.title != blank %}<h2>{{ section.settings.title | escape }}</h2>{% endif %}
+    {% if section.settings.description != blank %}<p>{{ section.settings.description | escape }}</p>{% endif %}
+  </div>
+  <div class="formula-bundle__grid">
+    {% for block in section.blocks %}
+      {% if block.type == "item" %}
+        <label class="formula-bundle-card">
+          <input type="checkbox" data-bundle-item data-product-id="{{ block.settings.product_id | escape }}" data-variant-id="{{ block.settings.variant_id | escape }}" {% if block.settings.selected %}checked{% endif %} {% if block.settings.product_id == blank %}disabled{% endif %} />
+          {% if block.settings.image != blank %}<span class="formula-bundle-card__media"><img src="{{ block.settings.image | img_url: '600x' }}" alt="{{ block.settings.name | escape }}" loading="lazy" /></span>{% endif %}
+          <span class="formula-bundle-card__body">
+            {% if block.settings.badge != blank %}<span class="formula-bundle-card__badge">{{ block.settings.badge | escape }}</span>{% endif %}
+            {% if block.settings.name != blank %}<strong>{{ block.settings.name | escape }}</strong>{% endif %}
+            {% if block.settings.price != blank %}<span>{{ block.settings.price | escape }}</span>{% endif %}
+          </span>
+        </label>
+      {% endif %}
+    {% endfor %}
+  </div>
+  <div class="formula-bundle__action">
+    {% if section.settings.button_label != blank %}<button type="button" data-bundle-add>{{ section.settings.button_label | escape }}</button>{% endif %}
+    <p data-bundle-status aria-live="polite"></p>
+  </div>
+  <script>
+    (function () {
+      var root = document.currentScript.closest(".formula-bundle");
+      if (!root) return;
+      var button = root.querySelector("[data-bundle-add]");
+      var status = root.querySelector("[data-bundle-status]");
+      if (!button) return;
+      button.addEventListener("click", function () {
+        var items = Array.prototype.slice.call(root.querySelectorAll("[data-bundle-item]:checked"));
+        if (!items.length) { if (status) status.textContent = "Lütfen en az bir ürün seçin."; return; }
+        var original = button.textContent;
+        button.disabled = true;
+        button.textContent = "Ekleniyor…";
+        var chain = Promise.resolve();
+        var lastData = null;
+        items.forEach(function (item) {
+          chain = chain.then(function () {
+            var params = new URLSearchParams();
+            params.append("product_id", item.getAttribute("data-product-id"));
+            var variantId = item.getAttribute("data-variant-id");
+            if (variantId) params.append("variant_id", variantId);
+            params.append("quantity", "1");
+            return fetch("/cart/add", { method: "POST", body: params, headers: { Accept: "application/json", "Content-Type": "application/x-www-form-urlencoded" } })
+              .then(function (response) { if (!response.ok) throw new Error("add-failed"); return response.json(); })
+              .then(function (data) { lastData = data; });
+          });
+        });
+        chain.then(function () {
+          button.textContent = "Eklendi ✓";
+          if (status) status.textContent = items.length + " ürün sepete eklendi.";
+          // cartRuntimeClient.ts'in header sepet rozeti (updateBadge) kendi
+          // kapanışında (IIFE) tanımlı, bu ayrı <script>'ten erişilemiyor —
+          // aynı seçici/mantık burada tekrarlanıyor, aksi halde rozet
+          // ürün gerçekten eklenmiş olsa bile güncel sayıyı göstermiyor.
+          var count = lastData && typeof lastData.item_count === "number" ? lastData.item_count : null;
+          if (count !== null) {
+            document.querySelectorAll('a[aria-label="Sepet"]').forEach(function (a) {
+              var span = a.querySelector("span");
+              if (!span && count > 0) {
+                span = document.createElement("span");
+                span.style.cssText = "position:absolute;top:2px;right:2px;min-width:16px;height:16px;background:#ef4444;color:#fff;border-radius:99px;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 3px;line-height:1;pointer-events:none";
+                a.style.position = a.style.position || "relative";
+                a.appendChild(span);
+              }
+              if (span) { span.textContent = String(count); span.style.display = count > 0 ? "flex" : "none"; }
+            });
+          }
+          setTimeout(function () { button.textContent = original; button.disabled = false; }, 1500);
+        }).catch(function () {
+          button.textContent = original;
+          button.disabled = false;
+          if (status) status.textContent = "Paket sepete eklenemedi. Lütfen tekrar deneyin.";
+        });
+      });
+    })();
+  </script>
+</section>
+
+{% schema %}
+{
+  "name": "Formula Paket Oluşturucu",
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Üst Etiket (ops.)", "default": "Rutin Paketi" },
+    { "type": "text", "id": "title", "label": "Başlık", "default": "Rutininizi Birlikte Alın" },
+    { "type": "textarea", "id": "description", "label": "Açıklama (ops.)", "default": "Sabit paket ürünlerini seçip tek adımda sepetinize ekleyin." },
+    { "type": "text", "id": "button_label", "label": "Buton", "default": "Seçilenleri Sepete Ekle" },${revealAnimationSchemaField()}
+  ],
+  "blocks": [{
+    "type": "item", "name": "Paket Ürünü", "settings": [
+      { "type": "text", "id": "product_id", "label": "Ürün ID (zorunlu)" },
+      { "type": "text", "id": "variant_id", "label": "Varyant ID (ops.)" },
+      { "type": "image_picker", "id": "image", "label": "Görsel" },
+      { "type": "text", "id": "name", "label": "Ürün Adı", "default": "Paket Ürünü" },
+      { "type": "text", "id": "price", "label": "Gösterim Fiyatı (ops.)" },
+      { "type": "text", "id": "badge", "label": "Rozet (ops.)" },
+      { "type": "checkbox", "id": "selected", "label": "Başlangıçta Seçili", "default": true }
+    ]
+  }],
+  "max_blocks": 6,
+  "presets": [{ "name": "Formula Paket Oluşturucu", "blocks": [{ "type": "item" }, { "type": "item" }, { "type": "item" }] }]
+}
+{% endschema %}`;
+
+export const FORMULA_SHOPPABLE_VIDEO = `<section class="formula-shoppable-video{% if section.settings.layout_style == 'stacked' %} formula-shoppable-video--stacked{% endif %}${revealAnimationClass()}" data-shoppable-video>
+  {% if section.settings.title != blank or section.settings.description != blank %}<div class="formula-section-head">{% if section.settings.title != blank %}<h2>{{ section.settings.title | escape }}</h2>{% endif %}{% if section.settings.description != blank %}<p>{{ section.settings.description | escape }}</p>{% endif %}</div>{% endif %}
+  <div class="formula-shoppable-video__layout">
+    <div class="formula-shoppable-video__media">
+      {% if section.settings.video_url != blank %}<video controls playsinline {% if section.settings.poster != blank %}poster="{{ section.settings.poster | img_url: '1200x' }}"{% endif %}><source src="{{ section.settings.video_url | escape }}" /></video>{% elsif section.settings.poster != blank %}<img src="{{ section.settings.poster | img_url: '1200x' }}" alt="{{ section.settings.title | escape }}" loading="lazy" />{% endif %}
+    </div>
+    <div class="formula-shoppable-video__products">
+      {% for block in section.blocks %}{% if block.type == "product" %}
+        <article class="formula-video-product" data-video-time="{{ block.settings.time_seconds | default: 0 }}">
+          {% if block.settings.image != blank %}<img src="{{ block.settings.image | img_url: '240x' }}" alt="{{ block.settings.name | escape }}" loading="lazy" />{% endif %}
+          <div>{% if block.settings.time_label != blank %}<button type="button" data-video-seek>{{ block.settings.time_label | escape }}</button>{% endif %}{% if block.settings.name != blank %}<h3>{{ block.settings.name | escape }}</h3>{% endif %}{% if block.settings.price != blank %}<p>{{ block.settings.price | escape }}</p>{% endif %}{% if block.settings.url != blank %}<a href="{{ block.settings.url | escape }}">Ürünü Gör →</a>{% endif %}</div>
+        </article>
+      {% endif %}{% endfor %}
+    </div>
+  </div>
+  <script>
+    (function () {
+      var root = document.currentScript.closest(".formula-shoppable-video");
+      if (!root) return;
+      var video = root.querySelector("video");
+      if (!video) return;
+      root.querySelectorAll("[data-video-seek]").forEach(function (button) {
+        button.addEventListener("click", function () {
+          var card = button.closest("[data-video-time]");
+          video.currentTime = Number(card && card.getAttribute("data-video-time")) || 0;
+          video.play().catch(function () {});
+        });
+      });
+    })();
+  </script>
+</section>
+{% schema %}
+{
+  "name": "Formula Alışveriş Yapılabilir Video",
+  "settings": [
+    { "type": "text", "id": "title", "label": "Başlık (ops.)", "default": "Videodaki Rutini Keşfedin" },
+    { "type": "textarea", "id": "description", "label": "Açıklama (ops.)" },
+    { "type": "url", "id": "video_url", "label": "Video URL" },
+    { "type": "image_picker", "id": "poster", "label": "Kapak Görseli" },
+    { "type": "select", "id": "layout_style", "label": "Yerleşim", "default": "side", "options": [{"label":"Yan yana","value":"side"},{"label":"Alt alta","value":"stacked"}] },${revealAnimationSchemaField()}
+  ],
+  "blocks": [{ "type": "product", "name": "Video Ürünü", "settings": [
+    { "type": "range", "id": "time_seconds", "label": "Zaman (saniye)", "min": 0, "max": 600, "step": 1, "default": 0 },
+    { "type": "text", "id": "time_label", "label": "Zaman Etiketi (ops.)", "default": "00:00" },
+    { "type": "image_picker", "id": "image", "label": "Görsel" },
+    { "type": "text", "id": "name", "label": "Ürün Adı", "default": "Ürün Adı" },
+    { "type": "text", "id": "price", "label": "Fiyat (ops.)" },
+    { "type": "url", "id": "url", "label": "Ürün URL" }
+  ] }], "max_blocks": 8,
+  "presets": [{ "name": "Formula Alışveriş Yapılabilir Video", "blocks": [{"type":"product","settings":{"time_seconds":12,"time_label":"00:12"}},{"type":"product","settings":{"time_seconds":45,"time_label":"00:45"}}] }]
+}
+{% endschema %}`;
+
+/** ShippingZone şehir bazlıdır; posta kodu eşleme/veri endpoint'i yoktur.
+ * Bu v1 yalnız mağazanın yazdığı genel bilgiyi gösterir ve sonucu açıkça
+ * tahmini/bilgilendirme olarak niteler. */
+export const FORMULA_DELIVERY_AVAILABILITY = `<section class="formula-delivery${revealAnimationClass()}" data-delivery-root>
+  <div class="formula-delivery__content">
+    {% if section.settings.eyebrow != blank %}<p class="formula-delivery__eyebrow">{{ section.settings.eyebrow | escape }}</p>{% endif %}
+    {% if section.settings.title != blank %}<h2>{{ section.settings.title | escape }}</h2>{% endif %}
+    {% if section.settings.description != blank %}<p>{{ section.settings.description | escape }}</p>{% endif %}
+    <form data-delivery-form>
+      <label for="delivery-postcode-{{ section.id }}">Posta kodu</label>
+      <div><input id="delivery-postcode-{{ section.id }}" inputmode="numeric" autocomplete="postal-code" pattern="[0-9]{5}" maxlength="5" required />{% if section.settings.button_label != blank %}<button type="submit">{{ section.settings.button_label | escape }}</button>{% endif %}</div>
+    </form>
+    <div class="formula-delivery__result" data-delivery-result hidden aria-live="polite">
+      {% if section.settings.estimate_text != blank %}<strong>{{ section.settings.estimate_text | escape }}</strong>{% endif %}
+      {% if section.settings.disclaimer != blank %}<p>{{ section.settings.disclaimer | escape }}</p>{% endif %}
+    </div>
+  </div>
+  <script>
+    (function () {
+      var root = document.currentScript.closest(".formula-delivery");
+      if (!root) return;
+      var form = root.querySelector("[data-delivery-form]");
+      var result = root.querySelector("[data-delivery-result]");
+      if (!form || !result) return;
+      form.addEventListener("submit", function (event) { event.preventDefault(); if (form.checkValidity()) result.hidden = false; });
+    })();
+  </script>
+</section>
+{% schema %}
+{
+  "name": "Formula Teslimat Bilgisi",
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Üst Etiket (ops.)", "default": "Teslimat" },
+    { "type": "text", "id": "title", "label": "Başlık", "default": "Teslimat Süresini Görün" },
+    { "type": "textarea", "id": "description", "label": "Açıklama (ops.)", "default": "Posta kodunuzu girerek mağazanın genel teslimat bilgisini görüntüleyin." },
+    { "type": "text", "id": "button_label", "label": "Buton", "default": "Bilgiyi Göster" },
+    { "type": "text", "id": "estimate_text", "label": "Genel Tahmin", "default": "Tahmini teslimat: 2–5 iş günü" },
+    { "type": "textarea", "id": "disclaimer", "label": "Bilgilendirme Notu", "default": "Bu süre posta koduna göre doğrulanmaz; kesin seçenekler ödeme adımında gösterilir." },${revealAnimationSchemaField()}
+  ],
+  "presets": [{ "name": "Formula Teslimat Bilgisi" }]
+}
+{% endschema %}`;
+
 /** Kullanıcı İçerikleri / Sosyal Kanıt Galerisi (2026-08-24, Codex'in
  * `ugc-gallery` önerisi) — müşteri fotoğrafı + isim + alıntı + puan +
  * opsiyonel ürün linki. `shoppable-image` ile AYNI mimari karar: gerçek
@@ -2626,6 +2833,9 @@ export const FORMULA_LIBRARY_SECTIONS: { type: string; content: string }[] = [
   { type: "announcement-bar", content: FORMULA_ANNOUNCEMENT_BAR },
   { type: "countdown-promotion", content: FORMULA_COUNTDOWN_PROMOTION },
   { type: "shoppable-image", content: FORMULA_SHOPPABLE_IMAGE },
+  { type: "bundle-builder", content: FORMULA_BUNDLE_BUILDER },
+  { type: "shoppable-video", content: FORMULA_SHOPPABLE_VIDEO },
+  { type: "delivery-availability", content: FORMULA_DELIVERY_AVAILABILITY },
   { type: "ugc-gallery", content: FORMULA_UGC_GALLERY },
   { type: "brand-marquee", content: FORMULA_MARQUEE },
   { type: "brands-slider", content: FORMULA_BRANDS_SLIDER },
@@ -3119,6 +3329,44 @@ export const FORMULA_LIBRARY_SECTIONS_CSS = `
 .formula-shoppable-image__card-price { font-size: 13px; color: #6b7280; margin: 0 0 6px; }
 .formula-shoppable-image__card-link { font-size: 12px; font-weight: 600; color: var(--color-primary); text-decoration: underline; text-underline-offset: 2px; }
 @media (max-width: 600px) { .formula-shoppable-image { padding: 40px 20px; } .formula-shoppable-image__card { width: 168px; } }
+
+/* Sabit Paket Oluşturucu (2026-08-24) */
+.formula-bundle { padding: 64px 40px; background: var(--color-surface); }
+.formula-bundle__eyebrow,.formula-delivery__eyebrow { color: var(--color-primary); font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; margin: 0 0 8px; }
+.formula-bundle__grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 18px; max-width: 980px; margin: 0 auto; }
+.formula-bundle-card { position: relative; display: block; cursor: pointer; border: 1px solid var(--color-border); border-radius: 14px; overflow: hidden; background: var(--color-background); }
+.formula-bundle-card:has(input:checked) { border-color: var(--color-primary); box-shadow: 0 0 0 2px color-mix(in srgb,var(--color-primary) 25%,transparent); }
+.formula-bundle-card input { position: absolute; top: 12px; right: 12px; width: 20px; height: 20px; accent-color: var(--color-primary); z-index: 1; }
+.formula-bundle-card__media { display: block; aspect-ratio: 1 / 1; background: var(--color-surface); }
+.formula-bundle-card__media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.formula-bundle-card__body { display: flex; flex-direction: column; gap: 5px; padding: 16px; font-size: 13px; color: var(--color-muted); }
+.formula-bundle-card__body strong { color: var(--color-text); font-size: 15px; }
+.formula-bundle-card__badge { align-self: flex-start; border-radius: 999px; padding: 3px 8px; background: var(--color-accent); color: #fff; font-size: 10px; }
+.formula-bundle__action { text-align: center; margin-top: 24px; }
+.formula-bundle__action button { min-height: 46px; padding: 0 24px; border: 0; border-radius: 999px; background: var(--color-primary); color: #fff; font-weight: 700; cursor: pointer; }
+.formula-bundle__action p { min-height: 20px; margin: 10px 0 0; color: var(--color-muted); font-size: 12px; }
+
+/* Alışveriş Yapılabilir Video (2026-08-24) */
+.formula-shoppable-video { padding: 64px 40px; }
+.formula-shoppable-video__layout { display: grid; grid-template-columns: minmax(0,1.65fr) minmax(280px,.75fr); gap: 28px; max-width: 1120px; margin: 0 auto; align-items: start; }
+.formula-shoppable-video--stacked .formula-shoppable-video__layout { grid-template-columns: 1fr; }
+.formula-shoppable-video__media { aspect-ratio: 16 / 9; overflow: hidden; border-radius: 16px; background: #111; }
+.formula-shoppable-video__media video,.formula-shoppable-video__media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.formula-shoppable-video__products { display: flex; flex-direction: column; gap: 12px; }
+.formula-video-product { display: grid; grid-template-columns: 76px minmax(0,1fr); gap: 12px; padding: 12px; border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-surface); }
+.formula-video-product img { width: 76px; height: 76px; object-fit: cover; border-radius: 8px; }
+.formula-video-product h3 { font-size: 14px; margin: 4px 0; }.formula-video-product p { color: var(--color-muted); font-size: 12px; margin: 0 0 5px; }
+.formula-video-product button { border: 0; padding: 0; background: none; color: var(--color-primary); font-size: 11px; font-weight: 700; cursor: pointer; }.formula-video-product a { color: var(--color-text); font-size: 12px; font-weight: 600; }
+
+/* Teslimat Bilgisi (2026-08-24) */
+.formula-delivery { padding: 64px 40px; background: var(--color-surface); }
+.formula-delivery__content { max-width: 680px; margin: 0 auto; padding: 32px; border: 1px solid var(--color-border); border-radius: 18px; background: var(--color-background); }
+.formula-delivery h2 { font-family: var(--font-heading); margin: 0 0 8px; }.formula-delivery__content>p { color: var(--color-muted); line-height: 1.6; }
+.formula-delivery form label { display: block; font-size: 12px; font-weight: 700; margin-bottom: 7px; }.formula-delivery form>div { display: flex; gap: 8px; }
+.formula-delivery input { min-width: 0; flex: 1; min-height: 46px; border: 1px solid var(--color-border); border-radius: 8px; padding: 0 13px; background: var(--color-background); color: var(--color-text); }
+.formula-delivery button { min-height: 46px; border: 0; border-radius: 8px; padding: 0 18px; background: var(--color-primary); color: #fff; font-weight: 700; cursor: pointer; }
+.formula-delivery__result { margin-top: 16px; padding: 14px; border-radius: 10px; background: var(--color-surface); }.formula-delivery__result p { margin: 6px 0 0; color: var(--color-muted); font-size: 12px; line-height: 1.5; }
+@media (max-width: 760px) { .formula-bundle,.formula-shoppable-video,.formula-delivery { padding: 40px 20px; }.formula-bundle__grid,.formula-shoppable-video__layout { grid-template-columns: 1fr; }.formula-delivery__content { padding: 22px; }.formula-delivery form>div { flex-direction: column; } }
 
 /* Kullanıcı İçerikleri Galerisi (2026-08-24) */
 .formula-ugc { padding: 64px 40px; }
