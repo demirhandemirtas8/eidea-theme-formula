@@ -799,7 +799,10 @@ export const FORMULA_HERO = `<section class="formula-hero{% if section.settings.
   {% unless section.settings.layout_style == 'centered' %}
   <div class="formula-hero__media">
     {% if section.settings.image != blank %}
-      <img src="{{ section.settings.image | img_url: '1200x' }}" alt="{{ section.settings.title | escape }}" loading="eager" style="object-position: {{ section.settings.image_position | default: 'center' }};${imageEffectStyle("section.settings")}" />
+      <picture>
+        {% if section.settings.mobile_image != blank %}<source media="(max-width: 767px)" srcset="{{ section.settings.mobile_image | img_url: '900x' }}" />{% endif %}
+        <img src="{{ section.settings.image | img_url: '1200x' }}" alt="{{ section.settings.title | escape }}" loading="eager" style="object-position: {{ section.settings.image_position | default: 'center' }};${imageEffectStyle("section.settings")}" />
+      </picture>
     {% else %}
       <div class="formula-hero__placeholder" aria-hidden="true"></div>
     {% endif %}
@@ -831,6 +834,8 @@ export const FORMULA_HERO = `<section class="formula-hero{% if section.settings.
     { "type": "url", "id": "quiz_url", "label": "İkincil Buton URL", "default": "/pages/cilt-analizi" },
     { "type": "header", "id": "hero_media", "label": "Görsel (Bölünmüş / Tam genişlik)" },
     { "type": "image_picker", "id": "image", "label": "Görsel" },
+    { "type": "image_picker", "id": "mobile_image", "label": "Mobil Görsel (ops.)",
+      "info": "Sadece telefon genişliğinde bu görsel kullanılır — boş bırakılırsa masaüstü görseli küçültülerek gösterilir." },
     { "type": "select", "id": "image_position", "label": "Görsel Konumu (kırpma odağı)", "default": "center",
       "options": [
         { "label": "Orta", "value": "center" },
@@ -1413,7 +1418,10 @@ export const FORMULA_COLLECTION_SHOWCASE = `<section class="formula-collection-s
 export const FORMULA_GENERAL_SHOWCASE = `<section class="formula-showcase{% if section.settings.layout == 'image_right' %} formula-showcase--reverse{% endif %}${revealAnimationClass()}">
   <div class="formula-showcase__media" style="border-radius: {{ section.settings.image_shape | default: 18 }}px">
     {% if section.settings.image != blank %}
-      <img src="{{ section.settings.image | img_url: '1400x' }}" alt="{{ section.settings.title | escape }}" loading="lazy" style="${imageEffectStyle("section.settings")}" />
+      <picture>
+        {% if section.settings.mobile_image != blank %}<source media="(max-width: 767px)" srcset="{{ section.settings.mobile_image | img_url: '900x' }}" />{% endif %}
+        <img src="{{ section.settings.image | img_url: '1400x' }}" alt="{{ section.settings.title | escape }}" loading="lazy" style="${imageEffectStyle("section.settings")}" />
+      </picture>
     {% else %}
       <div class="formula-showcase__placeholder" aria-hidden="true"></div>
     {% endif %}
@@ -1437,6 +1445,8 @@ export const FORMULA_GENERAL_SHOWCASE = `<section class="formula-showcase{% if s
     { "type": "text", "id": "title", "label": "Başlık", "default": "Yeni Sezon" },
     { "type": "textarea", "id": "subtitle", "label": "Alt Metin", "default": "" },
     { "type": "image_picker", "id": "image", "label": "Görsel" },
+    { "type": "image_picker", "id": "mobile_image", "label": "Mobil Görsel (ops.)",
+      "info": "Sadece telefon genişliğinde bu görsel kullanılır — boş bırakılırsa masaüstü görseli küçültülerek gösterilir." },
     { "type": "select", "id": "layout", "label": "Yerleşim", "default": "image_left",
       "options": [
         { "label": "Görsel solda", "value": "image_left" },
@@ -3159,16 +3169,25 @@ export const FORMULA_BUNDLE_BUILDER = `<section class="formula-bundle${revealAni
 {% endschema %}`;
 
 export const FORMULA_SHOPPABLE_VIDEO = `<section class="formula-shoppable-video{% if section.settings.layout_style == 'stacked' %} formula-shoppable-video--stacked{% endif %}${revealAnimationClass()}" data-shoppable-video>
+  {%- assign shoppable_video_url = section.settings.video_url -%}
+  {%- assign shoppable_video_is_embed = false -%}
+  {%- if shoppable_video_url contains 'youtube.com' or shoppable_video_url contains 'youtu.be' -%}
+    {%- assign shoppable_video_is_embed = true -%}
+    {%- assign shoppable_video_embed_src = shoppable_video_url | replace: 'youtu.be/', 'youtube.com/embed/' | replace: 'watch?v=', 'embed/' -%}
+  {%- elsif shoppable_video_url contains 'vimeo.com' -%}
+    {%- assign shoppable_video_is_embed = true -%}
+    {%- assign shoppable_video_embed_src = shoppable_video_url | replace: 'vimeo.com/', 'player.vimeo.com/video/' -%}
+  {%- endif -%}
   {% if section.settings.title != blank or section.settings.description != blank %}<div class="formula-section-head">{% if section.settings.title != blank %}<h2>{{ section.settings.title | escape }}</h2>{% endif %}{% if section.settings.description != blank %}<p>{{ section.settings.description | escape }}</p>{% endif %}</div>{% endif %}
   <div class="formula-shoppable-video__layout">
     <div class="formula-shoppable-video__media">
-      {% if section.settings.video_url != blank %}<video controls playsinline {% if section.settings.poster != blank %}poster="{{ section.settings.poster | img_url: '1200x' }}"{% endif %}><source src="{{ section.settings.video_url | escape }}" /></video>{% elsif section.settings.poster != blank %}<img src="{{ section.settings.poster | img_url: '1200x' }}" alt="{{ section.settings.title | escape }}" loading="lazy" />{% endif %}
+      {% if shoppable_video_is_embed %}<iframe class="formula-shoppable-video__iframe" src="{{ shoppable_video_embed_src | escape }}" title="{{ section.settings.title | default: 'Video' | escape }}" loading="lazy" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>{% elsif shoppable_video_url != blank %}<video controls playsinline {% if section.settings.poster != blank %}poster="{{ section.settings.poster | img_url: '1200x' }}"{% endif %}><source src="{{ shoppable_video_url | escape }}" /></video>{% elsif section.settings.poster != blank %}<img src="{{ section.settings.poster | img_url: '1200x' }}" alt="{{ section.settings.title | escape }}" loading="lazy" />{% endif %}
     </div>
     <div class="formula-shoppable-video__products">
       {% for block in section.blocks %}{% if block.type == "product" %}
         <article class="formula-video-product" data-video-time="{{ block.settings.time_seconds | default: 0 }}">
           {% if block.settings.image != blank %}<img src="{{ block.settings.image | img_url: '240x' }}" alt="{{ block.settings.name | escape }}" loading="lazy" />{% endif %}
-          <div>{% if block.settings.time_label != blank %}<button type="button" data-video-seek>{{ block.settings.time_label | escape }}</button>{% endif %}{% if block.settings.name != blank %}<h3>{{ block.settings.name | escape }}</h3>{% endif %}{% if block.settings.price != blank %}<p>{{ block.settings.price | escape }}</p>{% endif %}{% if block.settings.url != blank %}<a href="{{ block.settings.url | escape }}">Ürünü Gör →</a>{% endif %}</div>
+          <div>{% if block.settings.time_label != blank %}{% if shoppable_video_is_embed %}<span class="formula-video-product__time">{{ block.settings.time_label | escape }}</span>{% else %}<button type="button" data-video-seek>{{ block.settings.time_label | escape }}</button>{% endif %}{% endif %}{% if block.settings.name != blank %}<h3>{{ block.settings.name | escape }}</h3>{% endif %}{% if block.settings.price != blank %}<p>{{ block.settings.price | escape }}</p>{% endif %}{% if block.settings.url != blank %}<a href="{{ block.settings.url | escape }}">Ürünü Gör →</a>{% endif %}</div>
         </article>
       {% endif %}{% endfor %}
     </div>
@@ -3195,13 +3214,16 @@ export const FORMULA_SHOPPABLE_VIDEO = `<section class="formula-shoppable-video{
   "settings": [
     { "type": "text", "id": "title", "label": "Başlık (ops.)", "default": "Videodaki Rutini Keşfedin" },
     { "type": "textarea", "id": "description", "label": "Açıklama (ops.)" },
-    { "type": "url", "id": "video_url", "label": "Video URL" },
-    { "type": "image_picker", "id": "poster", "label": "Kapak Görseli" },
+    { "type": "url", "id": "video_url", "label": "Video Bağlantısı",
+      "info": "YouTube, Vimeo linki veya doğrudan bir .mp4 dosya adresi yapıştır — dosya yüklemek değil, bağlantı yapıştırmak gerekir." },
+    { "type": "image_picker", "id": "poster", "label": "Yedek Görsel",
+      "info": "Video bağlantısı boşsa (veya video hâlâ yüklenirken) gösterilir." },
     { "type": "select", "id": "layout_style", "label": "Yerleşim", "default": "side", "options": [{"label":"Yan yana","value":"side"},{"label":"Alt alta","value":"stacked"}] },${revealAnimationSchemaField()}
   ],
   "blocks": [{ "type": "product", "name": "Video Ürünü", "settings": [
     { "type": "range", "id": "time_seconds", "label": "Zaman (saniye)", "min": 0, "max": 600, "step": 1, "default": 0 },
-    { "type": "text", "id": "time_label", "label": "Zaman Etiketi (ops.)", "default": "00:00" },
+    { "type": "text", "id": "time_label", "label": "Zaman Etiketi (ops.)", "default": "00:00",
+      "info": "Tıklayınca videoyu o saniyeye atlatır — sadece doğrudan .mp4 bağlantısında çalışır, YouTube/Vimeo'da sadece etiket olarak görünür." },
     { "type": "image_picker", "id": "image", "label": "Görsel" },
     { "type": "text", "id": "name", "label": "Ürün Adı", "default": "Ürün Adı" },
     { "type": "text", "id": "price", "label": "Fiyat (ops.)" },
@@ -3479,6 +3501,7 @@ export const FORMULA_LIBRARY_SECTIONS_CSS = `
 .formula-showcase { display: grid; grid-template-columns: 1fr 1fr; align-items: center; gap: 48px; padding: 64px 40px; background: var(--color-background); }
 .formula-showcase--reverse .formula-showcase__media { order: 2; }
 .formula-showcase__media { position: relative; aspect-ratio: 5/4; overflow: hidden; background: var(--color-surface); }
+.formula-showcase__media picture { display: block; width: 100%; height: 100%; }
 .formula-showcase__media img { width: 100%; height: 100%; object-fit: cover; }
 .formula-showcase__placeholder { width: 100%; height: 100%; background: linear-gradient(155deg, var(--color-primary) 0%, var(--color-surface) 70%); opacity: .5; }
 .formula-showcase__eyebrow { text-transform: uppercase; letter-spacing: 0.1em; font-size: 12px; color: var(--color-primary); margin: 0 0 16px; font-weight: 600; }
@@ -3854,12 +3877,13 @@ export const FORMULA_LIBRARY_SECTIONS_CSS = `
 .formula-shoppable-video__layout { display: grid; grid-template-columns: minmax(0,1.65fr) minmax(280px,.75fr); gap: 28px; max-width: 1120px; margin: 0 auto; align-items: start; }
 .formula-shoppable-video--stacked .formula-shoppable-video__layout { grid-template-columns: 1fr; }
 .formula-shoppable-video__media { aspect-ratio: 16 / 9; overflow: hidden; border-radius: 16px; background: #111; }
-.formula-shoppable-video__media video,.formula-shoppable-video__media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.formula-shoppable-video__media video,.formula-shoppable-video__media img,.formula-shoppable-video__media iframe { width: 100%; height: 100%; object-fit: cover; display: block; border: 0; }
 .formula-shoppable-video__products { display: flex; flex-direction: column; gap: 12px; }
 .formula-video-product { display: grid; grid-template-columns: 76px minmax(0,1fr); gap: 12px; padding: 12px; border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-surface); }
 .formula-video-product img { width: 76px; height: 76px; object-fit: cover; border-radius: 8px; }
 .formula-video-product h3 { font-size: 14px; margin: 4px 0; }.formula-video-product p { color: var(--color-muted); font-size: 12px; margin: 0 0 5px; }
 .formula-video-product button { border: 0; padding: 0; background: none; color: var(--color-primary); font-size: 11px; font-weight: 700; cursor: pointer; }.formula-video-product a { color: var(--color-text); font-size: 12px; font-weight: 600; }
+.formula-video-product__time { display: inline-block; color: var(--color-muted); font-size: 11px; font-weight: 700; }
 
 /* Teslimat Bilgisi (2026-08-24) */
 .formula-delivery { padding: 64px 40px; background: var(--color-surface); }
@@ -4095,6 +4119,7 @@ body.formula-mobile-menu-open { overflow: hidden; }
 .formula-hero__sub { color: var(--color-muted); line-height: 1.6; max-width: 42ch; margin: 0 0 32px; }
 .formula-hero__actions { display: flex; gap: 12px; flex-wrap: wrap; }
 .formula-hero__media { position: relative; aspect-ratio: 4/5; border-radius: 18px; overflow: hidden; background: #ffffff; }
+.formula-hero__media picture { display: block; width: 100%; height: 100%; }
 .formula-hero__media img { width: 100%; height: 100%; object-fit: cover; }
 .formula-hero__placeholder { width: 100%; height: 100%; background: linear-gradient(155deg, var(--color-primary) 0%, var(--color-surface) 70%); opacity: .5; }
 .formula-hero--reverse { grid-template-columns: 1fr 1fr; direction: rtl; }
