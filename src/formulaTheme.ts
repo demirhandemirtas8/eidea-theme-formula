@@ -2905,6 +2905,20 @@ export const FORMULA_LIBRARY_SECTIONS_CSS = `
 .formula-related--compact .formula-product-card { display: flex; align-items: center; gap: 14px; padding: 10px 0; border-bottom: 1px solid var(--color-border); }
 .formula-related--compact .formula-product-card__media { width: 56px; height: 56px; aspect-ratio: auto; flex-shrink: 0; margin-bottom: 0; }
 
+/* Kampanya Geri Sayımı (2026-08-24) — GERÇEK BUG DÜZELTMESİ: section eklenirken
+   bu CSS bloğu unutulmuştu, section tamamen stilsiz render ediliyordu (sadece
+   sayaç sayıları JS ile doluyor, kutu/hizalama/renk hiç yoktu). */
+.formula-countdown { padding: 48px 40px; text-align: center; background: var(--color-secondary); color: #ffffff; }
+.formula-countdown__inner { max-width: 640px; margin: 0 auto; }
+.formula-countdown__heading { font-family: var(--font-heading); font-size: clamp(20px, 2.6vw, 30px); font-weight: 600; margin: 0 0 6px; }
+.formula-countdown__sub { font-size: 14px; opacity: .8; margin: 0 0 24px; }
+.formula-countdown__timer { display: flex; justify-content: center; gap: 16px; margin-bottom: 24px; }
+.formula-countdown__unit { display: flex; flex-direction: column; align-items: center; min-width: 56px; }
+.formula-countdown__unit span { font-family: var(--font-heading); font-size: clamp(24px, 3.4vw, 36px); font-weight: 700; line-height: 1; }
+.formula-countdown__unit label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; opacity: .7; margin-top: 6px; }
+.formula-countdown__expired { font-size: 15px; margin: 0 0 20px; }
+@media (max-width: 600px) { .formula-countdown { padding: 36px 20px; } .formula-countdown__timer { gap: 10px; } .formula-countdown__unit { min-width: 46px; } }
+
 /* 404 (2026-08-19) */
 .formula-404 { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 96px 24px; min-height: 50vh; }
 .formula-404__code { font-family: var(--font-heading); font-size: clamp(64px, 12vw, 140px); font-weight: 700; line-height: 1; margin: 0; color: var(--color-border); letter-spacing: -0.03em; }
