@@ -130,6 +130,7 @@ export const FORMULA_NAV_HEADER = `<section class="formula-nav">
         <button type="button" class="formula-nav__search-toggle" aria-label="Ara" aria-expanded="false" data-nav-search-toggle>${navIconSvg("search")}</button>
         <form action="/search" method="get" class="formula-nav__search-form" data-nav-search-form>
           <input type="search" name="q" placeholder="Ara…" class="formula-nav__search-input" aria-label="Arama sorgusu" />
+          <button type="button" class="formula-nav__search-close" aria-label="Aramayı kapat" data-nav-search-close>&times;</button>
         </form>
       </div>
     {%- else -%}
@@ -148,6 +149,7 @@ export const FORMULA_NAV_HEADER = `<section class="formula-nav">
       var toggle = wrap.querySelector("[data-nav-search-toggle]");
       var form = wrap.querySelector("[data-nav-search-form]");
       var input = form ? form.querySelector("input") : null;
+      var closeBtn = wrap.querySelector("[data-nav-search-close]");
       if (!toggle || !form) return;
       function close() {
         wrap.classList.remove("is-open");
@@ -159,6 +161,7 @@ export const FORMULA_NAV_HEADER = `<section class="formula-nav">
         toggle.setAttribute("aria-expanded", open ? "true" : "false");
         if (open && input) input.focus();
       });
+      if (closeBtn) closeBtn.addEventListener("click", function (e) { e.stopPropagation(); e.preventDefault(); close(); });
       form.addEventListener("click", function (e) { e.stopPropagation(); });
       document.addEventListener("click", close);
       document.addEventListener("keydown", function (e) { if (e.key === "Escape") close(); });
@@ -272,6 +275,7 @@ export const FORMULA_NAV_HEADER_CENTERED = `<section class="formula-nav formula-
         <button type="button" class="formula-nav__search-toggle" aria-label="Ara" aria-expanded="false" data-nav-search-toggle>${navIconSvg("search")}</button>
         <form action="/search" method="get" class="formula-nav__search-form" data-nav-search-form>
           <input type="search" name="q" placeholder="Ara…" class="formula-nav__search-input" aria-label="Arama sorgusu" />
+          <button type="button" class="formula-nav__search-close" aria-label="Aramayı kapat" data-nav-search-close>&times;</button>
         </form>
       </div>
     {%- else -%}
@@ -290,6 +294,7 @@ export const FORMULA_NAV_HEADER_CENTERED = `<section class="formula-nav formula-
       var toggle = wrap.querySelector("[data-nav-search-toggle]");
       var form = wrap.querySelector("[data-nav-search-form]");
       var input = form ? form.querySelector("input") : null;
+      var closeBtn = wrap.querySelector("[data-nav-search-close]");
       if (!toggle || !form) return;
       function close() {
         wrap.classList.remove("is-open");
@@ -301,6 +306,7 @@ export const FORMULA_NAV_HEADER_CENTERED = `<section class="formula-nav formula-
         toggle.setAttribute("aria-expanded", open ? "true" : "false");
         if (open && input) input.focus();
       });
+      if (closeBtn) closeBtn.addEventListener("click", function (e) { e.stopPropagation(); e.preventDefault(); close(); });
       form.addEventListener("click", function (e) { e.stopPropagation(); });
       document.addEventListener("click", close);
       document.addEventListener("keydown", function (e) { if (e.key === "Escape") close(); });
@@ -2687,7 +2693,12 @@ export const FORMULA_BUNDLE_BUILDER = `<section class="formula-bundle${revealAni
         });
         chain.then(function () {
           button.textContent = "Eklendi ✓";
-          if (status) status.textContent = items.length + " ürün sepete eklendi.";
+          if (status) {
+            var appliedDiscount = lastData && Number(lastData.discount_total);
+            status.textContent = items.length + " ürün sepete eklendi." + (appliedDiscount > 0
+              ? " Otomatik kampanya uygulandı: ₺" + appliedDiscount.toFixed(2) + " indirim."
+              : " Uygun otomatik kampanyalar ödeme adımında da hesaplanır.");
+          }
           // cartRuntimeClient.ts'in header sepet rozeti (updateBadge) kendi
           // kapanışında (IIFE) tanımlı, bu ayrı <script>'ten erişilemiyor —
           // aynı seçici/mantık burada tekrarlanıyor, aksi halde rozet
@@ -3574,9 +3585,11 @@ a { color: inherit; }
    genişliğini/hizasını ASLA etkilemiyor, sadece üzerine bindiriliyor. */
 .formula-nav__search { position: relative; display: flex; align-items: center; }
 .formula-nav__search-toggle { background: none; border: none; cursor: pointer; padding: 0; display: flex; color: inherit; }
-.formula-nav__search-form { position: absolute; right: 0; top: calc(100% + 12px); width: 0; overflow: hidden; opacity: 0; pointer-events: none; background: var(--color-background); border: 1px solid var(--color-border); border-radius: 10px; box-shadow: 0 18px 44px rgba(15,23,42,.12); transition: width .2s ease, opacity .2s ease; z-index: 30; }
-.formula-nav__search.is-open .formula-nav__search-form { width: 260px; opacity: 1; pointer-events: auto; padding: 4px; }
-.formula-nav__search-input { width: 100%; box-sizing: border-box; border: none; outline: none; padding: 10px 12px; font-size: 14px; background: transparent; color: var(--color-text); }
+.formula-nav__search-form { position: absolute; right: 0; top: calc(100% + 12px); width: 0; overflow: hidden; opacity: 0; pointer-events: none; display: flex; align-items: center; background: var(--color-background); border: 1px solid var(--color-border); border-radius: 10px; box-shadow: 0 18px 44px rgba(15,23,42,.12); transition: width .2s ease, opacity .2s ease; z-index: 30; }
+.formula-nav__search.is-open .formula-nav__search-form { width: 280px; opacity: 1; pointer-events: auto; padding: 4px; }
+.formula-nav__search-input { flex: 1; min-width: 0; box-sizing: border-box; border: none; outline: none; padding: 10px 12px; font-size: 14px; background: transparent; color: var(--color-text); }
+.formula-nav__search-close { flex-shrink: 0; background: none; border: none; cursor: pointer; font-size: 20px; line-height: 1; padding: 0 10px; color: var(--color-muted); }
+.formula-nav__search-close:hover { color: var(--color-text); }
 @media (max-width: 767.98px) { .formula-nav__search.is-open .formula-nav__search-form { position: fixed; left: 12px; right: 12px; top: 64px; width: auto; } }
 .formula-nav__icon { width: 19px; height: 19px; display: block; }
 .formula-nav__quiz { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 999px; padding: 7px 14px; color: var(--color-primary) !important; font-weight: 500; }
