@@ -178,6 +178,7 @@ export const FORMULA_NAV_HEADER = `<section class="formula-nav{% if section.sett
       <a href="/search" aria-label="Ara">${navIconSvg("search")}</a>
     {%- endif -%}
     {% if section.settings.show_wishlist %}<a href="/account#favorites" aria-label="Favorilerim">${navIconSvg("heart")}</a>{% endif %}
+    <span data-locale-switcher hidden></span>
     <a href="/account" aria-label="Hesabım">${navIconSvg("account")}</a>
     <a href="/cart" aria-label="Sepet" data-cart-open-mode="{{ section.settings.cart_open_mode | default: 'page' }}">${navIconSvg("cart")}</a>
   </div>
@@ -512,6 +513,7 @@ export const FORMULA_NAV_HEADER_CENTERED = `<section class="formula-nav formula-
       <a href="/search" aria-label="Ara">${navIconSvg("search")}</a>
     {%- endif -%}
     {% if section.settings.show_wishlist %}<a href="/account#favorites" aria-label="Favorilerim">${navIconSvg("heart")}</a>{% endif %}
+    <span data-locale-switcher hidden></span>
     <a href="/account" aria-label="Hesabım">${navIconSvg("account")}</a>
     <a href="/cart" aria-label="Sepet" data-cart-open-mode="{{ section.settings.cart_open_mode | default: 'page' }}">${navIconSvg("cart")}</a>
   </div>
