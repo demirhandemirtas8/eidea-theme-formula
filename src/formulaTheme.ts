@@ -1389,7 +1389,7 @@ export const FORMULA_COLLECTION_SHOWCASE = `<section class="formula-collection-s
       <a class="formula-btn formula-btn--solid" href="{{ section.settings.collection.url | escape }}">{{ section.settings.cta_label | default: "Koleksiyonu Gör" | escape }}</a>
     </div>
   {% else %}
-    <div class="formula-collection-showcase__empty">Ayarlar panelinden bir koleksiyon seçin.</div>
+    <div class="formula-collection-showcase__empty">{{ section.settings.empty_text | default: "Ayarlar panelinden bir koleksiyon seçin." | escape }}</div>
   {% endif %}
 </section>
 
@@ -1397,6 +1397,7 @@ export const FORMULA_COLLECTION_SHOWCASE = `<section class="formula-collection-s
 {
   "name": "Formula Koleksiyon Vitrini",
   "settings": [
+    { "type": "text", "id": "empty_text", "label": "Boş Durum Metni", "default": "Ayarlar panelinden bir koleksiyon seçin." },
     { "type": "collection", "id": "collection", "label": "Koleksiyon" },
     { "type": "text", "id": "cta_label", "label": "Buton Metni", "default": "Koleksiyonu Gör" },
     { "type": "select", "id": "layout", "label": "Yerleşim", "default": "image_left",
@@ -1499,7 +1500,7 @@ export const FORMULA_FAQ = `<section class="formula-faq{% if section.settings.la
   </div>
   {% if section.settings.layout_style == 'categorized' %}
     <div class="formula-faq__tabs" role="tablist" aria-label="SSS kategorileri">
-      <button type="button" class="formula-faq__tab is-active" data-faq-tab="all" aria-selected="true">Tümü</button>
+      <button type="button" class="formula-faq__tab is-active" data-faq-tab="all" aria-selected="true">{{ section.settings.all_label | default: "Tümü" | escape }}</button>
       {% for block in section.blocks %}{% if block.type == "question" and block.settings.category != blank %}<button type="button" class="formula-faq__tab" data-faq-tab="{{ block.settings.category | escape }}" aria-selected="false">{{ block.settings.category | escape }}</button>{% endif %}{% endfor %}
     </div>
   {% endif %}
@@ -1539,6 +1540,7 @@ export const FORMULA_FAQ = `<section class="formula-faq{% if section.settings.la
 {
   "name": "Formula SSS",
   "settings": [
+    { "type": "text", "id": "all_label", "label": "Tümü Sekmesi", "default": "Tümü" },
     { "type": "select", "id": "layout_style", "label": "Yerleşim", "default": "single", "options": [{"label":"Tek kolon accordion","value":"single"},{"label":"İki kolon accordion","value":"two_columns"},{"label":"Kategori sekmeli","value":"categorized"}] },
     { "type": "text", "id": "title", "label": "Başlık", "default": "Sıkça Sorulan Sorular" },${revealAnimationSchemaField()}
   ],
@@ -2000,14 +2002,14 @@ export const FORMULA_CHECKOUT_SUCCESS = `<section class="formula-order-result${r
       <p class="formula-order-result__number">{{ section.settings.order_number_label | default: "Sipariş No:" | escape }} <strong>{{ order.number }}</strong></p>
       {% if bank_accounts %}
         <div class="formula-order-result__bank">
-          <p class="formula-order-result__bank-title">Havale/EFT ile ödeme yapın</p>
+          <p class="formula-order-result__bank-title">{{ section.settings.bank_title | default: "Havale/EFT ile ödeme yapın" | escape }}</p>
           {% for account in bank_accounts %}
             <div class="formula-order-result__bank-row">
               <p class="formula-order-result__bank-name">{{ account.bankName | escape }} — {{ account.accountName | escape }}</p>
               <p class="formula-order-result__bank-iban">{{ account.iban | escape }} · {{ account.currency | escape }}</p>
             </div>
           {% endfor %}
-          {% if bank_reference %}<p class="formula-order-result__bank-ref">Açıklamaya <strong>{{ bank_reference | escape }}</strong> referans kodunu yazmayı unutma.</p>{% endif %}
+          {% if bank_reference %}<p class="formula-order-result__bank-ref">{{ section.settings.bank_reference_prefix | default: "Açıklamaya" | escape }} <strong>{{ bank_reference | escape }}</strong> {{ section.settings.bank_reference_suffix | default: "referans kodunu yazmayı unutma." | escape }}</p>{% endif %}
         </div>
       {% endif %}
       {% if order.items.size > 0 %}
@@ -2045,6 +2047,9 @@ export const FORMULA_CHECKOUT_SUCCESS = `<section class="formula-order-result${r
     { "type": "text", "id": "success_title", "label": "Başlık", "default": "Siparişiniz Alındı!" },
     { "type": "textarea", "id": "success_text", "label": "Açıklama (kart/kapıda ödeme)", "default": "Ödemeniz başarıyla tamamlandı. Sipariş onayı e-posta adresine gönderilecek." },
     { "type": "textarea", "id": "bank_text", "label": "Açıklama (havale/EFT)", "default": "Siparişiniz oluşturuldu — ödemeyi aşağıdaki hesaba göndermeniz gerekiyor." },
+    { "type": "text", "id": "bank_title", "label": "Havale Başlığı", "default": "Havale/EFT ile ödeme yapın" },
+    { "type": "text", "id": "bank_reference_prefix", "label": "Referans Ön Metni", "default": "Açıklamaya" },
+    { "type": "text", "id": "bank_reference_suffix", "label": "Referans Son Metni", "default": "referans kodunu yazmayı unutma." },
     { "type": "text", "id": "order_number_label", "label": "Sipariş No Etiketi", "default": "Sipariş No:" },
     { "type": "text", "id": "total_label", "label": "Toplam Etiketi", "default": "Toplam" },
     { "type": "text", "id": "cta_label", "label": "Buton Metni", "default": "Alışverişe Devam Et" },
@@ -2808,10 +2813,10 @@ export const FORMULA_CONTACT_FORM = `<section data-section-id="{{ section.id }}"
     {% if section.settings.subtitle != blank %}<p style="font-size:15px;line-height:1.7;color:{{ section.settings.muted | default: 'var(--color-muted)' }};margin:0 0 28px">{{ section.settings.subtitle | escape }}</p>{% endif %}
     <form data-eidea-contact-form data-success-message="{{ section.settings.success_message | default: 'Mesajın alındı, en kısa sürede dönüş yapacağız.' | escape }}" style="display:grid;gap:12px;text-align:left">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <label style="display:grid;gap:6px;font-size:13px;font-weight:700;color:{{ section.settings.text | default: 'var(--color-text)' }}"><span>Ad Soyad</span><input name="name" required style="height:46px;border-radius:10px;border:1px solid {{ section.settings.border | default: '#e5e7eb' }};padding:0 14px"></label>
-        <label style="display:grid;gap:6px;font-size:13px;font-weight:700;color:{{ section.settings.text | default: 'var(--color-text)' }}"><span>E-posta</span><input type="email" name="email" required style="height:46px;border-radius:10px;border:1px solid {{ section.settings.border | default: '#e5e7eb' }};padding:0 14px"></label>
+        <label style="display:grid;gap:6px;font-size:13px;font-weight:700;color:{{ section.settings.text | default: 'var(--color-text)' }}"><span>{{ section.settings.name_label | default: "Ad Soyad" | escape }}</span><input name="name" required style="height:46px;border-radius:10px;border:1px solid {{ section.settings.border | default: '#e5e7eb' }};padding:0 14px"></label>
+        <label style="display:grid;gap:6px;font-size:13px;font-weight:700;color:{{ section.settings.text | default: 'var(--color-text)' }}"><span>{{ section.settings.email_label | default: "E-posta" | escape }}</span><input type="email" name="email" required style="height:46px;border-radius:10px;border:1px solid {{ section.settings.border | default: '#e5e7eb' }};padding:0 14px"></label>
       </div>
-      {% if section.settings.show_phone %}<label style="display:grid;gap:6px;font-size:13px;font-weight:700;color:{{ section.settings.text | default: 'var(--color-text)' }}"><span>Telefon (ops.)</span><input name="phone" type="tel" inputmode="numeric" pattern="[0-9]*" placeholder="05XX XXX XX XX" data-eidea-phone-field style="height:46px;border-radius:10px;border:1px solid {{ section.settings.border | default: '#e5e7eb' }};padding:0 14px"></label>{% endif %}
+      {% if section.settings.show_phone %}<label style="display:grid;gap:6px;font-size:13px;font-weight:700;color:{{ section.settings.text | default: 'var(--color-text)' }}"><span>{{ section.settings.phone_label | default: "Telefon (ops.)" | escape }}</span><input name="phone" type="tel" inputmode="numeric" pattern="[0-9]*" placeholder="{{ section.settings.phone_placeholder | default: '05XX XXX XX XX' | escape }}" data-eidea-phone-field style="height:46px;border-radius:10px;border:1px solid {{ section.settings.border | default: '#e5e7eb' }};padding:0 14px"></label>{% endif %}
       {% if section.settings.show_subject %}<label style="display:grid;gap:6px;font-size:13px;font-weight:700;color:{{ section.settings.text | default: 'var(--color-text)' }}"><span>Konu (ops.)</span><input name="subject" style="height:46px;border-radius:10px;border:1px solid {{ section.settings.border | default: '#e5e7eb' }};padding:0 14px"></label>{% endif %}
       <label style="display:grid;gap:6px;font-size:13px;font-weight:700;color:{{ section.settings.text | default: 'var(--color-text)' }}"><span>Mesajın</span><textarea name="message" required rows="5" style="border-radius:10px;border:1px solid {{ section.settings.border | default: '#e5e7eb' }};padding:12px 14px;font-family:inherit;resize:vertical"></textarea></label>
       {%- comment -%}
@@ -2841,7 +2846,7 @@ export const FORMULA_CONTACT_FORM = `<section data-section-id="{{ section.id }}"
               {%- endcomment -%}
               {% assign contact_choice_options = block.settings.options | split: "," %}
               <select name="q_{{ block.id }}" {% if block.settings.required %}required{% endif %} style="height:46px;border-radius:10px;border:1px solid {{ section.settings.border | default: '#e5e7eb' }};padding:0 14px;background:#fff">
-                <option value="">Seçiniz</option>
+                <option value="">{{ section.settings.select_placeholder | default: "Seçiniz" | escape }}</option>
                 {% for opt in contact_choice_options %}
                   {% if opt != blank %}<option value="{{ opt | strip | escape }}">{{ opt | strip | escape }}</option>{% endif %}
                 {% endfor %}
@@ -2869,6 +2874,11 @@ export const FORMULA_CONTACT_FORM = `<section data-section-id="{{ section.id }}"
     { "type": "text", "id": "title", "label": "Başlık", "default": "Bize Ulaşın" },
     { "type": "textarea", "id": "subtitle", "label": "Alt metin", "default": "Sorularınız için formu doldurun, en kısa sürede dönüş yapalım." },
     { "type": "text", "id": "submit_label", "label": "Gönder buton metni", "default": "Gönder" },
+    { "type": "text", "id": "name_label", "label": "Ad Soyad Etiketi", "default": "Ad Soyad" },
+    { "type": "text", "id": "email_label", "label": "E-posta Etiketi", "default": "E-posta" },
+    { "type": "text", "id": "phone_label", "label": "Telefon Etiketi", "default": "Telefon (ops.)" },
+    { "type": "text", "id": "phone_placeholder", "label": "Telefon Yer Tutucu", "default": "05XX XXX XX XX" },
+    { "type": "text", "id": "select_placeholder", "label": "Seçim Yer Tutucu", "default": "Seçiniz" },
     { "type": "text", "id": "success_message", "label": "Başarı mesajı", "default": "Mesajın alındı, en kısa sürede dönüş yapacağız." },
     { "type": "checkbox", "id": "show_phone", "label": "Telefon alanı göster", "default": true },
     { "type": "checkbox", "id": "show_subject", "label": "Konu alanı göster", "default": false },
@@ -2938,7 +2948,7 @@ export const FORMULA_BRANDS_SLIDER = `<section class="formula-brands-slider${rev
         {% endif %}
       </a>
     {% else %}
-      <p class="formula-brands-slider__empty">Henüz marka eklenmemiş.</p>
+      <p class="formula-brands-slider__empty">{{ section.settings.empty_text | default: "Henüz marka eklenmemiş." | escape }}</p>
     {% endfor %}
   </div>
 </section>
@@ -2948,6 +2958,7 @@ export const FORMULA_BRANDS_SLIDER = `<section class="formula-brands-slider${rev
   "name": "Markalar Slider",
   "settings": [
     { "type": "text", "id": "title", "label": "Başlık", "default": "Markalarımız" },
+    { "type": "text", "id": "empty_text", "label": "Boş Durum Metni", "default": "Henüz marka eklenmemiş." },
     { "type": "checkbox", "id": "show_arrows", "label": "Ok butonları göster", "default": true },${revealAnimationSchemaField()}
   ],
   "presets": [{ "name": "Markalar Slider" }]
@@ -2967,10 +2978,10 @@ export const FORMULA_COUNTDOWN_PROMOTION = `<section class="formula-countdown${r
     {% if section.settings.heading != blank %}<p class="formula-countdown__heading">{{ section.settings.heading | escape }}</p>{% endif %}
     {% if section.settings.subtitle != blank %}<p class="formula-countdown__sub">{{ section.settings.subtitle | escape }}</p>{% endif %}
     <div class="formula-countdown__timer" data-countdown-timer>
-      <div class="formula-countdown__unit"><span data-countdown-days>00</span><label>Gün</label></div>
-      <div class="formula-countdown__unit"><span data-countdown-hours>00</span><label>Saat</label></div>
-      <div class="formula-countdown__unit"><span data-countdown-minutes>00</span><label>Dk</label></div>
-      <div class="formula-countdown__unit"><span data-countdown-seconds>00</span><label>Sn</label></div>
+      <div class="formula-countdown__unit"><span data-countdown-days>00</span><label>{{ section.settings.days_label | default: "Gün" | escape }}</label></div>
+      <div class="formula-countdown__unit"><span data-countdown-hours>00</span><label>{{ section.settings.hours_label | default: "Saat" | escape }}</label></div>
+      <div class="formula-countdown__unit"><span data-countdown-minutes>00</span><label>{{ section.settings.minutes_label | default: "Dk" | escape }}</label></div>
+      <div class="formula-countdown__unit"><span data-countdown-seconds>00</span><label>{{ section.settings.seconds_label | default: "Sn" | escape }}</label></div>
     </div>
     <p class="formula-countdown__expired" data-countdown-expired hidden>{{ section.settings.expired_message | default: "Kampanya sona erdi." | escape }}</p>
     {% if section.settings.cta_label != blank %}
@@ -3027,6 +3038,10 @@ export const FORMULA_COUNTDOWN_PROMOTION = `<section class="formula-countdown${r
 {
   "name": "Formula Kampanya Geri Sayımı",
   "settings": [
+    { "type": "text", "id": "days_label", "label": "Gün Etiketi", "default": "Gün" },
+    { "type": "text", "id": "hours_label", "label": "Saat Etiketi", "default": "Saat" },
+    { "type": "text", "id": "minutes_label", "label": "Dakika Etiketi", "default": "Dk" },
+    { "type": "text", "id": "seconds_label", "label": "Saniye Etiketi", "default": "Sn" },
     { "type": "text", "id": "heading", "label": "Başlık", "default": "Kampanya bitmeden yakala" },
     { "type": "text", "id": "subtitle", "label": "Alt Metin", "default": "Sınırlı süreli fırsat" },
     { "type": "text", "id": "end_at", "label": "Bitiş Tarihi/Saati (ör. 2026-12-31T23:59)", "default": "" },
@@ -3074,7 +3089,7 @@ export const FORMULA_SHOPPABLE_IMAGE = `<section class="formula-shoppable-image{
             {% if block.settings.badge != blank %}<span class="formula-shoppable-image__card-badge">{{ block.settings.badge | escape }}</span>{% endif %}
             <p class="formula-shoppable-image__card-name">{{ block.settings.name | escape }}</p>
             {% if block.settings.price != blank %}<p class="formula-shoppable-image__card-price">{{ block.settings.price | escape }}</p>{% endif %}
-            <a class="formula-shoppable-image__card-link" href="{{ block.settings.url | default: '#' | escape }}">Ürünü Gör</a>
+            <a class="formula-shoppable-image__card-link" href="{{ block.settings.url | default: '#' | escape }}">{{ section.settings.product_link_label | default: "Ürünü Gör" | escape }}</a>
           </div>
         </div>
       {% endif %}
@@ -3114,6 +3129,7 @@ export const FORMULA_SHOPPABLE_IMAGE = `<section class="formula-shoppable-image{
 {
   "name": "Formula Alışveriş Yapılabilir Görsel",
   "settings": [
+    { "type": "text", "id": "product_link_label", "label": "Ürün Bağlantısı", "default": "Ürünü Gör" },
     { "type": "text", "id": "title", "label": "Başlık (ops.)", "default": "Görünümü Satın Al" },
     { "type": "image_picker", "id": "image", "label": "Ana Görsel" },
     { "type": "select", "id": "image_ratio", "label": "Görsel Oranı", "default": "square",
@@ -3288,7 +3304,7 @@ export const FORMULA_SHOPPABLE_VIDEO = `<section class="formula-shoppable-video{
       {% for block in section.blocks %}{% if block.type == "product" %}
         <article class="formula-video-product" data-video-time="{{ block.settings.time_seconds | default: 0 }}">
           {% if block.settings.image != blank %}<img src="{{ block.settings.image | img_url: '240x' }}" alt="{{ block.settings.name | escape }}" loading="lazy" />{% endif %}
-          <div>{% if block.settings.time_label != blank %}{% if shoppable_video_is_embed %}<span class="formula-video-product__time">{{ block.settings.time_label | escape }}</span>{% else %}<button type="button" data-video-seek>{{ block.settings.time_label | escape }}</button>{% endif %}{% endif %}{% if block.settings.name != blank %}<h3>{{ block.settings.name | escape }}</h3>{% endif %}{% if block.settings.price != blank %}<p>{{ block.settings.price | escape }}</p>{% endif %}{% if block.settings.url != blank %}<a href="{{ block.settings.url | escape }}">Ürünü Gör →</a>{% endif %}</div>
+          <div>{% if block.settings.time_label != blank %}{% if shoppable_video_is_embed %}<span class="formula-video-product__time">{{ block.settings.time_label | escape }}</span>{% else %}<button type="button" data-video-seek>{{ block.settings.time_label | escape }}</button>{% endif %}{% endif %}{% if block.settings.name != blank %}<h3>{{ block.settings.name | escape }}</h3>{% endif %}{% if block.settings.price != blank %}<p>{{ block.settings.price | escape }}</p>{% endif %}{% if block.settings.url != blank %}<a href="{{ block.settings.url | escape }}">{{ section.settings.product_link_label | default: "Ürünü Gör →" | escape }}</a>{% endif %}</div>
         </article>
       {% endif %}{% endfor %}
     </div>
@@ -3313,6 +3329,7 @@ export const FORMULA_SHOPPABLE_VIDEO = `<section class="formula-shoppable-video{
 {
   "name": "Formula Alışveriş Yapılabilir Video",
   "settings": [
+    { "type": "text", "id": "product_link_label", "label": "Ürün Bağlantısı", "default": "Ürünü Gör →" },
     { "type": "text", "id": "title", "label": "Başlık (ops.)", "default": "Videodaki Rutini Keşfedin" },
     { "type": "textarea", "id": "description", "label": "Açıklama (ops.)" },
     { "type": "url", "id": "video_url", "label": "Video Bağlantısı",
@@ -3343,7 +3360,7 @@ export const FORMULA_DELIVERY_AVAILABILITY = `<section class="formula-delivery${
     {% if section.settings.title != blank %}<h2>{{ section.settings.title | escape }}</h2>{% endif %}
     {% if section.settings.description != blank %}<p>{{ section.settings.description | escape }}</p>{% endif %}
     <form data-delivery-form>
-      <label for="delivery-postcode-{{ section.id }}">Posta kodu</label>
+      <label for="delivery-postcode-{{ section.id }}">{{ section.settings.postcode_label | default: "Posta kodu" | escape }}</label>
       <div><input id="delivery-postcode-{{ section.id }}" inputmode="numeric" autocomplete="postal-code" pattern="[0-9]{5}" maxlength="5" required />{% if section.settings.button_label != blank %}<button type="submit">{{ section.settings.button_label | escape }}</button>{% endif %}</div>
     </form>
     <div class="formula-delivery__result" data-delivery-result hidden aria-live="polite">
@@ -3366,6 +3383,7 @@ export const FORMULA_DELIVERY_AVAILABILITY = `<section class="formula-delivery${
 {
   "name": "Formula Teslimat Bilgisi",
   "settings": [
+    { "type": "text", "id": "postcode_label", "label": "Posta Kodu Etiketi", "default": "Posta kodu" },
     { "type": "text", "id": "eyebrow", "label": "Üst Etiket (ops.)", "default": "Teslimat" },
     { "type": "text", "id": "title", "label": "Başlık", "default": "Teslimat Süresini Görün" },
     { "type": "textarea", "id": "description", "label": "Açıklama (ops.)", "default": "Posta kodunuzu girerek mağazanın genel teslimat bilgisini görüntüleyin." },

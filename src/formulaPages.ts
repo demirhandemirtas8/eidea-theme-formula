@@ -10,7 +10,7 @@ import type { EipgBlock } from "@eidea/ei-engine/browser";
 import { resolveSectionInstanceRole } from "@eidea/ei-engine/browser";
 import type { EiPage, EiSection } from "@eidea/studio-core";
 import type { ThemePageSpec, ThemeSectionInstance } from "./multiPageScaffold.js";
-import { sectionSlot } from "../governance/commandGovernance.js";
+import { sectionSlot } from "./sectionSlot.js";
 import { getSectionDesigns } from "./sectionDesigns.js";
 import {
   FORMULA_NAV_HEADER,
