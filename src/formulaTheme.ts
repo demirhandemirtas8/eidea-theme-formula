@@ -1059,10 +1059,19 @@ export const FORMULA_FOOTER_MENU = `<section class="formula-footer">
         reference-ei-engine-liquid-scoping-gotchas), o yaklaşım denendi ve
         gerçek render testinde SESSİZCE render OLMADIĞI görüldü.
       {%- endcomment -%}
-      <div class="formula-footer__social">
+      {%- comment -%}
+        2026-08-25 — Basalt/Aura'ya eklenen "ikon/yazı/ikon+yazı" seçimi
+        (kullanıcı isteği) buraya da uygulandı — assign FOR DIŞINDA (yukarıdaki
+        yorumdaki scoping notuyla AYNI gerekçe: for içi assign dışarı sızmıyor).
+      {%- endcomment -%}
+      {% assign formula_social_display = section.settings.social_display | default: 'icon' %}
+      <div class="formula-footer__social formula-footer__social--{{ formula_social_display }}">
         {% for block in section.blocks %}
           {% if block.type == "social_link" and block.settings.url != blank %}
-            <a href="{{ block.settings.url | escape }}" target="_blank" rel="noopener" aria-label="{{ block.settings.platform | default: 'Sosyal medya' | escape }}" title="{{ block.settings.platform | default: 'Sosyal medya' | escape }}">${FORMULA_SOCIAL_ICON_CASE}</a>
+            <a href="{{ block.settings.url | escape }}" target="_blank" rel="noopener" aria-label="{{ block.settings.platform | default: 'Sosyal medya' | escape }}" title="{{ block.settings.platform | default: 'Sosyal medya' | escape }}">
+              {% if formula_social_display != 'text' %}${FORMULA_SOCIAL_ICON_CASE}{% endif %}
+              {% if formula_social_display != 'icon' %}<span>{{ block.settings.platform | default: 'Sosyal medya' | escape }}</span>{% endif %}
+            </a>
           {% endif %}
         {% endfor %}
       </div>
@@ -1103,7 +1112,14 @@ export const FORMULA_FOOTER_MENU = `<section class="formula-footer">
       "info": "Tema Ayarları'ndaki Logo görselini kullanır (varsa) — burada ayrı bir logo metni/görseli YOK, sadece aç/kapat." },
     { "type": "textarea", "id": "blurb", "label": "Marka Açıklaması", "default": "Az bileşen, yüksek standart. Cilt bakımını şeffaf ve anlaşılır yapıyoruz." },
     { "type": "text", "id": "copyright_text", "label": "Telif Metni", "default": "Tüm hakları saklıdır.",
-      "info": "Yıl ve mağaza adı otomatik eklenir (ör. © 2026 Formula), burada sadece sondaki ibareyi değiştirirsin." }
+      "info": "Yıl ve mağaza adı otomatik eklenir (ör. © 2026 Formula), burada sadece sondaki ibareyi değiştirirsin." },
+    { "type": "select", "id": "social_display", "label": "Sosyal Linkler Görünümü", "default": "icon",
+      "options": [
+        { "label": "Sadece İkon", "value": "icon" },
+        { "label": "Sadece Yazı", "value": "text" },
+        { "label": "İkon + Yazı", "value": "both" }
+      ]
+    }
   ],
   "blocks": [
     {
@@ -2244,7 +2260,7 @@ export const FORMULA_VIDEO_BANNER = `<section class="formula-video${revealAnimat
 export const FORMULA_JOURNAL_TEASER = `<section class="formula-journal{% if section.settings.layout_style == 'featured' %} formula-journal--featured{% elsif section.settings.layout_style == 'carousel' %} formula-journal--carousel{% elsif section.settings.layout_style == 'compact' %} formula-journal--compact{% endif %}${revealAnimationClass()}">
   <div class="formula-section-head">
     {% if section.settings.title != blank %}<h2>{{ section.settings.title | escape }}</h2>{% endif %}
-    <a href="{{ section.settings.view_all_url | default: '/' | escape }}">{{ section.settings.view_all_label | default: "Tümünü Oku" | escape }}</a>
+    <a href="{{ section.settings.view_all_url | default: '/blog' | escape }}">{{ section.settings.view_all_label | default: "Tümünü Oku" | escape }}</a>
   </div>
   <div class="formula-journal__grid">
     {% for block in section.blocks %}
@@ -2280,7 +2296,7 @@ export const FORMULA_JOURNAL_TEASER = `<section class="formula-journal{% if sect
     },
     { "type": "text", "id": "title", "label": "Başlık", "default": "Dergi" },
     { "type": "text", "id": "view_all_label", "label": "Tümünü Gör Metni", "default": "Tümünü Oku" },
-    { "type": "url", "id": "view_all_url", "label": "Tümünü Gör URL", "default": "/" },${revealAnimationSchemaField()}
+    { "type": "url", "id": "view_all_url", "label": "Tümünü Gör URL", "default": "/blog" },${revealAnimationSchemaField()}
   ],
   "blocks": [
     {
@@ -2291,7 +2307,7 @@ export const FORMULA_JOURNAL_TEASER = `<section class="formula-journal{% if sect
         { "type": "text", "id": "category", "label": "Kategori (ops.)", "default": "Cilt Bakımı" },
         { "type": "text", "id": "title", "label": "Başlık", "default": "Aktif İçerik Nedir, Nasıl Okunur?" },
         { "type": "textarea", "id": "excerpt", "label": "Özet", "default": "Etikette gördüğün oranların ne anlama geldiğini açıklıyoruz." },
-        { "type": "url", "id": "url", "label": "Bağlantı", "default": "/pages" }
+        { "type": "url", "id": "url", "label": "Bağlantı", "default": "/blog" }
       ]
     }
   ],
@@ -4297,6 +4313,7 @@ body.formula-mobile-menu-open { overflow: hidden; }
 .formula-footer__social a { display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--color-border); color: var(--color-muted); transition: color .15s, border-color .15s, background .15s; }
 .formula-footer__social a:hover { color: var(--color-text); border-color: var(--color-text); background: var(--color-surface); }
 .formula-footer__social-icon { width: 17px; height: 17px; display: block; }
+.formula-footer__social--text a, .formula-footer__social--both a { width: auto; height: auto; border-radius: 999px; padding: 8px 16px; gap: 8px; font-size: 12px; font-weight: 700; text-decoration: none; }
 .formula-footer__column { min-width: 140px; }
 .formula-footer__column-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 12px; color: var(--color-text); }
 .formula-footer__column-links { display: flex; flex-direction: column; gap: 10px; }

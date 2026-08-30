@@ -221,6 +221,7 @@ export function buildFormulaPages(): ThemePageSpec[] {
     block("account-tab-addresses", "tab", "Sekme", { key: "addresses", label: "Adreslerim" }),
     block("account-tab-favorites", "tab", "Sekme", { key: "favorites", label: "Favorilerim" }),
     block("account-tab-loyalty", "tab", "Sekme", { key: "loyalty", label: "Sadakat Puanlarım" }),
+    block("account-tab-company", "tab", "Sekme", { key: "company", label: "Firma" }),
   ];
 
   const accountPage = utilityPage("account", "Hesabım", "/account", "page", {
