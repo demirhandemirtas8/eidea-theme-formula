@@ -2813,12 +2813,12 @@ export const FORMULA_CONTACT_FORM = `<section data-section-id="{{ section.id }}"
     {% if section.settings.subtitle != blank %}<p style="font-size:15px;line-height:1.7;color:{{ section.settings.muted | default: 'var(--color-muted)' }};margin:0 0 28px">{{ section.settings.subtitle | escape }}</p>{% endif %}
     <form data-eidea-contact-form data-success-message="{{ section.settings.success_message | default: 'Mesajın alındı, en kısa sürede dönüş yapacağız.' | escape }}" style="display:grid;gap:12px;text-align:left">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <label style="display:grid;gap:6px;font-size:13px;font-weight:700;color:{{ section.settings.text | default: 'var(--color-text)' }}"><span>{{ section.settings.name_label | default: "Ad Soyad" | escape }}</span><input name="name" required style="height:46px;border-radius:10px;border:1px solid {{ section.settings.border | default: '#e5e7eb' }};padding:0 14px"></label>
-        <label style="display:grid;gap:6px;font-size:13px;font-weight:700;color:{{ section.settings.text | default: 'var(--color-text)' }}"><span>{{ section.settings.email_label | default: "E-posta" | escape }}</span><input type="email" name="email" required style="height:46px;border-radius:10px;border:1px solid {{ section.settings.border | default: '#e5e7eb' }};padding:0 14px"></label>
+        <label style="display:grid;gap:6px;font-size:13px;font-weight:700;color:{{ section.settings.text | default: 'var(--color-text)' }}"><span>{{ section.settings.name_label | default: "Ad Soyad" | escape }}</span><input name="name" required style="height:46px;border-radius:10px;border:1px solid {{ section.settings.border | default: 'var(--color-border)' }};padding:0 14px"></label>
+        <label style="display:grid;gap:6px;font-size:13px;font-weight:700;color:{{ section.settings.text | default: 'var(--color-text)' }}"><span>{{ section.settings.email_label | default: "E-posta" | escape }}</span><input type="email" name="email" required style="height:46px;border-radius:10px;border:1px solid {{ section.settings.border | default: 'var(--color-border)' }};padding:0 14px"></label>
       </div>
-      {% if section.settings.show_phone %}<label style="display:grid;gap:6px;font-size:13px;font-weight:700;color:{{ section.settings.text | default: 'var(--color-text)' }}"><span>{{ section.settings.phone_label | default: "Telefon (ops.)" | escape }}</span><input name="phone" type="tel" inputmode="numeric" pattern="[0-9]*" placeholder="{{ section.settings.phone_placeholder | default: '05XX XXX XX XX' | escape }}" data-eidea-phone-field style="height:46px;border-radius:10px;border:1px solid {{ section.settings.border | default: '#e5e7eb' }};padding:0 14px"></label>{% endif %}
-      {% if section.settings.show_subject %}<label style="display:grid;gap:6px;font-size:13px;font-weight:700;color:{{ section.settings.text | default: 'var(--color-text)' }}"><span>Konu (ops.)</span><input name="subject" style="height:46px;border-radius:10px;border:1px solid {{ section.settings.border | default: '#e5e7eb' }};padding:0 14px"></label>{% endif %}
-      <label style="display:grid;gap:6px;font-size:13px;font-weight:700;color:{{ section.settings.text | default: 'var(--color-text)' }}"><span>Mesajın</span><textarea name="message" required rows="5" style="border-radius:10px;border:1px solid {{ section.settings.border | default: '#e5e7eb' }};padding:12px 14px;font-family:inherit;resize:vertical"></textarea></label>
+      {% if section.settings.show_phone %}<label style="display:grid;gap:6px;font-size:13px;font-weight:700;color:{{ section.settings.text | default: 'var(--color-text)' }}"><span>{{ section.settings.phone_label | default: "Telefon (ops.)" | escape }}</span><input name="phone" type="tel" inputmode="numeric" pattern="[0-9]*" placeholder="{{ section.settings.phone_placeholder | default: '05XX XXX XX XX' | escape }}" data-eidea-phone-field style="height:46px;border-radius:10px;border:1px solid {{ section.settings.border | default: 'var(--color-border)' }};padding:0 14px"></label>{% endif %}
+      {% if section.settings.show_subject %}<label style="display:grid;gap:6px;font-size:13px;font-weight:700;color:{{ section.settings.text | default: 'var(--color-text)' }}"><span>Konu (ops.)</span><input name="subject" style="height:46px;border-radius:10px;border:1px solid {{ section.settings.border | default: 'var(--color-border)' }};padding:0 14px"></label>{% endif %}
+      <label style="display:grid;gap:6px;font-size:13px;font-weight:700;color:{{ section.settings.text | default: 'var(--color-text)' }}"><span>Mesajın</span><textarea name="message" required rows="5" style="border-radius:10px;border:1px solid {{ section.settings.border | default: 'var(--color-border)' }};padding:12px 14px;font-family:inherit;resize:vertical"></textarea></label>
       {%- comment -%}
         2026-08-23 — kullanıcı isteği: Studio'dan mağaza sahibi formu
         istediği kadar özel soruyla genişletebilsin (kısa metin/uzun metin/
@@ -2831,7 +2831,7 @@ export const FORMULA_CONTACT_FORM = `<section data-section-id="{{ section.id }}"
           <label data-eidea-contact-question data-question-id="{{ block.id }}" data-question-type="{{ block.settings.field_type | default: 'short_text' }}" data-question-label="{{ block.settings.label | default: 'Soru' | escape }}" style="display:grid;gap:6px;font-size:13px;font-weight:700;color:{{ section.settings.text | default: 'var(--color-text)' }}">
             <span>{{ block.settings.label | default: "Soru" | escape }}{% if block.settings.required %} *{% endif %}</span>
             {% if block.settings.field_type == "long_text" %}
-              <textarea name="q_{{ block.id }}" rows="4" {% if block.settings.required %}required{% endif %} style="border-radius:10px;border:1px solid {{ section.settings.border | default: '#e5e7eb' }};padding:12px 14px;font-family:inherit;resize:vertical"></textarea>
+              <textarea name="q_{{ block.id }}" rows="4" {% if block.settings.required %}required{% endif %} style="border-radius:10px;border:1px solid {{ section.settings.border | default: 'var(--color-border)' }};padding:12px 14px;font-family:inherit;resize:vertical"></textarea>
             {% elsif block.settings.field_type == "choice" %}
               {%- comment -%}
                 ei-engine'in for tag'i "in X" kısmını evaluatePipeline DEĞİL
@@ -2845,21 +2845,21 @@ export const FORMULA_CONTACT_FORM = `<section data-section-id="{{ section.id }}"
                 yüzden hemen altındaki for tarafından güvenle okunabiliyor.
               {%- endcomment -%}
               {% assign contact_choice_options = block.settings.options | split: "," %}
-              <select name="q_{{ block.id }}" {% if block.settings.required %}required{% endif %} style="height:46px;border-radius:10px;border:1px solid {{ section.settings.border | default: '#e5e7eb' }};padding:0 14px;background:#fff">
+              <select name="q_{{ block.id }}" {% if block.settings.required %}required{% endif %} style="height:46px;border-radius:10px;border:1px solid {{ section.settings.border | default: 'var(--color-border)' }};padding:0 14px;background:var(--color-background)">
                 <option value="">{{ section.settings.select_placeholder | default: "Seçiniz" | escape }}</option>
                 {% for opt in contact_choice_options %}
                   {% if opt != blank %}<option value="{{ opt | strip | escape }}">{{ opt | strip | escape }}</option>{% endif %}
                 {% endfor %}
               </select>
             {% elsif block.settings.field_type == "file" %}
-              <input type="file" name="q_{{ block.id }}" data-eidea-contact-file {% if block.settings.required %}required{% endif %} style="border-radius:10px;border:1px dashed {{ section.settings.border | default: '#e5e7eb' }};padding:12px 14px">
+              <input type="file" name="q_{{ block.id }}" data-eidea-contact-file {% if block.settings.required %}required{% endif %} style="border-radius:10px;border:1px dashed {{ section.settings.border | default: 'var(--color-border)' }};padding:12px 14px">
             {% else %}
-              <input type="text" name="q_{{ block.id }}" {% if block.settings.required %}required{% endif %} style="height:46px;border-radius:10px;border:1px solid {{ section.settings.border | default: '#e5e7eb' }};padding:0 14px">
+              <input type="text" name="q_{{ block.id }}" {% if block.settings.required %}required{% endif %} style="height:46px;border-radius:10px;border:1px solid {{ section.settings.border | default: 'var(--color-border)' }};padding:0 14px">
             {% endif %}
           </label>
         {% endif %}
       {% endfor %}
-      <button type="submit" style="justify-self:start;height:48px;padding:0 28px;border:0;border-radius:10px;background:{{ section.settings.button_bg | default: '#111827' }};color:{{ section.settings.button_text | default: '#ffffff' }};font-weight:800;cursor:pointer">{{ section.settings.submit_label | default: "Gönder" | escape }}</button>
+      <button type="submit" style="justify-self:start;height:48px;padding:0 28px;border:0;border-radius:10px;background:{{ section.settings.button_bg | default: 'var(--color-primary)' }};color:{{ section.settings.button_text | default: 'var(--color-surface)' }};font-weight:800;cursor:pointer">{{ section.settings.submit_label | default: "Gönder" | escape }}</button>
       <p data-eidea-contact-form-message style="font-size:13px;margin:0"></p>
     </form>
   </div>
@@ -2890,9 +2890,9 @@ export const FORMULA_CONTACT_FORM = `<section data-section-id="{{ section.id }}"
     { "type": "color", "id": "text", "label": "Yazı" },
     { "type": "color", "id": "muted", "label": "İkincil yazı" },
     { "type": "color", "id": "accent", "label": "Vurgu" },
-    { "type": "color", "id": "border", "label": "Çizgi", "default": "#e5e7eb" },
-    { "type": "color", "id": "button_bg", "label": "Buton arka plan", "default": "#111827" },
-    { "type": "color", "id": "button_text", "label": "Buton yazı", "default": "#ffffff" }
+    { "type": "color", "id": "border", "label": "Çizgi" },
+    { "type": "color", "id": "button_bg", "label": "Buton arka plan" },
+    { "type": "color", "id": "button_text", "label": "Buton yazı" }
   ],
   "blocks": [
     {
@@ -3530,10 +3530,10 @@ export const FORMULA_LIBRARY_SECTIONS_CSS = `
 .formula-image-overlay { position: absolute; inset: 0; pointer-events: none; }
 
 /* Duyuru çubuğu */
-.formula-announcement { position: relative; display: flex; align-items: center; justify-content: center; background: var(--color-secondary); color: #ffffff; padding: 9px 40px; font-size: 12px; letter-spacing: 0.02em; text-align: center; }
+.formula-announcement { position: relative; display: flex; align-items: center; justify-content: center; background: var(--color-secondary); color: var(--color-background); padding: 9px 40px; font-size: 12px; letter-spacing: 0.02em; text-align: center; }
 .formula-announcement__text a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
 .formula-announcement__close { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); background: none; border: 0; color: rgba(255,255,255,.7); cursor: pointer; font-size: 12px; padding: 4px; }
-.formula-announcement__close:hover { color: #ffffff; }
+.formula-announcement__close:hover { color: var(--color-background); }
 @media (max-width: 767.98px) { .formula-announcement { padding: 8px 44px 8px 16px; font-size: 11px; } }
 
 /* Kayan yazı */
@@ -3547,7 +3547,7 @@ export const FORMULA_LIBRARY_SECTIONS_CSS = `
 /* Markalar slider (2026-08-23) — native CSS scroll-snap, JS kütüphanesi yok. */
 .formula-brands-slider { padding: 56px 40px; }
 .formula-brands-slider__nav { display: flex; gap: 8px; }
-.formula-brands-slider__nav button { width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--color-border); background: #fff; cursor: pointer; font-size: 15px; color: var(--color-text); }
+.formula-brands-slider__nav button { width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--color-border); background: var(--color-background); cursor: pointer; font-size: 15px; color: var(--color-text); }
 .formula-brands-slider__nav button:hover { background: var(--color-surface); }
 .formula-brands-slider__track { display: flex; gap: 32px; overflow-x: auto; scroll-snap-type: x proximity; padding-bottom: 8px; scrollbar-width: thin; }
 .formula-brands-slider__item { flex: 0 0 auto; scroll-snap-align: start; display: flex; align-items: center; justify-content: center; height: 64px; min-width: 120px; opacity: .7; transition: opacity .2s; }
@@ -3685,11 +3685,11 @@ export const FORMULA_LIBRARY_SECTIONS_CSS = `
 .formula-slide__copy--dark .formula-btn--solid { background: var(--color-text); }
 .formula-slider__nav { position: absolute; inset: 0; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; pointer-events: none; }
 .formula-slider__arrow { pointer-events: auto; width: 40px; height: 40px; border-radius: 999px; border: 0; background: rgba(255,255,255,.85); color: var(--color-text); font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-.formula-slider__arrow:hover { background: #fff; }
+.formula-slider__arrow:hover { background: var(--color-background); }
 @media (max-width: 700px) { .formula-slide__copy { padding: 20px; } }
 
 /* Rakamlarla */
-.formula-stats { padding: 56px 40px; background: var(--color-secondary); color: #ffffff; text-align: center; }
+.formula-stats { padding: 56px 40px; background: var(--color-secondary); color: var(--color-background); text-align: center; }
 .formula-stats__title { font-family: var(--font-heading); font-size: 22px; font-weight: 600; margin: 0 0 32px; }
 .formula-stats__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 24px; max-width: 900px; margin: 0 auto; }
 .formula-stat__number { font-family: var(--font-heading); font-size: clamp(28px, 3.4vw, 40px); font-weight: 700; margin: 0 0 6px; letter-spacing: -0.01em; }
@@ -3763,7 +3763,7 @@ export const FORMULA_LIBRARY_SECTIONS_CSS = `
 .formula-routine-step__media { position: relative; aspect-ratio: 1; border-radius: 50%; overflow: hidden; background: var(--color-surface); margin-bottom: 14px; }
 .formula-routine-step__media img { width: 100%; height: 100%; object-fit: cover; }
 .formula-routine-step__placeholder { width: 100%; height: 100%; background: linear-gradient(160deg, var(--color-border), var(--color-surface)); }
-.formula-routine-step__badge { position: absolute; top: 8px; left: 8px; width: 24px; height: 24px; border-radius: 50%; background: var(--color-primary); color: #fff; font-family: var(--font-heading); font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+.formula-routine-step__badge { position: absolute; top: 8px; left: 8px; width: 24px; height: 24px; border-radius: 50%; background: var(--color-primary); color: var(--color-background); font-family: var(--font-heading); font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
 .formula-routine-step__name { font-family: var(--font-heading); font-size: 15px; font-weight: 600; margin: 0 0 4px; text-align: center; }
 .formula-routine-step__desc { color: var(--color-muted); font-size: 12px; line-height: 1.5; margin: 0; text-align: center; }
 @media (max-width: 700px) { .formula-routine { padding: 44px 20px; } }
@@ -3945,7 +3945,7 @@ export const FORMULA_LIBRARY_SECTIONS_CSS = `
 /* Kampanya Geri Sayımı (2026-08-24) — GERÇEK BUG DÜZELTMESİ: section eklenirken
    bu CSS bloğu unutulmuştu, section tamamen stilsiz render ediliyordu (sadece
    sayaç sayıları JS ile doluyor, kutu/hizalama/renk hiç yoktu). */
-.formula-countdown { padding: 48px 40px; text-align: center; background: var(--color-secondary); color: #ffffff; }
+.formula-countdown { padding: 48px 40px; text-align: center; background: var(--color-secondary); color: var(--color-background); }
 .formula-countdown__inner { max-width: 640px; margin: 0 auto; }
 .formula-countdown__heading { font-family: var(--font-heading); font-size: clamp(20px, 2.6vw, 30px); font-weight: 600; margin: 0 0 6px; }
 .formula-countdown__sub { font-size: 14px; opacity: .8; margin: 0 0 24px; }
@@ -3963,15 +3963,15 @@ export const FORMULA_LIBRARY_SECTIONS_CSS = `
 .formula-shoppable-image--portrait .formula-shoppable-image__stage { aspect-ratio: 3 / 4; }
 .formula-shoppable-image--landscape .formula-shoppable-image__stage { aspect-ratio: 16 / 9; max-width: 960px; }
 .formula-shoppable-image__media { width: 100%; height: 100%; object-fit: cover; display: block; }
-.formula-shoppable-image__dot { position: absolute; width: 26px; height: 26px; border-radius: 50%; background: #111111; border: 3px solid #ffffff; box-shadow: 0 1px 6px rgba(0,0,0,.35); transform: translate(-50%, -50%); cursor: pointer; padding: 0; z-index: 2; }
-.formula-shoppable-image__dot-pulse { position: absolute; inset: -6px; border-radius: 50%; background: #111111; opacity: .45; animation: formula-shoppable-pulse 2.2s ease-out infinite; }
+.formula-shoppable-image__dot { position: absolute; width: 26px; height: 26px; border-radius: 50%; background: var(--color-text); border: 3px solid var(--color-surface); box-shadow: 0 1px 6px rgba(0,0,0,.35); transform: translate(-50%, -50%); cursor: pointer; padding: 0; z-index: 2; }
+.formula-shoppable-image__dot-pulse { position: absolute; inset: -6px; border-radius: 50%; background: var(--color-text); opacity: .45; animation: formula-shoppable-pulse 2.2s ease-out infinite; }
 @keyframes formula-shoppable-pulse { 0% { transform: scale(.6); opacity: .5; } 100% { transform: scale(1.7); opacity: 0; } }
-.formula-shoppable-image__card { position: absolute; transform: translate(-50%, calc(-100% - 20px)); width: 200px; background: #ffffff; border-radius: 10px; box-shadow: 0 8px 28px rgba(0,0,0,.18); padding: 12px; display: flex; gap: 10px; z-index: 3; text-align: left; }
+.formula-shoppable-image__card { position: absolute; transform: translate(-50%, calc(-100% - 20px)); width: 200px; background: var(--color-surface); border-radius: 10px; box-shadow: 0 8px 28px rgba(0,0,0,.18); padding: 12px; display: flex; gap: 10px; z-index: 3; text-align: left; }
 .formula-shoppable-image__card-media { width: 52px; height: 52px; border-radius: 6px; object-fit: cover; flex-shrink: 0; }
 .formula-shoppable-image__card-body { min-width: 0; }
-.formula-shoppable-image__card-badge { display: inline-block; font-size: 10px; text-transform: uppercase; letter-spacing: 0.04em; background: var(--color-primary); color: #ffffff; padding: 2px 6px; border-radius: 4px; margin-bottom: 4px; }
-.formula-shoppable-image__card-name { font-size: 13px; font-weight: 600; color: #111111; margin: 0 0 2px; line-height: 1.3; }
-.formula-shoppable-image__card-price { font-size: 13px; color: #6b7280; margin: 0 0 6px; }
+.formula-shoppable-image__card-badge { display: inline-block; font-size: 10px; text-transform: uppercase; letter-spacing: 0.04em; background: var(--color-primary); color: var(--color-background); padding: 2px 6px; border-radius: 4px; margin-bottom: 4px; }
+.formula-shoppable-image__card-name { font-size: 13px; font-weight: 600; color: var(--color-text); margin: 0 0 2px; line-height: 1.3; }
+.formula-shoppable-image__card-price { font-size: 13px; color: var(--color-muted); margin: 0 0 6px; }
 .formula-shoppable-image__card-link { font-size: 12px; font-weight: 600; color: var(--color-primary); text-decoration: underline; text-underline-offset: 2px; }
 @media (max-width: 600px) { .formula-shoppable-image { padding: 40px 20px; } .formula-shoppable-image__card { width: 168px; } }
 
@@ -3986,16 +3986,16 @@ export const FORMULA_LIBRARY_SECTIONS_CSS = `
 .formula-bundle-card__media img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .formula-bundle-card__body { display: flex; flex-direction: column; gap: 5px; padding: 16px; font-size: 13px; color: var(--color-muted); }
 .formula-bundle-card__body strong { color: var(--color-text); font-size: 15px; }
-.formula-bundle-card__badge { align-self: flex-start; border-radius: 999px; padding: 3px 8px; background: var(--color-accent); color: #fff; font-size: 10px; }
+.formula-bundle-card__badge { align-self: flex-start; border-radius: 999px; padding: 3px 8px; background: var(--color-accent); color: var(--color-background); font-size: 10px; }
 .formula-bundle__action { text-align: center; margin-top: 24px; }
-.formula-bundle__action button { min-height: 46px; padding: 0 24px; border: 0; border-radius: 999px; background: var(--color-primary); color: #fff; font-weight: 700; cursor: pointer; }
+.formula-bundle__action button { min-height: 46px; padding: 0 24px; border: 0; border-radius: 999px; background: var(--color-primary); color: var(--color-background); font-weight: 700; cursor: pointer; }
 .formula-bundle__action p { min-height: 20px; margin: 10px 0 0; color: var(--color-muted); font-size: 12px; }
 
 /* Alışveriş Yapılabilir Video (2026-08-24) */
 .formula-shoppable-video { padding: 64px 40px; }
 .formula-shoppable-video__layout { display: grid; grid-template-columns: minmax(0,1.65fr) minmax(280px,.75fr); gap: 28px; max-width: 1120px; margin: 0 auto; align-items: start; }
 .formula-shoppable-video--stacked .formula-shoppable-video__layout { grid-template-columns: 1fr; }
-.formula-shoppable-video__media { aspect-ratio: 16 / 9; overflow: hidden; border-radius: 16px; background: #111; }
+.formula-shoppable-video__media { aspect-ratio: 16 / 9; overflow: hidden; border-radius: 16px; background: var(--color-secondary); }
 .formula-shoppable-video__media video,.formula-shoppable-video__media img,.formula-shoppable-video__media iframe { width: 100%; height: 100%; object-fit: cover; display: block; border: 0; }
 .formula-shoppable-video__products { display: flex; flex-direction: column; gap: 12px; }
 .formula-video-product { display: grid; grid-template-columns: 76px minmax(0,1fr); gap: 12px; padding: 12px; border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-surface); }
@@ -4010,7 +4010,7 @@ export const FORMULA_LIBRARY_SECTIONS_CSS = `
 .formula-delivery h2 { font-family: var(--font-heading); margin: 0 0 8px; }.formula-delivery__content>p { color: var(--color-muted); line-height: 1.6; }
 .formula-delivery form label { display: block; font-size: 12px; font-weight: 700; margin-bottom: 7px; }.formula-delivery form>div { display: flex; gap: 8px; }
 .formula-delivery input { min-width: 0; flex: 1; min-height: 46px; border: 1px solid var(--color-border); border-radius: 8px; padding: 0 13px; background: var(--color-background); color: var(--color-text); }
-.formula-delivery button { min-height: 46px; border: 0; border-radius: 8px; padding: 0 18px; background: var(--color-primary); color: #fff; font-weight: 700; cursor: pointer; }
+.formula-delivery button { min-height: 46px; border: 0; border-radius: 8px; padding: 0 18px; background: var(--color-primary); color: var(--color-background); font-weight: 700; cursor: pointer; }
 .formula-delivery__result { margin-top: 16px; padding: 14px; border-radius: 10px; background: var(--color-surface); }.formula-delivery__result p { margin: 6px 0 0; color: var(--color-muted); font-size: 12px; line-height: 1.5; }
 @media (max-width: 760px) { .formula-bundle,.formula-shoppable-video,.formula-delivery { padding: 40px 20px; }.formula-bundle__grid,.formula-shoppable-video__layout { grid-template-columns: 1fr; }.formula-delivery__content { padding: 22px; }.formula-delivery form>div { flex-direction: column; } }
 
@@ -4117,9 +4117,9 @@ a { color: inherit; }
 
 .formula-btn { display: inline-flex; align-items: center; justify-content: center; padding: 13px 26px; border-radius: 999px; font-size: 13px; letter-spacing: 0.02em; text-decoration: none; border: 1px solid transparent; transition: opacity .15s; }
 .formula-btn:hover { opacity: .82; }
-.formula-btn--solid { background: var(--color-primary); color: #ffffff; }
+.formula-btn--solid { background: var(--color-primary); color: var(--color-background); }
 .formula-btn--ghost { border-color: var(--color-text); color: var(--color-text); }
-.formula-btn--invert { background: #ffffff; color: var(--color-primary); }
+.formula-btn--invert { background: var(--color-background); color: var(--color-primary); }
 
 .formula-section-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 28px; }
 .formula-section-head h2 { font-family: var(--font-heading); font-size: 26px; font-weight: 600; margin: 0; letter-spacing: -0.01em; }
@@ -4258,7 +4258,7 @@ body.formula-mobile-menu-open { overflow: hidden; }
 .formula-hero__title { font-family: var(--font-heading); font-size: clamp(36px, 4.5vw, 56px); line-height: 1.05; letter-spacing: -0.02em; margin: 0 0 20px; max-width: 12ch; }
 .formula-hero__sub { color: var(--color-muted); line-height: 1.6; max-width: 42ch; margin: 0 0 32px; }
 .formula-hero__actions { display: flex; gap: 12px; flex-wrap: wrap; }
-.formula-hero__media { position: relative; aspect-ratio: 4/5; border-radius: 18px; overflow: hidden; background: #ffffff; }
+.formula-hero__media { position: relative; aspect-ratio: 4/5; border-radius: 18px; overflow: hidden; background: var(--color-background); }
 .formula-hero__media picture { display: block; width: 100%; height: 100%; }
 .formula-hero__media img { width: 100%; height: 100%; object-fit: cover; }
 .formula-hero__placeholder { width: 100%; height: 100%; background: linear-gradient(155deg, var(--color-primary) 0%, var(--color-surface) 70%); opacity: .5; }
@@ -4276,7 +4276,7 @@ body.formula-mobile-menu-open { overflow: hidden; }
 @media (max-width: 900px) { .formula-hero { grid-template-columns: 1fr; padding: 48px 24px; text-align: center; } .formula-hero--reverse { direction: ltr; } .formula-hero__actions { justify-content: center; } .formula-hero__sub { max-width: none; margin-left: auto; margin-right: auto; } .formula-hero--overlay .formula-hero__copy, .formula-hero--centered { padding: 40px 24px; } }
 
 /* Quiz banner */
-.formula-quiz { background: var(--color-primary); color: #ffffff; text-align: center; padding: 56px 24px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.formula-quiz { background: var(--color-primary); color: var(--color-background); text-align: center; padding: 56px 24px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
 .formula-quiz__title { font-family: var(--font-heading); font-size: 24px; font-weight: 600; margin: 0; max-width: 32ch; }
 .formula-quiz__sub { margin: 0 0 14px; opacity: .85; font-size: 14px; }
 
@@ -4292,7 +4292,7 @@ body.formula-mobile-menu-open { overflow: hidden; }
 .formula-product-card__media { position: relative; aspect-ratio: 3/4; background: var(--color-surface); border-radius: 14px; overflow: hidden; margin-bottom: 14px; }
 .formula-product-card__media img { width: 100%; height: 100%; object-fit: cover; }
 .formula-product-card__placeholder { width: 100%; height: 100%; background: linear-gradient(160deg, var(--color-border), var(--color-surface)); }
-.formula-badge { position: absolute; top: 10px; left: 10px; background: var(--color-accent); color: #fff; font-size: 10px; text-transform: uppercase; letter-spacing: 0.04em; padding: 4px 9px; border-radius: 999px; }
+.formula-badge { position: absolute; top: 10px; left: 10px; background: var(--color-accent); color: var(--color-background); font-size: 10px; text-transform: uppercase; letter-spacing: 0.04em; padding: 4px 9px; border-radius: 999px; }
 .formula-product-card__active { font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--color-primary); margin: 0 0 4px; }
 .formula-product-card__vendor { font-size: 11px; color: var(--color-muted); margin: 0 0 2px; text-transform: uppercase; letter-spacing: 0.04em; }
 .formula-product-card__name { font-size: 14px; font-weight: 500; margin: 0 0 4px; }
