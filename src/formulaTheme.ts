@@ -803,7 +803,13 @@ export const FORMULA_HERO = `<section class="formula-hero{% if section.settings.
     {% if section.settings.image != blank %}
       <picture>
         {% if section.settings.mobile_image != blank %}<source media="(max-width: 767px)" srcset="{{ section.settings.mobile_image | img_url: '450x' }} 1x, {{ section.settings.mobile_image | img_url: '675x' }} 1.5x, {{ section.settings.mobile_image | img_url: '900x' }} 2x" />{% endif %}
-        <img src="{{ section.settings.image | img_url: '1200x' }}" srcset="{{ section.settings.image | img_url: '600x' }} 1x, {{ section.settings.image | img_url: '900x' }} 1.5x, {{ section.settings.image | img_url: '1200x' }} 2x" alt="{{ section.settings.title | escape }}" loading="eager" fetchpriority="high" style="object-position: {{ section.settings.image_position | default: 'center' }};${imageEffectStyle("section.settings")}" />
+        {%- assign formula_hero_position = section.settings.image_position | default: 'center' -%}
+        {%- assign formula_hero_opacity = section.settings.image_opacity | default: 100 -%}
+        {%- assign formula_hero_blur = section.settings.image_blur | default: 0 -%}
+        {%- assign formula_hero_grayscale = section.settings.image_grayscale | default: 0 -%}
+        {%- assign formula_hero_brightness = section.settings.image_brightness | default: 100 -%}
+        {%- assign formula_hero_style = 'object-position: ' | append: formula_hero_position | append: ';opacity:' | append: formula_hero_opacity | append: '%;filter:blur(' | append: formula_hero_blur | append: 'px) grayscale(' | append: formula_hero_grayscale | append: '%) brightness(' | append: formula_hero_brightness | append: '%)' -%}
+        {{ section.settings.image | image_tag: section.settings.title, '100vw', true, '600,900,1200', '', formula_hero_style }}
       </picture>
     {% else %}
       <div class="formula-hero__placeholder" aria-hidden="true"></div>
