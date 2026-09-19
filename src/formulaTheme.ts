@@ -40,6 +40,17 @@ function imageEffectStyle(prefix: string): string {
   return `opacity:{{ ${prefix}.image_opacity | default: 100 }}%;filter:blur({{ ${prefix}.image_blur | default: 0 }}px) grayscale({{ ${prefix}.image_grayscale | default: 0 }}%) brightness({{ ${prefix}.image_brightness | default: 100 }}%)`;
 }
 
+/** `imageEffectStyle()`'ın image_tag'in styleAttr argümanına GÜVENLE
+ * geçirilebilecek eşdeğeri — filter argümanları literal/bare-variable
+ * (motor `{{ }}` iç içe geçmeyi desteklemiyor, bkz. WORKLOG 2026-09-17
+ * formula hero düzeltmesi), o yüzden değer önce `{% assign %}` + `append`
+ * zinciriyle hesaplanıp SONRA bare değişken olarak geçirilmeli. `varName`
+ * her çağrı yerinde BENZERSİZ olmalı (aynı section iki kez eklenirse bile
+ * kullanımdan hemen önce yeniden atandığı için çakışma sorun değil). */
+function imageEffectStyleAssign(prefix: string, varName: string): string {
+  return `{%- assign ${varName}_opacity = ${prefix}.image_opacity | default: 100 -%}{%- assign ${varName}_blur = ${prefix}.image_blur | default: 0 -%}{%- assign ${varName}_grayscale = ${prefix}.image_grayscale | default: 0 -%}{%- assign ${varName}_brightness = ${prefix}.image_brightness | default: 100 -%}{%- assign ${varName} = 'opacity:' | append: ${varName}_opacity | append: '%;filter:blur(' | append: ${varName}_blur | append: 'px) grayscale(' | append: ${varName}_grayscale | append: '%) brightness(' | append: ${varName}_brightness | append: '%)' -%}`;
+}
+
 /** Kaplama (overlay) katmanı — yoğunluk 0'sa hiç render edilmez (gereksiz DOM). */
 function imageEffectOverlay(prefix: string): string {
   return `{% if ${prefix}.image_overlay_opacity > 0 %}<div class="formula-image-overlay" style="background:{{ ${prefix}.image_overlay_color | default: '#000000' }};opacity:{{ ${prefix}.image_overlay_opacity | default: 0 }}%"></div>{% endif %}`;
@@ -900,7 +911,7 @@ export const FORMULA_BESTSELLERS = `<section class="formula-bestsellers{% if sec
         <a class="formula-product-card" href="{{ block.settings.url | default: '#' | escape }}">
           <div class="formula-product-card__media">
             {% if block.settings.image != blank %}
-              <img src="{{ block.settings.image | img_url: '700x' }}" srcset="{{ block.settings.image | img_url: '350x' }} 1x, {{ block.settings.image | img_url: '525x' }} 1.5x, {{ block.settings.image | img_url: '700x' }} 2x" alt="{{ block.settings.name | escape }}" loading="lazy" />
+              {{ block.settings.image | image_tag: block.settings.name, '(max-width: 749px) 60vw, 25vw', false, '350,525,700' }}
             {% else %}
               <div class="formula-product-card__placeholder" aria-hidden="true"></div>
             {% endif %}
@@ -1295,7 +1306,7 @@ export const FORMULA_COLLECTION_LIST = `<section class="formula-collection-list 
         <a class="formula-collection-card formula-collection-card--{% if section.settings.layout_style == 'circles' %}circle{% else %}{{ section.settings.card_style | default: 'below' }}{% endif %}" href="{{ block.settings.collection.url | escape }}">
           <div class="formula-collection-card__media" style="border-radius: {% if section.settings.layout_style == 'circles' %}999{% else %}{{ section.settings.image_shape | default: 14 }}{% endif %}px">
             {% if block.settings.collection.image != blank %}
-              <img src="{{ block.settings.collection.image | img_url: '900x' }}" srcset="{{ block.settings.collection.image | img_url: '450x' }} 1x, {{ block.settings.collection.image | img_url: '675x' }} 1.5x, {{ block.settings.collection.image | img_url: '900x' }} 2x" alt="{{ block.settings.collection.title | escape }}" loading="lazy" />
+              {{ block.settings.collection.image | image_tag: block.settings.collection.title, '(max-width: 749px) 45vw, 22vw', false, '450,675,900' }}
             {% else %}
               <div class="formula-collection-card__placeholder" aria-hidden="true"></div>
             {% endif %}
@@ -1383,7 +1394,7 @@ export const FORMULA_COLLECTION_SHOWCASE = `<section class="formula-collection-s
   {% if section.settings.collection != blank %}
     <div class="formula-collection-showcase__media" style="border-radius: {{ section.settings.image_shape | default: 18 }}px">
       {% if section.settings.collection.image != blank %}
-        <img src="{{ section.settings.collection.image | img_url: '1400x' }}" srcset="{{ section.settings.collection.image | img_url: '700x' }} 1x, {{ section.settings.collection.image | img_url: '1050x' }} 1.5x, {{ section.settings.collection.image | img_url: '1400x' }} 2x" alt="{{ section.settings.collection.title | escape }}" loading="lazy" style="${imageEffectStyle("section.settings")}" />
+        ${imageEffectStyleAssign("section.settings", "formula_showcase_col_style")}{{ section.settings.collection.image | image_tag: section.settings.collection.title, '(max-width: 749px) 90vw, 50vw', false, '700,1050,1400', '', formula_showcase_col_style }}
       {% else %}
         <div class="formula-collection-showcase__placeholder" aria-hidden="true"></div>
       {% endif %}
@@ -1445,7 +1456,7 @@ export const FORMULA_GENERAL_SHOWCASE = `<section class="formula-showcase{% if s
     {% if section.settings.image != blank %}
       <picture>
         {% if section.settings.mobile_image != blank %}<source media="(max-width: 767px)" srcset="{{ section.settings.mobile_image | img_url: '450x' }} 1x, {{ section.settings.mobile_image | img_url: '675x' }} 1.5x, {{ section.settings.mobile_image | img_url: '900x' }} 2x" />{% endif %}
-        <img src="{{ section.settings.image | img_url: '1400x' }}" srcset="{{ section.settings.image | img_url: '700x' }} 1x, {{ section.settings.image | img_url: '1050x' }} 1.5x, {{ section.settings.image | img_url: '1400x' }} 2x" alt="{{ section.settings.title | escape }}" loading="lazy" style="${imageEffectStyle("section.settings")}" />
+        ${imageEffectStyleAssign("section.settings", "formula_general_showcase_style")}{{ section.settings.image | image_tag: section.settings.title, '(max-width: 749px) 90vw, 50vw', false, '700,1050,1400', '', formula_general_showcase_style }}
       </picture>
     {% else %}
       <div class="formula-showcase__placeholder" aria-hidden="true"></div>
@@ -1647,7 +1658,7 @@ export const FORMULA_SLIDER = `<section class="formula-slider${revealAnimationCl
       {% if block.type == "slide" %}
         <div class="formula-slide" style="aspect-ratio: {{ section.settings.aspect_ratio | default: '21/9' }}">
           {% if block.settings.image != blank %}
-            <img src="{{ block.settings.image | img_url: '1600x' }}" srcset="{{ block.settings.image | img_url: '800x' }} 1x, {{ block.settings.image | img_url: '1200x' }} 1.5x, {{ block.settings.image | img_url: '1600x' }} 2x" alt="{{ block.settings.title | escape }}" loading="lazy" style="object-position: {{ block.settings.image_position | default: 'center' }};${imageEffectStyle("block.settings")}" />
+            {%- assign formula_slider_pos = block.settings.image_position | default: 'center' -%}${imageEffectStyleAssign("block.settings", "formula_slider_effect")}{%- assign formula_slider_style = 'object-position: ' | append: formula_slider_pos | append: ';' | append: formula_slider_effect -%}{{ block.settings.image | image_tag: block.settings.title, '100vw', false, '800,1200,1600', '', formula_slider_style }}
           {% else %}
             <div class="formula-slide__placeholder" aria-hidden="true"></div>
           {% endif %}
@@ -2142,7 +2153,7 @@ export const FORMULA_ROUTINE_STEPS = `<section class="formula-routine${revealAni
         <a class="formula-routine-step" href="{{ block.settings.url | default: '#' | escape }}">
           <div class="formula-routine-step__media">
             {% if block.settings.image != blank %}
-              <img src="{{ block.settings.image | img_url: '500x' }}" srcset="{{ block.settings.image | img_url: '250x' }} 1x, {{ block.settings.image | img_url: '375x' }} 1.5x, {{ block.settings.image | img_url: '500x' }} 2x" alt="{{ block.settings.name | escape }}" loading="lazy" />
+              {{ block.settings.image | image_tag: block.settings.name, '(max-width: 749px) 40vw, 20vw', false, '250,375,500' }}
             {% else %}
               <div class="formula-routine-step__placeholder" aria-hidden="true"></div>
             {% endif %}
@@ -2241,7 +2252,7 @@ export const FORMULA_VIDEO_BANNER = `<section class="formula-video${revealAnimat
     {% if section.settings.video_url != blank %}
       <video class="formula-video__el" src="{{ section.settings.video_url | escape }}" {% if section.settings.poster != blank %}poster="{{ section.settings.poster | img_url: '1400x' }}"{% endif %} autoplay muted loop playsinline></video>
     {% elsif section.settings.poster != blank %}
-      <img src="{{ section.settings.poster | img_url: '1400x' }}" srcset="{{ section.settings.poster | img_url: '700x' }} 1x, {{ section.settings.poster | img_url: '1050x' }} 1.5x, {{ section.settings.poster | img_url: '1400x' }} 2x" alt="{{ section.settings.title | escape }}" loading="lazy" />
+      {{ section.settings.poster | image_tag: section.settings.title, '100vw', false, '700,1050,1400' }}
     {% else %}
       <div class="formula-video__placeholder" aria-hidden="true"></div>
     {% endif %}
@@ -2281,7 +2292,7 @@ export const FORMULA_JOURNAL_TEASER = `<section class="formula-journal{% if sect
         <a class="formula-journal-card" href="{{ block.settings.url | default: '#' | escape }}">
           <div class="formula-journal-card__media">
             {% if block.settings.image != blank %}
-              <img src="{{ block.settings.image | img_url: '700x' }}" srcset="{{ block.settings.image | img_url: '350x' }} 1x, {{ block.settings.image | img_url: '525x' }} 1.5x, {{ block.settings.image | img_url: '700x' }} 2x" alt="{{ block.settings.title | escape }}" loading="lazy" />
+              {{ block.settings.image | image_tag: block.settings.title, '(max-width: 749px) 90vw, 45vw', false, '350,525,700' }}
             {% else %}
               <div class="formula-journal-card__placeholder" aria-hidden="true"></div>
             {% endif %}
@@ -2346,7 +2357,7 @@ export const FORMULA_COMPARISON_TABLE = `<section class="formula-compare{% if se
         {% if block.type == "product" %}
           <a class="formula-compare-card" href="{{ block.settings.url | default: '#' | escape }}">
             {% if block.settings.image != blank %}
-              <div class="formula-compare-card__media"><img src="{{ block.settings.image | img_url: '500x' }}" srcset="{{ block.settings.image | img_url: '250x' }} 1x, {{ block.settings.image | img_url: '375x' }} 1.5x, {{ block.settings.image | img_url: '500x' }} 2x" alt="{{ block.settings.name | escape }}" loading="lazy" /></div>
+              <div class="formula-compare-card__media">{{ block.settings.image | image_tag: block.settings.name, '(max-width: 749px) 45vw, 22vw', false, '250,375,500' }}</div>
             {% endif %}
             <p class="formula-compare-card__name">{{ block.settings.name | default: "Ürün" | escape }}</p>
             <dl class="formula-compare-card__specs">
@@ -2368,7 +2379,7 @@ export const FORMULA_COMPARISON_TABLE = `<section class="formula-compare{% if se
             {% if block.type == "product" %}
               <a class="formula-compare__cell formula-compare__cell--product" href="{{ block.settings.url | default: '#' | escape }}">
                 {% if block.settings.image != blank %}
-                  <img src="{{ block.settings.image | img_url: '300x' }}" srcset="{{ block.settings.image | img_url: '150x' }} 1x, {{ block.settings.image | img_url: '225x' }} 1.5x, {{ block.settings.image | img_url: '300x' }} 2x" alt="{{ block.settings.name | escape }}" loading="lazy" />
+                  {{ block.settings.image | image_tag: block.settings.name, '(max-width: 749px) 30vw, 15vw', false, '150,225,300' }}
                 {% endif %}
                 <p>{{ block.settings.name | default: "Ürün" | escape }}</p>
               </a>
@@ -2521,7 +2532,7 @@ export const FORMULA_COLLAGE = `<section class="formula-collage${revealAnimation
       {% if block.type == "item" %}
         <a class="formula-collage__item formula-collage__item--{{ block.settings.scale | default: 'normal' }}" href="{{ block.settings.url | default: '#' | escape }}">
           {% if block.settings.image != blank %}
-            <img src="{{ block.settings.image | img_url: '900x' }}" srcset="{{ block.settings.image | img_url: '450x' }} 1x, {{ block.settings.image | img_url: '675x' }} 1.5x, {{ block.settings.image | img_url: '900x' }} 2x" alt="{{ block.settings.label | escape }}" loading="lazy" />
+            {{ block.settings.image | image_tag: block.settings.label, '(max-width: 749px) 45vw, 25vw', false, '450,675,900' }}
           {% else %}
             <div class="formula-collage__placeholder" aria-hidden="true"></div>
           {% endif %}
@@ -2575,7 +2586,7 @@ export const FORMULA_MULTIROW = `<section class="formula-multirow${revealAnimati
       <div class="formula-multirow__row{% if block.settings.layout == 'image_right' %} formula-multirow__row--reverse{% endif %}">
         <div class="formula-multirow__media" style="border-radius: {{ block.settings.image_shape | default: 18 }}px">
           {% if block.settings.image != blank %}
-            <img src="{{ block.settings.image | img_url: '1200x' }}" srcset="{{ block.settings.image | img_url: '600x' }} 1x, {{ block.settings.image | img_url: '900x' }} 1.5x, {{ block.settings.image | img_url: '1200x' }} 2x" alt="{{ block.settings.title | escape }}" loading="lazy" />
+            {{ block.settings.image | image_tag: block.settings.title, '(max-width: 749px) 90vw, 50vw', false, '600,900,1200' }}
           {% else %}
             <div class="formula-multirow__placeholder" aria-hidden="true"></div>
           {% endif %}
@@ -2651,14 +2662,14 @@ export const FORMULA_BEFORE_AFTER = `<section class="formula-before-after${revea
   <div class="formula-ba" style="--ba-pos: 50%; aspect-ratio: {{ section.settings.aspect_ratio | default: '4/3' }}">
     <div class="formula-ba__layer formula-ba__layer--after">
       {% if section.settings.after_image != blank %}
-        <img src="{{ section.settings.after_image | img_url: '1200x' }}" srcset="{{ section.settings.after_image | img_url: '600x' }} 1x, {{ section.settings.after_image | img_url: '900x' }} 1.5x, {{ section.settings.after_image | img_url: '1200x' }} 2x" alt="{{ section.settings.after_label | default: 'Sonra' | escape }}" loading="lazy" />
+        {%- assign formula_after_alt = section.settings.after_label | default: 'Sonra' -%}{{ section.settings.after_image | image_tag: formula_after_alt, '(max-width: 749px) 90vw, 50vw', false, '600,900,1200' }}
       {% else %}
         <div class="formula-ba__placeholder" aria-hidden="true"></div>
       {% endif %}
     </div>
     <div class="formula-ba__layer formula-ba__layer--before" style="clip-path: inset(0 calc(100% - var(--ba-pos)) 0 0)">
       {% if section.settings.before_image != blank %}
-        <img src="{{ section.settings.before_image | img_url: '1200x' }}" srcset="{{ section.settings.before_image | img_url: '600x' }} 1x, {{ section.settings.before_image | img_url: '900x' }} 1.5x, {{ section.settings.before_image | img_url: '1200x' }} 2x" alt="{{ section.settings.before_label | default: 'Önce' | escape }}" loading="lazy" />
+        {%- assign formula_before_alt = section.settings.before_label | default: 'Önce' -%}{{ section.settings.before_image | image_tag: formula_before_alt, '(max-width: 749px) 90vw, 50vw', false, '600,900,1200' }}
       {% else %}
         <div class="formula-ba__placeholder" aria-hidden="true"></div>
       {% endif %}
@@ -2757,7 +2768,7 @@ export const FORMULA_RELATED_PRODUCTS = `<section{% if recommendations.performed
       <a class="formula-product-card formula-product-card--{{ section.settings.card_style | default: 'minimal' }}" href="{{ p.url | escape }}">
         <div class="formula-product-card__media">
           {% if p.images.size > 0 %}
-            <img src="{{ p.images.first | img_url: '700x' }}" srcset="{{ p.images.first | img_url: '350x' }} 1x, {{ p.images.first | img_url: '525x' }} 1.5x, {{ p.images.first | img_url: '700x' }} 2x" alt="{{ p.title | escape }}" loading="lazy" />
+            {{ p.images.first | image_tag: p.title, '(max-width: 749px) 60vw, 25vw', false, '350,525,700' }}
           {% else %}
             <div class="formula-product-card__placeholder" aria-hidden="true"></div>
           {% endif %}
@@ -3082,7 +3093,7 @@ export const FORMULA_SHOPPABLE_IMAGE = `<section class="formula-shoppable-image{
   {% if section.settings.title != blank %}<h2 class="formula-shoppable-image__title">{{ section.settings.title | escape }}</h2>{% endif %}
   <div class="formula-shoppable-image__stage">
     {% if section.settings.image != blank %}
-      <img class="formula-shoppable-image__media" src="{{ section.settings.image | img_url: '1400x' }}" srcset="{{ section.settings.image | img_url: '700x' }} 1x, {{ section.settings.image | img_url: '1050x' }} 1.5x, {{ section.settings.image | img_url: '1400x' }} 2x" alt="{{ section.settings.title | default: '' | escape }}" loading="lazy" />
+      {%- assign formula_shoppable_alt = section.settings.title | default: '' -%}{{ section.settings.image | image_tag: formula_shoppable_alt, '(max-width: 749px) 100vw, 60vw', false, '700,1050,1400', 'formula-shoppable-image__media' }}
     {% endif %}
     {% for block in section.blocks %}
       {% if block.type == "hotspot" %}
@@ -3189,7 +3200,7 @@ export const FORMULA_BUNDLE_BUILDER = `<section class="formula-bundle${revealAni
       {% if block.type == "item" %}
         <label class="formula-bundle-card">
           <input type="checkbox" data-bundle-item data-product-id="{{ block.settings.product_id | escape }}" data-variant-id="{{ block.settings.variant_id | escape }}" {% if block.settings.selected %}checked{% endif %} {% if block.settings.product_id == blank %}disabled{% endif %} />
-          {% if block.settings.image != blank %}<span class="formula-bundle-card__media"><img src="{{ block.settings.image | img_url: '600x' }}" srcset="{{ block.settings.image | img_url: '300x' }} 1x, {{ block.settings.image | img_url: '450x' }} 1.5x, {{ block.settings.image | img_url: '600x' }} 2x" alt="{{ block.settings.name | escape }}" loading="lazy" /></span>{% endif %}
+          {% if block.settings.image != blank %}<span class="formula-bundle-card__media">{{ block.settings.image | image_tag: block.settings.name, '(max-width: 749px) 45vw, 20vw', false, '300,450,600' }}</span>{% endif %}
           <span class="formula-bundle-card__body">
             {% if block.settings.badge != blank %}<span class="formula-bundle-card__badge">{{ block.settings.badge | escape }}</span>{% endif %}
             {% if block.settings.name != blank %}<strong>{{ block.settings.name | escape }}</strong>{% endif %}
@@ -3304,12 +3315,12 @@ export const FORMULA_SHOPPABLE_VIDEO = `<section class="formula-shoppable-video{
   {% if section.settings.title != blank or section.settings.description != blank %}<div class="formula-section-head">{% if section.settings.title != blank %}<h2>{{ section.settings.title | escape }}</h2>{% endif %}{% if section.settings.description != blank %}<p>{{ section.settings.description | escape }}</p>{% endif %}</div>{% endif %}
   <div class="formula-shoppable-video__layout">
     <div class="formula-shoppable-video__media">
-      {% if shoppable_video_is_embed %}<iframe class="formula-shoppable-video__iframe" src="{{ shoppable_video_embed_src | escape }}" title="{{ section.settings.title | default: 'Video' | escape }}" loading="lazy" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>{% elsif shoppable_video_url != blank %}<video controls playsinline {% if section.settings.poster != blank %}poster="{{ section.settings.poster | img_url: '1200x' }}"{% endif %}><source src="{{ shoppable_video_url | escape }}" /></video>{% elsif section.settings.poster != blank %}<img src="{{ section.settings.poster | img_url: '1200x' }}" srcset="{{ section.settings.poster | img_url: '600x' }} 1x, {{ section.settings.poster | img_url: '900x' }} 1.5x, {{ section.settings.poster | img_url: '1200x' }} 2x" alt="{{ section.settings.title | escape }}" loading="lazy" />{% endif %}
+      {% if shoppable_video_is_embed %}<iframe class="formula-shoppable-video__iframe" src="{{ shoppable_video_embed_src | escape }}" title="{{ section.settings.title | default: 'Video' | escape }}" loading="lazy" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>{% elsif shoppable_video_url != blank %}<video controls playsinline {% if section.settings.poster != blank %}poster="{{ section.settings.poster | img_url: '1200x' }}"{% endif %}><source src="{{ shoppable_video_url | escape }}" /></video>{% elsif section.settings.poster != blank %}{{ section.settings.poster | image_tag: section.settings.title, '(max-width: 749px) 100vw, 50vw', false, '600,900,1200' }}{% endif %}
     </div>
     <div class="formula-shoppable-video__products">
       {% for block in section.blocks %}{% if block.type == "product" %}
         <article class="formula-video-product" data-video-time="{{ block.settings.time_seconds | default: 0 }}">
-          {% if block.settings.image != blank %}<img src="{{ block.settings.image | img_url: '240x' }}" srcset="{{ block.settings.image | img_url: '120x' }} 1x, {{ block.settings.image | img_url: '180x' }} 1.5x, {{ block.settings.image | img_url: '240x' }} 2x" alt="{{ block.settings.name | escape }}" loading="lazy" />{% endif %}
+          {% if block.settings.image != blank %}{{ block.settings.image | image_tag: block.settings.name, '(max-width: 749px) 40vw, 15vw', false, '120,180,240' }}{% endif %}
           <div>{% if block.settings.time_label != blank %}{% if shoppable_video_is_embed %}<span class="formula-video-product__time">{{ block.settings.time_label | escape }}</span>{% else %}<button type="button" data-video-seek>{{ block.settings.time_label | escape }}</button>{% endif %}{% endif %}{% if block.settings.name != blank %}<h3>{{ block.settings.name | escape }}</h3>{% endif %}{% if block.settings.price != blank %}<p>{{ block.settings.price | escape }}</p>{% endif %}{% if block.settings.url != blank %}<a href="{{ block.settings.url | escape }}">{{ section.settings.product_link_label | default: "Ürünü Gör →" | escape }}</a>{% endif %}</div>
         </article>
       {% endif %}{% endfor %}
@@ -3415,7 +3426,7 @@ export const FORMULA_UGC_GALLERY = `<section class="formula-ugc{% if section.set
     {% for block in section.blocks %}
       {% if block.type == "post" %}
         <div class="formula-ugc-card">
-          {% if block.settings.image != blank %}<div class="formula-ugc-card__media"><img src="{{ block.settings.image | img_url: '600x' }}" srcset="{{ block.settings.image | img_url: '300x' }} 1x, {{ block.settings.image | img_url: '450x' }} 1.5x, {{ block.settings.image | img_url: '600x' }} 2x" alt="{{ block.settings.author | escape }}" loading="lazy" /></div>{% endif %}
+          {% if block.settings.image != blank %}<div class="formula-ugc-card__media">{{ block.settings.image | image_tag: block.settings.author, '(max-width: 749px) 45vw, 22vw', false, '300,450,600' }}</div>{% endif %}
           <div class="formula-ugc-card__body">
             {% if block.settings.rating != blank %}<p class="formula-ugc-card__rating">{{ block.settings.rating }}</p>{% endif %}
             {% if block.settings.caption != blank %}<p class="formula-ugc-card__caption">{{ block.settings.caption | escape }}</p>{% endif %}
