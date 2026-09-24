@@ -852,7 +852,7 @@ export const FORMULA_HERO = `<section class="formula-hero{% if section.settings.
     { "type": "text", "id": "quiz_label", "label": "İkincil Buton Metni", "default": "Cildini Tanı →" },
     { "type": "url", "id": "quiz_url", "label": "İkincil Buton URL", "default": "/pages/cilt-analizi" },
     { "type": "header", "id": "hero_media", "label": "Görsel (Bölünmüş / Tam genişlik)" },
-    { "type": "image_picker", "id": "image", "label": "Görsel" },
+    { "type": "image_picker", "id": "image", "label": "Görsel", "width": 1200, "height": 560 },
     { "type": "image_picker", "id": "mobile_image", "label": "Mobil Görsel (ops.)",
       "info": "Sadece telefon genişliğinde bu görsel kullanılır — boş bırakılırsa masaüstü görseli küçültülerek gösterilir." },
     { "type": "select", "id": "image_position", "label": "Görsel Konumu (kırpma odağı)", "default": "center",
