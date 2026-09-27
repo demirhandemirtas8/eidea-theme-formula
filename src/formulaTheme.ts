@@ -853,7 +853,7 @@ export const FORMULA_HERO = `<section class="formula-hero{% if section.settings.
     { "type": "url", "id": "quiz_url", "label": "İkincil Buton URL", "default": "/pages/cilt-analizi" },
     { "type": "header", "id": "hero_media", "label": "Görsel (Bölünmüş / Tam genişlik)" },
     { "type": "image_picker", "id": "image", "label": "Görsel", "width": 1200, "height": 560 },
-    { "type": "image_picker", "id": "mobile_image", "label": "Mobil Görsel (ops.)",
+    { "type": "image_picker", "id": "mobile_image", "label": "Mobil Görsel (ops.)", "width": 800, "height": 1000,
       "info": "Sadece telefon genişliğinde bu görsel kullanılır — boş bırakılırsa masaüstü görseli küçültülerek gösterilir." },
     { "type": "select", "id": "image_position", "label": "Görsel Konumu (kırpma odağı)", "default": "center",
       "options": [
@@ -945,7 +945,7 @@ export const FORMULA_BESTSELLERS = `<section class="formula-bestsellers{% if sec
         { "type": "text", "id": "price", "label": "Fiyat", "default": "₺349" },
         { "type": "text", "id": "badge", "label": "Rozet (ops.)", "default": "" },
         { "type": "url", "id": "url", "label": "Ürün URL", "default": "#" },
-        { "type": "image_picker", "id": "image", "label": "Görsel" }
+        { "type": "image_picker", "id": "image", "label": "Görsel", "width": 900, "height": 1200 }
       ]
     }
   ],
@@ -1480,8 +1480,8 @@ export const FORMULA_GENERAL_SHOWCASE = `<section class="formula-showcase{% if s
     { "type": "text", "id": "eyebrow", "label": "Üst Etiket (ops.)", "default": "" },
     { "type": "text", "id": "title", "label": "Başlık", "default": "Yeni Sezon" },
     { "type": "textarea", "id": "subtitle", "label": "Alt Metin", "default": "" },
-    { "type": "image_picker", "id": "image", "label": "Görsel" },
-    { "type": "image_picker", "id": "mobile_image", "label": "Mobil Görsel (ops.)",
+    { "type": "image_picker", "id": "image", "label": "Görsel", "width": 1500, "height": 1200 },
+    { "type": "image_picker", "id": "mobile_image", "label": "Mobil Görsel (ops.)", "width": 900, "height": 720,
       "info": "Sadece telefon genişliğinde bu görsel kullanılır — boş bırakılırsa masaüstü görseli küçültülerek gösterilir." },
     { "type": "select", "id": "layout", "label": "Yerleşim", "default": "image_left",
       "options": [
@@ -1889,7 +1889,7 @@ export const FORMULA_TESTIMONIAL = `<section class="formula-testimonial{% if sec
       "name": "Alıntı",
       "settings": [
         { "type": "textarea", "id": "quote", "label": "Alıntı Metni", "default": "Cildim hiç bu kadar dengeli olmamıştı, 4 haftada fark ettim." },
-        { "type": "image_picker", "id": "avatar", "label": "Fotoğraf (ops.)" },
+        { "type": "image_picker", "id": "avatar", "label": "Fotoğraf (ops.)", "width": 400, "height": 400 },
         { "type": "text", "id": "name", "label": "İsim", "default": "Elif Y." },
         { "type": "text", "id": "role", "label": "Unvan/Not (ops.)", "default": "Doğrulanmış Müşteri" }
       ]
@@ -2180,7 +2180,7 @@ export const FORMULA_ROUTINE_STEPS = `<section class="formula-routine${revealAni
       "name": "Adım",
       "settings": [
         { "type": "text", "id": "order", "label": "Sıra No", "default": "1" },
-        { "type": "image_picker", "id": "image", "label": "Görsel" },
+        { "type": "image_picker", "id": "image", "label": "Görsel", "width": 800, "height": 800 },
         { "type": "text", "id": "name", "label": "Ürün/Adım Adı", "default": "Nazik Temizleyici" },
         { "type": "textarea", "id": "description", "label": "Açıklama", "default": "Cildi kurutmadan temizler, pH dengesini korur." },
         { "type": "url", "id": "url", "label": "Bağlantı (ops.)", "default": "" }
@@ -2327,7 +2327,7 @@ export const FORMULA_JOURNAL_TEASER = `<section class="formula-journal{% if sect
       "type": "article",
       "name": "Yazı",
       "settings": [
-        { "type": "image_picker", "id": "image", "label": "Görsel" },
+        { "type": "image_picker", "id": "image", "label": "Görsel", "width": 1200, "height": 900 },
         { "type": "text", "id": "category", "label": "Kategori (ops.)", "default": "Cilt Bakımı" },
         { "type": "text", "id": "title", "label": "Başlık", "default": "Aktif İçerik Nedir, Nasıl Okunur?" },
         { "type": "textarea", "id": "excerpt", "label": "Özet", "default": "Etikette gördüğün oranların ne anlama geldiğini açıklıyoruz." },
@@ -2436,7 +2436,7 @@ export const FORMULA_COMPARISON_TABLE = `<section class="formula-compare{% if se
       "type": "product",
       "name": "Ürün",
       "settings": [
-        { "type": "image_picker", "id": "image", "label": "Görsel" },
+        { "type": "image_picker", "id": "image", "label": "Görsel", "width": 800, "height": 800 },
         { "type": "text", "id": "name", "label": "Ürün Adı", "default": "Niasinamid Serum" },
         { "type": "url", "id": "url", "label": "Ürün URL", "default": "#" },
         { "type": "text", "id": "feature1_value", "label": "1. Satır Değeri", "default": "Tüm Cilt Tipleri" },
@@ -2612,7 +2612,7 @@ export const FORMULA_MULTIROW = `<section class="formula-multirow${revealAnimati
       "type": "row",
       "name": "Satır",
       "settings": [
-        { "type": "image_picker", "id": "image", "label": "Görsel" },
+        { "type": "image_picker", "id": "image", "label": "Görsel", "width": 1500, "height": 1200 },
         { "type": "text", "id": "eyebrow", "label": "Üst Etiket (ops.)", "default": "" },
         { "type": "text", "id": "title", "label": "Başlık", "default": "Başlık" },
         { "type": "textarea", "id": "body", "label": "Metin", "default": "" },
@@ -2686,9 +2686,9 @@ export const FORMULA_BEFORE_AFTER = `<section class="formula-before-after${revea
   "name": "Formula Öncesi / Sonrası",
   "settings": [
     { "type": "text", "id": "title", "label": "Başlık", "default": "Öncesi / Sonrası" },
-    { "type": "image_picker", "id": "before_image", "label": "Önce Görseli" },
+    { "type": "image_picker", "id": "before_image", "label": "Önce Görseli", "width": 1200, "height": 900 },
     { "type": "text", "id": "before_label", "label": "Önce Etiketi", "default": "Önce" },
-    { "type": "image_picker", "id": "after_image", "label": "Sonra Görseli" },
+    { "type": "image_picker", "id": "after_image", "label": "Sonra Görseli", "width": 1200, "height": 900 },
     { "type": "text", "id": "after_label", "label": "Sonra Etiketi", "default": "Sonra" },
     { "type": "select", "id": "aspect_ratio", "label": "Görsel Oranı", "default": "4/3",
       "options": [
@@ -3290,7 +3290,7 @@ export const FORMULA_BUNDLE_BUILDER = `<section class="formula-bundle${revealAni
     "type": "item", "name": "Paket Ürünü", "settings": [
       { "type": "text", "id": "product_id", "label": "Ürün ID (zorunlu)" },
       { "type": "text", "id": "variant_id", "label": "Varyant ID (ops.)" },
-      { "type": "image_picker", "id": "image", "label": "Görsel" },
+      { "type": "image_picker", "id": "image", "label": "Görsel", "width": 800, "height": 800 },
       { "type": "text", "id": "name", "label": "Ürün Adı", "default": "Paket Ürünü" },
       { "type": "text", "id": "price", "label": "Gösterim Fiyatı (ops.)" },
       { "type": "text", "id": "badge", "label": "Rozet (ops.)" },
@@ -3351,7 +3351,7 @@ export const FORMULA_SHOPPABLE_VIDEO = `<section class="formula-shoppable-video{
     { "type": "textarea", "id": "description", "label": "Açıklama (ops.)" },
     { "type": "url", "id": "video_url", "label": "Video Bağlantısı",
       "info": "YouTube, Vimeo linki veya doğrudan bir .mp4 dosya adresi yapıştır — dosya yüklemek değil, bağlantı yapıştırmak gerekir." },
-    { "type": "image_picker", "id": "poster", "label": "Yedek Görsel",
+    { "type": "image_picker", "id": "poster", "label": "Yedek Görsel", "width": 1600, "height": 900,
       "info": "Video bağlantısı boşsa (veya video hâlâ yüklenirken) gösterilir." },
     { "type": "select", "id": "layout_style", "label": "Yerleşim", "default": "side", "options": [{"label":"Yan yana","value":"side"},{"label":"Alt alta","value":"stacked"}] },${revealAnimationSchemaField()}
   ],
@@ -3359,7 +3359,7 @@ export const FORMULA_SHOPPABLE_VIDEO = `<section class="formula-shoppable-video{
     { "type": "range", "id": "time_seconds", "label": "Zaman (saniye)", "min": 0, "max": 600, "step": 1, "default": 0 },
     { "type": "text", "id": "time_label", "label": "Zaman Etiketi (ops.)", "default": "00:00",
       "info": "Tıklayınca videoyu o saniyeye atlatır — sadece doğrudan .mp4 bağlantısında çalışır, YouTube/Vimeo'da sadece etiket olarak görünür." },
-    { "type": "image_picker", "id": "image", "label": "Görsel" },
+    { "type": "image_picker", "id": "image", "label": "Görsel", "width": 1600, "height": 900 },
     { "type": "text", "id": "name", "label": "Ürün Adı", "default": "Ürün Adı" },
     { "type": "text", "id": "price", "label": "Fiyat (ops.)" },
     { "type": "url", "id": "url", "label": "Ürün URL" }
@@ -3457,7 +3457,7 @@ export const FORMULA_UGC_GALLERY = `<section class="formula-ugc{% if section.set
       "type": "post",
       "name": "Gönderi",
       "settings": [
-        { "type": "image_picker", "id": "image", "label": "Fotoğraf" },
+        { "type": "image_picker", "id": "image", "label": "Fotoğraf", "width": 800, "height": 800 },
         { "type": "text", "id": "author", "label": "Kullanıcı Adı", "default": "@kullanici" },
         { "type": "textarea", "id": "caption", "label": "Kısa Metin (ops.)", "default": "" },
         { "type": "select", "id": "rating", "label": "Puan (ops.)", "default": "",
