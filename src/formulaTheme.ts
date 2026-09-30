@@ -901,14 +901,18 @@ export const FORMULA_QUIZ_BANNER = `<section class="formula-quiz${revealAnimatio
 {% endschema %}`;
 
 /**
- * 2026-09-30 — flagship ürün grid'i, ÖNCEDEN manuel name/price/url/image
- * alanlarıyla çalışıyordu (fiyat donup eski kalabiliyordu, merchant ürün
- * fiyatını değiştirdiğinde burada manuel güncellemeyi UNUTABİLİRDİ — sessiz
- * yanlış fiyat gösterimi). ProductRefPicker'a geçirildi (bkz.
- * FORMULA_BUNDLE_BUILDER'ın aynı gerekçeli yorumu) — "active" (aktif içerik
- * etiketi, ör. "%10 Niasinamid") ve "badge" (ör. "Yeni"/"Çok Satan")
- * BİLİNÇLİ OLARAK manuel kaldı, bunlar gerçek ürün verisinin parçası değil,
- * salt pazarlama metni.
+ * 2026-09-30 — DENENDİ ama GERİ ALINDI: bu flagship ürün grid'ini
+ * ProductRefPicker'a geçirmeyi düşündüm (fiyat donup kalabiliyor
+ * gerekçesiyle), ama bu section type'ı (`bestsellers-grid`)
+ * `BestsellersSourcePanel.tsx`'in `BESTSELLERS_SOURCE_SECTION_TYPES`/
+ * `THEME_MAPPINGS` listesinde — merchant "Ürün Kaynağı" panelinden
+ * koleksiyon/kategori/marka/katalog seçip N ürünü TOPLU olarak
+ * name/price/image/url alanlarına yazdırabiliyor (`onReplaceBlocksOfType`,
+ * "Ürünleri Yenile" butonu ile istendiğinde tazelenebiliyor). Per-block
+ * picker'a geçmek bu ÇOK daha güçlü toplu-kaynak mekanizmasını KIRARdı
+ * (panel artık var olmayan alanlara yazardı, sessizce hiçbir etkisi
+ * olmazdı). Manuel alanlar BİLİNÇLİ OLARAK korundu — asıl "fiyat donuyor"
+ * sorununun gerçek çözümü zaten var: kaynak paneli + "Ürünleri Yenile".
  */
 export const FORMULA_BESTSELLERS = `<section class="formula-bestsellers{% if section.settings.layout_style == 'carousel' %} formula-bestsellers--carousel{% elsif section.settings.layout_style == 'featured' %} formula-bestsellers--featured{% endif %}${revealAnimationClass()}">
   <div class="formula-section-head">
@@ -917,19 +921,19 @@ export const FORMULA_BESTSELLERS = `<section class="formula-bestsellers{% if sec
   </div>
   <div class="formula-bestsellers__grid" style="--formula-bestsellers-cols: {{ section.settings.columns | default: 4 }}; --formula-bestsellers-cols-mobile: {{ section.settings.columns_mobile | default: 2 }}">
     {% for block in section.blocks %}
-      {% if block.type == "product" and block.settings.product != blank %}
-        <a class="formula-product-card" href="{{ block.settings.product.url | escape }}">
+      {% if block.type == "product" %}
+        <a class="formula-product-card" href="{{ block.settings.url | default: '#' | escape }}">
           <div class="formula-product-card__media">
-            {% if block.settings.product.image != blank %}
-              {{ block.settings.product.image | image_tag: block.settings.product.title, '(max-width: 749px) 60vw, 25vw', false, '350,525,700' }}
+            {% if block.settings.image != blank %}
+              {{ block.settings.image | image_tag: block.settings.name, '(max-width: 749px) 60vw, 25vw', false, '350,525,700' }}
             {% else %}
               <div class="formula-product-card__placeholder" aria-hidden="true"></div>
             {% endif %}
             {% if block.settings.badge != blank %}<span class="formula-badge">{{ block.settings.badge | escape }}</span>{% endif %}
           </div>
           {% if block.settings.active != blank %}<p class="formula-product-card__active">{{ block.settings.active | escape }}</p>{% endif %}
-          <p class="formula-product-card__name">{{ block.settings.product.title | escape }}</p>
-          <p class="formula-product-card__price">{{ block.settings.product.price | money }}</p>
+          <p class="formula-product-card__name">{{ block.settings.name | default: "Ürün" | escape }}</p>
+          <p class="formula-product-card__price">{{ block.settings.price | default: "—" | escape }}</p>
         </a>
       {% endif %}
     {% endfor %}
@@ -952,14 +956,25 @@ export const FORMULA_BESTSELLERS = `<section class="formula-bestsellers{% if sec
       "type": "product",
       "name": "Ürün",
       "settings": [
-        { "type": "product", "id": "product", "label": "Ürün (arayıp seçin)" },
-        { "type": "text", "id": "active", "label": "Aktif İçerik Etiketi (ops.)", "default": "" },
-        { "type": "text", "id": "badge", "label": "Rozet (ops.)", "default": "" }
+        { "type": "text", "id": "name", "label": "Ürün Adı", "default": "Niasinamid Serum" },
+        { "type": "text", "id": "active", "label": "Aktif İçerik Etiketi", "default": "%10 Niasinamid" },
+        { "type": "text", "id": "price", "label": "Fiyat", "default": "₺349" },
+        { "type": "text", "id": "badge", "label": "Rozet (ops.)", "default": "" },
+        { "type": "url", "id": "url", "label": "Ürün URL", "default": "#" },
+        { "type": "image_picker", "id": "image", "label": "Görsel", "width": 900, "height": 1200 }
       ]
     }
   ],
   "max_blocks": 12,
-  "presets": [{ "name": "Formula Çok Satanlar" }]
+  "presets": [{
+    "name": "Formula Çok Satanlar",
+    "blocks": [
+      { "type": "product", "settings": { "name": "Niasinamid Serum", "active": "%10 Niasinamid", "price": "₺349", "badge": "Çok Satan" } },
+      { "type": "product", "settings": { "name": "Hyalüronik Asit Serum", "active": "%2 Hyalüronik Asit", "price": "₺389", "badge": "" } },
+      { "type": "product", "settings": { "name": "Nazik Temizleyici Jel", "active": "pH 5.5", "price": "₺249", "badge": "Yeni" } },
+      { "type": "product", "settings": { "name": "SPF 50 Güneş Bakımı", "active": "Geniş Spektrum", "price": "₺299", "badge": "" } }
+    ]
+  }]
 }
 {% endschema %}`;
 
