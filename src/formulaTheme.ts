@@ -900,6 +900,16 @@ export const FORMULA_QUIZ_BANNER = `<section class="formula-quiz${revealAnimatio
 }
 {% endschema %}`;
 
+/**
+ * 2026-09-30 — flagship ürün grid'i, ÖNCEDEN manuel name/price/url/image
+ * alanlarıyla çalışıyordu (fiyat donup eski kalabiliyordu, merchant ürün
+ * fiyatını değiştirdiğinde burada manuel güncellemeyi UNUTABİLİRDİ — sessiz
+ * yanlış fiyat gösterimi). ProductRefPicker'a geçirildi (bkz.
+ * FORMULA_BUNDLE_BUILDER'ın aynı gerekçeli yorumu) — "active" (aktif içerik
+ * etiketi, ör. "%10 Niasinamid") ve "badge" (ör. "Yeni"/"Çok Satan")
+ * BİLİNÇLİ OLARAK manuel kaldı, bunlar gerçek ürün verisinin parçası değil,
+ * salt pazarlama metni.
+ */
 export const FORMULA_BESTSELLERS = `<section class="formula-bestsellers{% if section.settings.layout_style == 'carousel' %} formula-bestsellers--carousel{% elsif section.settings.layout_style == 'featured' %} formula-bestsellers--featured{% endif %}${revealAnimationClass()}">
   <div class="formula-section-head">
     {% if section.settings.title != blank %}<h2>{{ section.settings.title | escape }}</h2>{% endif %}
@@ -907,19 +917,19 @@ export const FORMULA_BESTSELLERS = `<section class="formula-bestsellers{% if sec
   </div>
   <div class="formula-bestsellers__grid" style="--formula-bestsellers-cols: {{ section.settings.columns | default: 4 }}; --formula-bestsellers-cols-mobile: {{ section.settings.columns_mobile | default: 2 }}">
     {% for block in section.blocks %}
-      {% if block.type == "product" %}
-        <a class="formula-product-card" href="{{ block.settings.url | default: '#' | escape }}">
+      {% if block.type == "product" and block.settings.product != blank %}
+        <a class="formula-product-card" href="{{ block.settings.product.url | escape }}">
           <div class="formula-product-card__media">
-            {% if block.settings.image != blank %}
-              {{ block.settings.image | image_tag: block.settings.name, '(max-width: 749px) 60vw, 25vw', false, '350,525,700' }}
+            {% if block.settings.product.image != blank %}
+              {{ block.settings.product.image | image_tag: block.settings.product.title, '(max-width: 749px) 60vw, 25vw', false, '350,525,700' }}
             {% else %}
               <div class="formula-product-card__placeholder" aria-hidden="true"></div>
             {% endif %}
             {% if block.settings.badge != blank %}<span class="formula-badge">{{ block.settings.badge | escape }}</span>{% endif %}
           </div>
           {% if block.settings.active != blank %}<p class="formula-product-card__active">{{ block.settings.active | escape }}</p>{% endif %}
-          <p class="formula-product-card__name">{{ block.settings.name | default: "Ürün" | escape }}</p>
-          <p class="formula-product-card__price">{{ block.settings.price | default: "—" | escape }}</p>
+          <p class="formula-product-card__name">{{ block.settings.product.title | escape }}</p>
+          <p class="formula-product-card__price">{{ block.settings.product.price | money }}</p>
         </a>
       {% endif %}
     {% endfor %}
@@ -942,25 +952,14 @@ export const FORMULA_BESTSELLERS = `<section class="formula-bestsellers{% if sec
       "type": "product",
       "name": "Ürün",
       "settings": [
-        { "type": "text", "id": "name", "label": "Ürün Adı", "default": "Niasinamid Serum" },
-        { "type": "text", "id": "active", "label": "Aktif İçerik Etiketi", "default": "%10 Niasinamid" },
-        { "type": "text", "id": "price", "label": "Fiyat", "default": "₺349" },
-        { "type": "text", "id": "badge", "label": "Rozet (ops.)", "default": "" },
-        { "type": "url", "id": "url", "label": "Ürün URL", "default": "#" },
-        { "type": "image_picker", "id": "image", "label": "Görsel", "width": 900, "height": 1200 }
+        { "type": "product", "id": "product", "label": "Ürün (arayıp seçin)" },
+        { "type": "text", "id": "active", "label": "Aktif İçerik Etiketi (ops.)", "default": "" },
+        { "type": "text", "id": "badge", "label": "Rozet (ops.)", "default": "" }
       ]
     }
   ],
   "max_blocks": 12,
-  "presets": [{
-    "name": "Formula Çok Satanlar",
-    "blocks": [
-      { "type": "product", "settings": { "name": "Niasinamid Serum", "active": "%10 Niasinamid", "price": "₺349", "badge": "Çok Satan" } },
-      { "type": "product", "settings": { "name": "Hyalüronik Asit Serum", "active": "%2 Hyalüronik Asit", "price": "₺389", "badge": "" } },
-      { "type": "product", "settings": { "name": "Nazik Temizleyici Jel", "active": "pH 5.5", "price": "₺249", "badge": "Yeni" } },
-      { "type": "product", "settings": { "name": "SPF 50 Güneş Bakımı", "active": "Geniş Spektrum", "price": "₺299", "badge": "" } }
-    ]
-  }]
+  "presets": [{ "name": "Formula Çok Satanlar" }]
 }
 {% endschema %}`;
 
@@ -3087,13 +3086,16 @@ export const FORMULA_COUNTDOWN_PROMOTION = `<section class="formula-countdown${r
 
 /** Alışveriş Yapılabilir Görsel (2026-08-24, Codex'in `shoppable-image`
  * önerisi) — büyük bir görsel üzerinde ürün noktaları (hotspot), tıklanınca
- * küçük bir kart (görsel/ad/fiyat/rozet/link) açılır. `comparison-table`'ın
- * "product" bloğuyla AYNI desen: gerçek connector ürün bağlantısı YOK
- * (ei-engine'in `{"type":"product"}` şema alanı var ama renderer'da
- * (`ecommerceContext.ts`) hiç çözümlenmiyor — araştırıldı, kullanılmadı),
- * bunun yerine manuel ad/fiyat/URL alanları. Kart açma/kapama TEK
+ * küçük bir kart (görsel/ad/fiyat/rozet/link) açılır. Kart açma/kapama TEK
  * self-contained script (`document.currentScript.closest`, FAQ/countdown'la
- * aynı desen), dışarı tıklayınca kapanır. */
+ * aynı desen), dışarı tıklayınca kapanır.
+ *
+ * 2026-09-30 — eski yorum "gerçek connector ürün bağlantısı YOK, ei-engine'in
+ * {"type":"product"} şema alanı renderer'da hiç çözümlenmiyor" artık YANLIŞ
+ * (bkz. FORMULA_BESTSELLERS'ın aynı gerekçeli yorumu, ProductRefPicker
+ * 2026-09-28'de eklendi) — hotspot bloğu artık ProductRefPicker'a geçirildi,
+ * fiyat/görsel/başlık gerçek üründen geliyor. `badge` pazarlama metni
+ * olarak manuel kaldı. */
 export const FORMULA_SHOPPABLE_IMAGE = `<section class="formula-shoppable-image{% if section.settings.image_ratio == 'portrait' %} formula-shoppable-image--portrait{% elsif section.settings.image_ratio == 'landscape' %} formula-shoppable-image--landscape{% endif %}${revealAnimationClass()}" style="{% if section.settings.bg_color != blank %}background:{{ section.settings.bg_color }};{% endif %}{% if section.settings.text_color != blank %}color:{{ section.settings.text_color }};{% endif %}">
   {% if section.settings.title != blank %}<h2 class="formula-shoppable-image__title">{{ section.settings.title | escape }}</h2>{% endif %}
   <div class="formula-shoppable-image__stage">
@@ -3101,17 +3103,17 @@ export const FORMULA_SHOPPABLE_IMAGE = `<section class="formula-shoppable-image{
       {%- assign formula_shoppable_alt = section.settings.title | default: '' -%}{{ section.settings.image | image_tag: formula_shoppable_alt, '(max-width: 749px) 100vw, 60vw', false, '700,1050,1400', 'formula-shoppable-image__media' }}
     {% endif %}
     {% for block in section.blocks %}
-      {% if block.type == "hotspot" %}
-        <button type="button" class="formula-shoppable-image__dot" style="left:{{ block.settings.position_x | default: 50 }}%;top:{{ block.settings.position_y | default: 50 }}%;{% if section.settings.dot_color != blank %}background:{{ section.settings.dot_color }};{% endif %}" data-hotspot-toggle aria-expanded="false" aria-label="{{ block.settings.name | escape }}">
+      {% if block.type == "hotspot" and block.settings.product != blank %}
+        <button type="button" class="formula-shoppable-image__dot" style="left:{{ block.settings.position_x | default: 50 }}%;top:{{ block.settings.position_y | default: 50 }}%;{% if section.settings.dot_color != blank %}background:{{ section.settings.dot_color }};{% endif %}" data-hotspot-toggle aria-expanded="false" aria-label="{{ block.settings.product.title | escape }}">
           <span class="formula-shoppable-image__dot-pulse" style="{% if section.settings.dot_color != blank %}background:{{ section.settings.dot_color }};{% endif %}"></span>
         </button>
         <div class="formula-shoppable-image__card" style="left:{{ block.settings.position_x | default: 50 }}%;top:{{ block.settings.position_y | default: 50 }}%" data-hotspot-card hidden>
-          {% if block.settings.image != blank %}<img class="formula-shoppable-image__card-media" src="{{ block.settings.image | img_url: '160x' }}" srcset="{{ block.settings.image | img_url: '80x' }} 1x, {{ block.settings.image | img_url: '120x' }} 1.5x, {{ block.settings.image | img_url: '160x' }} 2x" alt="{{ block.settings.name | escape }}" loading="lazy" />{% endif %}
+          {% if block.settings.product.image != blank %}{{ block.settings.product.image | image_tag: block.settings.product.title, '80px', false, '80,120,160', 'formula-shoppable-image__card-media' }}{% endif %}
           <div class="formula-shoppable-image__card-body">
             {% if block.settings.badge != blank %}<span class="formula-shoppable-image__card-badge">{{ block.settings.badge | escape }}</span>{% endif %}
-            <p class="formula-shoppable-image__card-name">{{ block.settings.name | escape }}</p>
-            {% if block.settings.price != blank %}<p class="formula-shoppable-image__card-price">{{ block.settings.price | escape }}</p>{% endif %}
-            <a class="formula-shoppable-image__card-link" href="{{ block.settings.url | default: '#' | escape }}">{{ section.settings.product_link_label | default: "Ürünü Gör" | escape }}</a>
+            <p class="formula-shoppable-image__card-name">{{ block.settings.product.title | escape }}</p>
+            {% if block.settings.product.price != blank %}<p class="formula-shoppable-image__card-price">{{ block.settings.product.price | money }}</p>{% endif %}
+            <a class="formula-shoppable-image__card-link" href="{{ block.settings.product.url | escape }}">{{ section.settings.product_link_label | default: "Ürünü Gör" | escape }}</a>
           </div>
         </div>
       {% endif %}
@@ -3172,22 +3174,13 @@ export const FORMULA_SHOPPABLE_IMAGE = `<section class="formula-shoppable-image{
       "settings": [
         { "type": "range", "id": "position_x", "label": "Yatay Konum (%)", "min": 0, "max": 100, "step": 1, "default": 50 },
         { "type": "range", "id": "position_y", "label": "Dikey Konum (%)", "min": 0, "max": 100, "step": 1, "default": 50 },
-        { "type": "image_picker", "id": "image", "label": "Küçük Görsel (ops.)" },
-        { "type": "text", "id": "name", "label": "Ürün Adı", "default": "Ürün Adı" },
-        { "type": "text", "id": "price", "label": "Fiyat", "default": "₺349" },
-        { "type": "text", "id": "badge", "label": "Rozet (ops.)", "default": "" },
-        { "type": "url", "id": "url", "label": "Ürün URL", "default": "#" }
+        { "type": "product", "id": "product", "label": "Ürün (arayıp seçin)" },
+        { "type": "text", "id": "badge", "label": "Rozet (ops.)", "default": "" }
       ]
     }
   ],
   "max_blocks": 8,
-  "presets": [{
-    "name": "Formula Alışveriş Yapılabilir Görsel",
-    "blocks": [
-      { "type": "hotspot", "settings": { "position_x": 32, "position_y": 45, "name": "Niasinamid Serum", "price": "₺349" } },
-      { "type": "hotspot", "settings": { "position_x": 68, "position_y": 62, "name": "Nazik Temizleyici Jel", "price": "₺249" } }
-    ]
-  }]
+  "presets": [{ "name": "Formula Alışveriş Yapılabilir Görsel" }]
 }
 {% endschema %}`;
 
@@ -3317,6 +3310,13 @@ export const FORMULA_BUNDLE_BUILDER = `<section class="formula-bundle${revealAni
 }
 {% endschema %}`;
 
+/**
+ * 2026-09-30 — "Video Ürünü" bloğu ÖNCEDEN manuel name/price/url/image
+ * alanlarıyla çalışıyordu (bkz. FORMULA_BESTSELLERS'ın aynı gerekçeli
+ * yorumu). ProductRefPicker'a geçirildi — "time_seconds"/"time_label"
+ * BİLİNÇLİ OLARAK manuel kaldı, bunlar videoya özgü zamanlama verisi,
+ * ürünün parçası değil.
+ */
 export const FORMULA_SHOPPABLE_VIDEO = `<section class="formula-shoppable-video{% if section.settings.layout_style == 'stacked' %} formula-shoppable-video--stacked{% endif %}${revealAnimationClass()}" data-shoppable-video>
   {%- assign shoppable_video_url = section.settings.video_url -%}
   {%- assign shoppable_video_is_embed = false -%}
@@ -3333,10 +3333,10 @@ export const FORMULA_SHOPPABLE_VIDEO = `<section class="formula-shoppable-video{
       {% if shoppable_video_is_embed %}<iframe class="formula-shoppable-video__iframe" src="{{ shoppable_video_embed_src | escape }}" title="{{ section.settings.title | default: 'Video' | escape }}" loading="lazy" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>{% elsif shoppable_video_url != blank %}<video controls playsinline {% if section.settings.poster != blank %}poster="{{ section.settings.poster | img_url: '1200x' }}"{% endif %}><source src="{{ shoppable_video_url | escape }}" /></video>{% elsif section.settings.poster != blank %}{{ section.settings.poster | image_tag: section.settings.title, '(max-width: 749px) 100vw, 50vw', false, '600,900,1200' }}{% endif %}
     </div>
     <div class="formula-shoppable-video__products">
-      {% for block in section.blocks %}{% if block.type == "product" %}
+      {% for block in section.blocks %}{% if block.type == "product" and block.settings.product != blank %}
         <article class="formula-video-product" data-video-time="{{ block.settings.time_seconds | default: 0 }}">
-          {% if block.settings.image != blank %}{{ block.settings.image | image_tag: block.settings.name, '(max-width: 749px) 40vw, 15vw', false, '120,180,240' }}{% endif %}
-          <div>{% if block.settings.time_label != blank %}{% if shoppable_video_is_embed %}<span class="formula-video-product__time">{{ block.settings.time_label | escape }}</span>{% else %}<button type="button" data-video-seek>{{ block.settings.time_label | escape }}</button>{% endif %}{% endif %}{% if block.settings.name != blank %}<h3>{{ block.settings.name | escape }}</h3>{% endif %}{% if block.settings.price != blank %}<p>{{ block.settings.price | escape }}</p>{% endif %}{% if block.settings.url != blank %}<a href="{{ block.settings.url | escape }}">{{ section.settings.product_link_label | default: "Ürünü Gör →" | escape }}</a>{% endif %}</div>
+          {% if block.settings.product.image != blank %}{{ block.settings.product.image | image_tag: block.settings.product.title, '(max-width: 749px) 40vw, 15vw', false, '120,180,240' }}{% endif %}
+          <div>{% if block.settings.time_label != blank %}{% if shoppable_video_is_embed %}<span class="formula-video-product__time">{{ block.settings.time_label | escape }}</span>{% else %}<button type="button" data-video-seek>{{ block.settings.time_label | escape }}</button>{% endif %}{% endif %}<h3>{{ block.settings.product.title | escape }}</h3>{% if block.settings.product.price != blank %}<p>{{ block.settings.product.price | money }}</p>{% endif %}<a href="{{ block.settings.product.url | escape }}">{{ section.settings.product_link_label | default: "Ürünü Gör →" | escape }}</a></div>
         </article>
       {% endif %}{% endfor %}
     </div>
@@ -3374,10 +3374,7 @@ export const FORMULA_SHOPPABLE_VIDEO = `<section class="formula-shoppable-video{
     { "type": "range", "id": "time_seconds", "label": "Zaman (saniye)", "min": 0, "max": 600, "step": 1, "default": 0 },
     { "type": "text", "id": "time_label", "label": "Zaman Etiketi (ops.)", "default": "00:00",
       "info": "Tıklayınca videoyu o saniyeye atlatır — sadece doğrudan .mp4 bağlantısında çalışır, YouTube/Vimeo'da sadece etiket olarak görünür." },
-    { "type": "image_picker", "id": "image", "label": "Görsel", "width": 1600, "height": 900 },
-    { "type": "text", "id": "name", "label": "Ürün Adı", "default": "Ürün Adı" },
-    { "type": "text", "id": "price", "label": "Fiyat (ops.)" },
-    { "type": "url", "id": "url", "label": "Ürün URL" }
+    { "type": "product", "id": "product", "label": "Ürün (arayıp seçin)" }
   ] }], "max_blocks": 8,
   "presets": [{ "name": "Formula Alışveriş Yapılabilir Video", "blocks": [{"type":"product","settings":{"time_seconds":12,"time_label":"00:12"}},{"type":"product","settings":{"time_seconds":45,"time_label":"00:45"}}] }]
 }
