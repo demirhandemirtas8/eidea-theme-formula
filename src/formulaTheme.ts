@@ -3191,9 +3191,22 @@ export const FORMULA_SHOPPABLE_IMAGE = `<section class="formula-shoppable-image{
 }
 {% endschema %}`;
 
-/** Sabit paket v1: connector ürün seçicisi Liquid'de çözülmediği için ürün ve
- * varyant kimlikleri açıkça girilir. İstek yine storefront'un kanonik
- * `/cart/add` endpoint'ine gider; fiyat hiçbir zaman client'tan gönderilmez. */
+/**
+ * 2026-09-30 — v1 notu artık YANLIŞ: "connector ürün seçicisi Liquid'de
+ * çözülmediği için ürün ID'si elle girilir" deniyordu, o zaman gerçekten
+ * öyleydi ama 2026-09-28'de ProductRefPicker (bkz. apps/studio/src/shell/
+ * ProductRefPicker.tsx) tam olarak bu sorunu çözdü — SEÇİM ANINDA gerçek
+ * arama sonucundan {id,title,price,image,url} yazılıyor, render-zamanı
+ * ayrı bir çözüm adımı gerekmiyor. Önceden merchant, admin panelde HİÇBİR
+ * YERDE görünmeyen ham bir ürün cuid'ini bilmek/kopyalamak zorundaydı — bu
+ * pratikte bu section'ı geliştirici yardımı olmadan kullanılamaz kılıyordu.
+ * Artık gerçek bir "ürün ara/seç" alanı var, fiyat/görsel/başlık otomatik
+ * gelir ve her zaman güncel (manuel girilen eski fiyat donup kalmaz).
+ * Varyant seçimi HÂLÂ manuel (picker şu an ürün seviyesinde, varyant
+ * seviyesinde değil) — boş bırakılırsa `/cart/add` varsayılan varyantı
+ * ekler (istek yine storefront'un kanonik endpoint'ine gider, fiyat asla
+ * client'tan gönderilmez).
+ */
 export const FORMULA_BUNDLE_BUILDER = `<section class="formula-bundle${revealAnimationClass()}" data-bundle-root>
   <div class="formula-section-head">
     {% if section.settings.eyebrow != blank %}<p class="formula-bundle__eyebrow">{{ section.settings.eyebrow | escape }}</p>{% endif %}
@@ -3204,12 +3217,12 @@ export const FORMULA_BUNDLE_BUILDER = `<section class="formula-bundle${revealAni
     {% for block in section.blocks %}
       {% if block.type == "item" %}
         <label class="formula-bundle-card">
-          <input type="checkbox" data-bundle-item data-product-id="{{ block.settings.product_id | escape }}" data-variant-id="{{ block.settings.variant_id | escape }}" {% if block.settings.selected %}checked{% endif %} {% if block.settings.product_id == blank %}disabled{% endif %} />
-          {% if block.settings.image != blank %}<span class="formula-bundle-card__media">{{ block.settings.image | image_tag: block.settings.name, '(max-width: 749px) 45vw, 20vw', false, '300,450,600' }}</span>{% endif %}
+          <input type="checkbox" data-bundle-item data-product-id="{{ block.settings.product.id | escape }}" data-variant-id="{{ block.settings.variant_id | escape }}" {% if block.settings.selected %}checked{% endif %} {% if block.settings.product == blank %}disabled{% endif %} />
+          {% if block.settings.product.image != blank %}<span class="formula-bundle-card__media">{{ block.settings.product.image | image_tag: block.settings.product.title, '(max-width: 749px) 45vw, 20vw', false, '300,450,600' }}</span>{% endif %}
           <span class="formula-bundle-card__body">
             {% if block.settings.badge != blank %}<span class="formula-bundle-card__badge">{{ block.settings.badge | escape }}</span>{% endif %}
-            {% if block.settings.name != blank %}<strong>{{ block.settings.name | escape }}</strong>{% endif %}
-            {% if block.settings.price != blank %}<span>{{ block.settings.price | escape }}</span>{% endif %}
+            {% if block.settings.product.title != blank %}<strong>{{ block.settings.product.title | escape }}</strong>{% endif %}
+            {% if block.settings.product.price != blank %}<span>{{ block.settings.product.price | money }}</span>{% endif %}
           </span>
         </label>
       {% endif %}
@@ -3293,11 +3306,8 @@ export const FORMULA_BUNDLE_BUILDER = `<section class="formula-bundle${revealAni
   ],
   "blocks": [{
     "type": "item", "name": "Paket Ürünü", "settings": [
-      { "type": "text", "id": "product_id", "label": "Ürün ID (zorunlu)" },
-      { "type": "text", "id": "variant_id", "label": "Varyant ID (ops.)" },
-      { "type": "image_picker", "id": "image", "label": "Görsel", "width": 800, "height": 800 },
-      { "type": "text", "id": "name", "label": "Ürün Adı", "default": "Paket Ürünü" },
-      { "type": "text", "id": "price", "label": "Gösterim Fiyatı (ops.)" },
+      { "type": "product", "id": "product", "label": "Ürün (arayıp seçin)" },
+      { "type": "text", "id": "variant_id", "label": "Varyant ID (ops., boş bırakılırsa varsayılan varyant eklenir)" },
       { "type": "text", "id": "badge", "label": "Rozet (ops.)" },
       { "type": "checkbox", "id": "selected", "label": "Başlangıçta Seçili", "default": true }
     ]
