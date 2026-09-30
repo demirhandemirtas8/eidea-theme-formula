@@ -905,7 +905,7 @@ export const FORMULA_BESTSELLERS = `<section class="formula-bestsellers{% if sec
     {% if section.settings.title != blank %}<h2>{{ section.settings.title | escape }}</h2>{% endif %}
     <a href="{{ section.settings.view_all_url | default: '/products' | escape }}">{{ section.settings.view_all_label | default: "Tümünü Gör" | escape }}</a>
   </div>
-  <div class="formula-bestsellers__grid">
+  <div class="formula-bestsellers__grid" style="--formula-bestsellers-cols: {{ section.settings.columns | default: 4 }}; --formula-bestsellers-cols-mobile: {{ section.settings.columns_mobile | default: 2 }}">
     {% for block in section.blocks %}
       {% if block.type == "product" %}
         <a class="formula-product-card" href="{{ block.settings.url | default: '#' | escape }}">
@@ -933,7 +933,9 @@ export const FORMULA_BESTSELLERS = `<section class="formula-bestsellers{% if sec
     { "type": "select", "id": "layout_style", "label": "Yerleşim", "default": "grid", "options": [{"label":"Grid","value":"grid"},{"label":"Carousel","value":"carousel"},{"label":"Öne çıkan","value":"featured"}] },
     { "type": "text", "id": "title", "label": "Başlık", "default": "Çok satanlar" },
     { "type": "text", "id": "view_all_label", "label": "Tümünü Gör Metni", "default": "Tümünü Gör" },
-    { "type": "url", "id": "view_all_url", "label": "Tümünü Gör URL", "default": "/products" },${revealAnimationSchemaField()}
+    { "type": "url", "id": "view_all_url", "label": "Tümünü Gör URL", "default": "/products" },
+    { "type": "range", "id": "columns", "label": "Sütun Sayısı (masaüstü)", "min": 2, "max": 5, "step": 1, "default": 4 },
+    { "type": "range", "id": "columns_mobile", "label": "Sütun Sayısı (mobil)", "min": 1, "max": 3, "step": 1, "default": 2 },${revealAnimationSchemaField()}
   ],
   "blocks": [
     {
@@ -1300,7 +1302,7 @@ export const FORMULA_COLLECTION_LIST = `<section class="formula-collection-list 
   <div class="formula-section-head">
     {% if section.settings.title != blank %}<h2>{{ section.settings.title | escape }}</h2>{% endif %}
   </div>
-  <div class="formula-collection-list__grid" style="--formula-collection-cols: {{ section.settings.columns | default: 3 }}; --formula-collection-gap: {{ section.settings.gap | default: 24 }}px">
+  <div class="formula-collection-list__grid" style="--formula-collection-cols: {{ section.settings.columns | default: 3 }}; --formula-collection-cols-mobile: {{ section.settings.columns_mobile | default: 2 }}; --formula-collection-gap: {{ section.settings.gap | default: 24 }}px">
     {% for block in section.blocks %}
       {% if block.type == "collection" and block.settings.collection != blank %}
         <a class="formula-collection-card formula-collection-card--{% if section.settings.layout_style == 'circles' %}circle{% else %}{{ section.settings.card_style | default: 'below' }}{% endif %}" href="{{ block.settings.collection.url | escape }}">
@@ -1341,6 +1343,7 @@ export const FORMULA_COLLECTION_LIST = `<section class="formula-collection-list 
         { "label": "4 sütun", "value": "4" }
       ]
     },
+    { "type": "range", "id": "columns_mobile", "label": "Sütun Sayısı (mobil)", "min": 1, "max": 3, "step": 1, "default": 2 },
     { "type": "range", "id": "gap", "label": "Kartlar Arası Boşluk (px)", "min": 8, "max": 48, "step": 4, "default": 24 },
     { "type": "select", "id": "card_style", "label": "Kart Stili", "default": "below",
       "options": [
@@ -2713,7 +2716,7 @@ export const FORMULA_BEFORE_AFTER = `<section class="formula-before-after${revea
  * gerçek gezinme sonrası dolar; aynı cart-badge/checkout gibi "sadece
  * published'ta çalışır" sınıfı (bkz. formulaPages.ts'in cart runtime notu).
  */
-export const FORMULA_RECENTLY_VIEWED = `<section class="formula-recently-viewed{% if section.settings.layout_style == 'carousel' %} formula-recently-viewed--carousel{% elsif section.settings.layout_style == 'compact' %} formula-recently-viewed--compact{% endif %}${revealAnimationClass()}" style="--formula-recently-viewed-cols: {{ section.settings.columns | default: 4 }}">
+export const FORMULA_RECENTLY_VIEWED = `<section class="formula-recently-viewed{% if section.settings.layout_style == 'carousel' %} formula-recently-viewed--carousel{% elsif section.settings.layout_style == 'compact' %} formula-recently-viewed--compact{% endif %}${revealAnimationClass()}" style="--formula-recently-viewed-cols: {{ section.settings.columns | default: 4 }}; --formula-recently-viewed-cols-mobile: {{ section.settings.columns_mobile | default: 2 }}">
   <div class="formula-section-head">
     {% if section.settings.title != blank %}<h2>{{ section.settings.title | escape }}</h2>{% endif %}
   </div>
@@ -2733,7 +2736,8 @@ export const FORMULA_RECENTLY_VIEWED = `<section class="formula-recently-viewed{
     },
     { "type": "text", "id": "title", "label": "Başlık", "default": "Son Baktıkların" },
     { "type": "range", "id": "limit", "label": "Gösterilecek Ürün Sayısı", "min": 2, "max": 8, "step": 1, "default": 4 },
-    { "type": "range", "id": "columns", "label": "Sütun Sayısı", "min": 2, "max": 6, "step": 1, "default": 4 },
+    { "type": "range", "id": "columns", "label": "Sütun Sayısı (masaüstü)", "min": 2, "max": 6, "step": 1, "default": 4 },
+    { "type": "range", "id": "columns_mobile", "label": "Sütun Sayısı (mobil)", "min": 1, "max": 3, "step": 1, "default": 2 },
     { "type": "select", "id": "card_style", "label": "Kart Stili", "default": "minimal",
       "options": [
         { "label": "Minimal", "value": "minimal" },
@@ -2758,7 +2762,7 @@ export const FORMULA_RECENTLY_VIEWED = `<section class="formula-recently-viewed{
  * her sayfada anlamlı olacağı anlamına gelmez, sadece HER ZAMAN teklif
  * edilen ortak kataloğun (`AddSectionPanel`) bir parçası.
  */
-export const FORMULA_RELATED_PRODUCTS = `<section{% if recommendations.performed %} class="formula-related{% if section.settings.layout_style == 'carousel' %} formula-related--carousel{% elsif section.settings.layout_style == 'compact' %} formula-related--compact{% endif %}${revealAnimationClass()}" style="--formula-related-cols: {{ section.settings.columns | default: 4 }}"{% endif %}>
+export const FORMULA_RELATED_PRODUCTS = `<section{% if recommendations.performed %} class="formula-related{% if section.settings.layout_style == 'carousel' %} formula-related--carousel{% elsif section.settings.layout_style == 'compact' %} formula-related--compact{% endif %}${revealAnimationClass()}" style="--formula-related-cols: {{ section.settings.columns | default: 4 }}; --formula-related-cols-mobile: {{ section.settings.columns_mobile | default: 2 }}"{% endif %}>
   {% if recommendations.performed %}
   <div class="formula-section-head">
     {% if section.settings.title != blank %}<h2>{{ section.settings.title | escape }}</h2>{% endif %}
@@ -2794,7 +2798,8 @@ export const FORMULA_RELATED_PRODUCTS = `<section{% if recommendations.performed
       ]
     },
     { "type": "text", "id": "title", "label": "Başlık", "default": "Bunları da Beğenebilirsin" },
-    { "type": "range", "id": "columns", "label": "Sütun Sayısı", "min": 2, "max": 5, "step": 1, "default": 4 },
+    { "type": "range", "id": "columns", "label": "Sütun Sayısı (masaüstü)", "min": 2, "max": 5, "step": 1, "default": 4 },
+    { "type": "range", "id": "columns_mobile", "label": "Sütun Sayısı (mobil)", "min": 1, "max": 3, "step": 1, "default": 2 },
     { "type": "select", "id": "card_style", "label": "Kart Stili", "default": "minimal",
       "options": [
         { "label": "Minimal", "value": "minimal" },
@@ -3422,7 +3427,7 @@ export const FORMULA_DELIVERY_AVAILABILITY = `<section class="formula-delivery${
  * `select`'in seçenek DEĞERİ olarak veriliyor (ör. value: "★★★★☆"). */
 export const FORMULA_UGC_GALLERY = `<section class="formula-ugc{% if section.settings.layout_style == 'masonry' %} formula-ugc--masonry{% elsif section.settings.layout_style == 'scroll' %} formula-ugc--scroll{% endif %}${revealAnimationClass()}">
   {% if section.settings.title != blank %}<div class="formula-section-head"><h2>{{ section.settings.title | escape }}</h2></div>{% endif %}
-  <div class="formula-ugc__grid">
+  <div class="formula-ugc__grid" style="--formula-ugc-cols: {{ section.settings.columns | default: 4 }}; --formula-ugc-cols-mobile: {{ section.settings.columns_mobile | default: 2 }}">
     {% for block in section.blocks %}
       {% if block.type == "post" %}
         <div class="formula-ugc-card">
@@ -3450,7 +3455,9 @@ export const FORMULA_UGC_GALLERY = `<section class="formula-ugc{% if section.set
         { "label": "Masonry (kesişik yükseklik)", "value": "masonry" },
         { "label": "Yatay akış", "value": "scroll" }
       ]
-    },${revealAnimationSchemaField()}
+    },
+    { "type": "range", "id": "columns", "label": "Sütun Sayısı (masaüstü)", "min": 2, "max": 5, "step": 1, "default": 4 },
+    { "type": "range", "id": "columns_mobile", "label": "Sütun Sayısı (mobil)", "min": 1, "max": 3, "step": 1, "default": 2 },${revealAnimationSchemaField()}
   ],
   "blocks": [
     {
@@ -3598,8 +3605,7 @@ export const FORMULA_LIBRARY_SECTIONS_CSS = `
 .formula-collection-card--overlay .formula-collection-card__title,
 .formula-collection-card--overlay .formula-collection-card__sub { color: #ffffff; }
 .formula-collection-card__scrim { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,.7), transparent 60%); pointer-events: none; }
-@media (max-width: 900px) { .formula-collection-list__grid { grid-template-columns: repeat(2, minmax(0,1fr)); } .formula-collection-list { padding: 44px 20px; } }
-@media (max-width: 560px) { .formula-collection-list__grid { grid-template-columns: 1fr; } }
+@media (max-width: 900px) { .formula-collection-list__grid { grid-template-columns: repeat(var(--formula-collection-cols-mobile, 2), minmax(0,1fr)); } .formula-collection-list { padding: 44px 20px; } }
 .formula-collection-list--carousel .formula-collection-list__grid { display:flex;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:12px;grid-template-columns:none; }
 .formula-collection-list--carousel .formula-collection-card { flex:0 0 min(70vw,320px);scroll-snap-align:start; }
 .formula-collection-list--circles .formula-collection-list__grid { grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:20px; }
@@ -3936,7 +3942,7 @@ export const FORMULA_LIBRARY_SECTIONS_CSS = `
 .formula-recently-viewed__price { font-size: 12px; color: var(--color-muted); margin: 0; }
 .formula-recently-viewed__card--bordered .formula-recently-viewed__media { border: 1px solid var(--color-border); }
 .formula-recently-viewed__card--shadow .formula-recently-viewed__media { box-shadow: 0 18px 44px rgba(15,23,42,.10); }
-@media (max-width: 700px) { .formula-recently-viewed__grid { grid-template-columns: repeat(2, minmax(0,1fr)); } }
+@media (max-width: 700px) { .formula-recently-viewed__grid { grid-template-columns: repeat(var(--formula-recently-viewed-cols-mobile, 2), minmax(0,1fr)); } }
 @media (max-width: 700px) { .formula-recently-viewed { padding: 44px 20px; } }
 .formula-recently-viewed--carousel .formula-recently-viewed__grid { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 12px; grid-template-columns: none; }
 .formula-recently-viewed--carousel .formula-recently-viewed__card { flex: 0 0 min(46vw, 200px); scroll-snap-align: start; }
@@ -3952,7 +3958,7 @@ export const FORMULA_LIBRARY_SECTIONS_CSS = `
    modifier'larıyla (aşağıda, .formula-product-card'ın hemen altında). */
 .formula-related { padding: 64px 40px; }
 .formula-related__grid { display: grid; grid-template-columns: repeat(var(--formula-related-cols, 4), minmax(0,1fr)); gap: 24px; }
-@media (max-width: 900px) { .formula-related__grid { grid-template-columns: repeat(2, minmax(0,1fr)); } .formula-related { padding: 44px 20px; } }
+@media (max-width: 900px) { .formula-related__grid { grid-template-columns: repeat(var(--formula-related-cols-mobile, 2), minmax(0,1fr)); } .formula-related { padding: 44px 20px; } }
 .formula-related--carousel .formula-related__grid { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 12px; grid-template-columns: none; }
 .formula-related--carousel .formula-product-card { flex: 0 0 min(60vw, 240px); scroll-snap-align: start; }
 .formula-related--compact .formula-related__grid { display: flex; flex-direction: column; gap: 0; }
@@ -4033,7 +4039,7 @@ export const FORMULA_LIBRARY_SECTIONS_CSS = `
 
 /* Kullanıcı İçerikleri Galerisi (2026-08-24) */
 .formula-ugc { padding: 64px 40px; }
-.formula-ugc__grid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 20px; }
+.formula-ugc__grid { display: grid; grid-template-columns: repeat(var(--formula-ugc-cols, 4), minmax(0,1fr)); gap: 20px; }
 .formula-ugc-card { border-radius: 10px; overflow: hidden; background: var(--color-surface); border: 1px solid var(--color-border); }
 .formula-ugc-card__media { aspect-ratio: 1 / 1; overflow: hidden; }
 .formula-ugc-card__media img { width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -4042,11 +4048,11 @@ export const FORMULA_LIBRARY_SECTIONS_CSS = `
 .formula-ugc-card__caption { font-size: 13px; color: var(--color-text); line-height: 1.5; margin: 0 0 8px; }
 .formula-ugc-card__author { font-size: 12px; color: var(--color-muted); margin: 0; }
 .formula-ugc-card__product { display: inline-block; margin-top: 8px; font-size: 12px; font-weight: 600; color: var(--color-primary); text-decoration: underline; text-underline-offset: 2px; }
-.formula-ugc--masonry .formula-ugc__grid { display: block; column-count: 4; column-gap: 20px; }
+.formula-ugc--masonry .formula-ugc__grid { display: block; column-count: var(--formula-ugc-cols, 4); column-gap: 20px; }
 .formula-ugc--masonry .formula-ugc-card { break-inside: avoid; margin-bottom: 20px; }
 .formula-ugc--scroll .formula-ugc__grid { display: flex; overflow-x: auto; scroll-snap-type: x proximity; gap: 16px; padding-bottom: 8px; grid-template-columns: none; }
 .formula-ugc--scroll .formula-ugc-card { flex: 0 0 min(72vw, 240px); scroll-snap-align: start; }
-@media (max-width: 900px) { .formula-ugc__grid { grid-template-columns: repeat(2, minmax(0,1fr)); } .formula-ugc--masonry .formula-ugc__grid { column-count: 2; } }
+@media (max-width: 900px) { .formula-ugc__grid { grid-template-columns: repeat(var(--formula-ugc-cols-mobile, 2), minmax(0,1fr)); } .formula-ugc--masonry .formula-ugc__grid { column-count: var(--formula-ugc-cols-mobile, 2); } }
 @media (max-width: 600px) { .formula-ugc { padding: 40px 20px; } }
 
 /* 404 (2026-08-19) */
@@ -4299,7 +4305,7 @@ body.formula-mobile-menu-open { overflow: hidden; }
 
 /* Bestsellers / product cards */
 .formula-bestsellers, .formula-concerns, .formula-philosophy { padding: 64px 40px; }
-.formula-bestsellers__grid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 24px; }
+.formula-bestsellers__grid { display: grid; grid-template-columns: repeat(var(--formula-bestsellers-cols, 4), minmax(0,1fr)); gap: 24px; }
 .formula-bestsellers--carousel .formula-bestsellers__grid { display:flex;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:12px; }
 .formula-bestsellers--carousel .formula-product-card { flex:0 0 min(78vw,300px);scroll-snap-align:start; }
 .formula-bestsellers--featured .formula-bestsellers__grid { grid-template-columns:repeat(3,minmax(0,1fr)); }
@@ -4318,7 +4324,7 @@ body.formula-mobile-menu-open { overflow: hidden; }
    (related-products/recently-viewed'in yeni "Kart Stili" ayarı). */
 .formula-product-card--bordered .formula-product-card__media { border: 1px solid var(--color-border); }
 .formula-product-card--shadow .formula-product-card__media { box-shadow: 0 18px 44px rgba(15,23,42,.10); }
-@media (max-width: 900px) { .formula-bestsellers__grid { grid-template-columns: repeat(2, minmax(0,1fr)); } .formula-bestsellers, .formula-concerns, .formula-philosophy { padding: 44px 20px; } }
+@media (max-width: 900px) { .formula-bestsellers__grid { grid-template-columns: repeat(var(--formula-bestsellers-cols-mobile, 2), minmax(0,1fr)); } .formula-bestsellers, .formula-concerns, .formula-philosophy { padding: 44px 20px; } }
 
 /* Concerns */
 .formula-concerns__grid { display: grid; grid-template-columns: repeat(6, minmax(0,1fr)); gap: 16px; }
