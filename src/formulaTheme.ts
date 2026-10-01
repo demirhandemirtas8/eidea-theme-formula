@@ -182,7 +182,7 @@ export const FORMULA_NAV_HEADER = `<section class="formula-nav{% if section.sett
         </form>
         <div class="formula-nav__search-results" data-nav-search-results></div>
       </div>
-    {%- elsif search_style == 'modal' -%}
+    {%- elsif search_style == 'modal' or search_style == 'icon' -%}
       <button type="button" class="formula-nav__search-toggle" aria-label="Ara" aria-expanded="false" data-nav-search-modal-toggle>${navIconSvg("search")}</button>
     {%- elsif search_style == 'bar' -%}
     {%- else -%}
@@ -193,7 +193,7 @@ export const FORMULA_NAV_HEADER = `<section class="formula-nav{% if section.sett
     <a href="/account" aria-label="Hesabım">${navIconSvg("account")}</a>
     <a href="/cart" aria-label="Sepet" data-cart-open-mode="{{ section.settings.cart_open_mode | default: 'page' }}">${navIconSvg("cart")}</a>
   </div>
-  {%- if search_style == 'modal' -%}
+  {%- if search_style == 'modal' or search_style == 'icon' -%}
     <div class="formula-nav__search-modal-backdrop" data-nav-search-backdrop></div>
     <div class="formula-nav__search formula-nav__search--modal" data-nav-search data-search-mode="modal" style="--formula-search-width: {{ section.settings.search_box_width | default: 240 }}px" data-search-result-count="{{ section.settings.search_result_count | default: 5 }}" data-search-show-price="{{ section.settings.search_show_price | default: true }}" aria-hidden="true">
       <div class="formula-nav__search-modal-box">
@@ -267,7 +267,7 @@ export const FORMULA_NAV_HEADER = `<section class="formula-nav{% if section.sett
       }
     })();
   </script>
-  {%- if search_style != 'icon' -%}
+  {%- if search_style != blank -%}
   <script>
     (function () {
       var root = document.currentScript.closest(".formula-nav");
@@ -517,7 +517,7 @@ export const FORMULA_NAV_HEADER_CENTERED = `<section class="formula-nav formula-
         </form>
         <div class="formula-nav__search-results" data-nav-search-results></div>
       </div>
-    {%- elsif search_style == 'modal' -%}
+    {%- elsif search_style == 'modal' or search_style == 'icon' -%}
       <button type="button" class="formula-nav__search-toggle" aria-label="Ara" aria-expanded="false" data-nav-search-modal-toggle>${navIconSvg("search")}</button>
     {%- elsif search_style == 'bar' -%}
     {%- else -%}
@@ -528,7 +528,7 @@ export const FORMULA_NAV_HEADER_CENTERED = `<section class="formula-nav formula-
     <a href="/account" aria-label="Hesabım">${navIconSvg("account")}</a>
     <a href="/cart" aria-label="Sepet" data-cart-open-mode="{{ section.settings.cart_open_mode | default: 'page' }}">${navIconSvg("cart")}</a>
   </div>
-  {%- if search_style == 'modal' -%}
+  {%- if search_style == 'modal' or search_style == 'icon' -%}
     <div class="formula-nav__search-modal-backdrop" data-nav-search-backdrop></div>
     <div class="formula-nav__search formula-nav__search--modal" data-nav-search data-search-mode="modal" style="--formula-search-width: {{ section.settings.search_box_width | default: 240 }}px" data-search-result-count="{{ section.settings.search_result_count | default: 5 }}" data-search-show-price="{{ section.settings.search_show_price | default: true }}" aria-hidden="true">
       <div class="formula-nav__search-modal-box">
@@ -602,7 +602,7 @@ export const FORMULA_NAV_HEADER_CENTERED = `<section class="formula-nav formula-
       }
     })();
   </script>
-  {%- if search_style != 'icon' -%}
+  {%- if search_style != blank -%}
   <script>
     (function () {
       var root = document.currentScript.closest(".formula-nav");
