@@ -12,6 +12,7 @@ import type { EiPage, EiSection } from "@eidea/studio-core";
 import type { ThemePageSpec, ThemeSectionInstance } from "./multiPageScaffold.js";
 import { sectionSlot } from "./sectionSlot.js";
 import { getSectionDesigns } from "./sectionDesigns.js";
+import { buildThemeBlogPages, themeBlogSectionFiles } from "./themeBlogSections.js";
 import {
   FORMULA_NAV_HEADER,
   FORMULA_HERO,
@@ -260,12 +261,13 @@ export function buildFormulaPages(): ThemePageSpec[] {
   return [
     homePage, productsPage, collectionPage, brandsPage, searchPage, productPage,
     cartPage, checkoutPage, accountPage, registerPage, loginPage, ordersPage, notFoundPage,
-    checkoutSuccessPage,
+    checkoutSuccessPage, ...buildThemeBlogPages("formula", utilityPage),
   ];
 }
 
 export function formulaSectionFiles(): Record<string, string> {
   return {
+    ...themeBlogSectionFiles("formula"),
     "sections/nav-header.ei": FORMULA_NAV_HEADER,
     "sections/hero.ei": FORMULA_HERO,
     "sections/quiz-banner.ei": FORMULA_QUIZ_BANNER,
