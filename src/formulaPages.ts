@@ -109,10 +109,16 @@ export function buildFormulaPages(): ThemePageSpec[] {
         src: "sections/bestsellers-grid.ei",
         settings: {},
         blocks: [
-          block("best-1", "product", "Ürün", { name: "Niasinamid Serum", active: "%10 Niasinamid", price: "₺349", badge: "Çok Satan", url: "/products/niasinamid-serum" }),
-          block("best-2", "product", "Ürün", { name: "Hyalüronik Asit Serum", active: "%2 Hyalüronik Asit", price: "₺389", badge: "", url: "/products/hyaluronik-asit-serum" }),
-          block("best-3", "product", "Ürün", { name: "Nazik Temizleyici Jel", active: "pH 5.5", price: "₺249", badge: "Yeni", url: "/products/nazik-temizleyici-jel" }),
-          block("best-4", "product", "Ürün", { name: "SPF 50 Güneş Bakımı", active: "Geniş Spektrum", price: "₺299", badge: "", url: "/products/spf-50-gunes-bakimi" }),
+          // GERÇEK KULLANICI RAPORU (2026-10-06): bu demo blokların `url`'i
+          // GERÇEK bir ürüne değil, VAR OLMAYAN bir slug'a (404) gidiyordu —
+          // panelde bu isimde ürün yoksa canlı mağazada gerçek bir ziyaretçi
+          // bu karta tıklayıp kırık sayfaya düşebiliyordu. Merchant kendi
+          // ürünlerini ekleyip bu blokları GERÇEK ürünle değiştirene kadar
+          // link en azından var olan /products sayfasına gider (404 yok).
+          block("best-1", "product", "Ürün", { name: "Niasinamid Serum", active: "%10 Niasinamid", price: "₺349", badge: "Çok Satan", url: "/products" }),
+          block("best-2", "product", "Ürün", { name: "Hyalüronik Asit Serum", active: "%2 Hyalüronik Asit", price: "₺389", badge: "", url: "/products" }),
+          block("best-3", "product", "Ürün", { name: "Nazik Temizleyici Jel", active: "pH 5.5", price: "₺249", badge: "Yeni", url: "/products" }),
+          block("best-4", "product", "Ürün", { name: "SPF 50 Güneş Bakımı", active: "Geniş Spektrum", price: "₺299", badge: "", url: "/products" }),
         ],
       },
       {
