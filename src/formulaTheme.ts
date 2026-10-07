@@ -12,6 +12,8 @@
  * — içerik Formula'ya özgü, ama section `type` hâlâ "nav-header"/"footer-menu".
  */
 
+import { sectionSpacingSchemaFields, sectionSpacingStyle, sectionVisibilityClass } from "./sectionSpacing.js";
+
 /**
  * 2026-08-18 — "görsel ekleyebildiğimiz alanlara daha fazla özellik getir"
  * (kullanıcı raporu). Görsel içeren section'ların (Hero, Koleksiyon/Genel
@@ -93,33 +95,11 @@ function revealAnimationClass(): string {
   return ` formula-reveal formula-reveal--{{ section.settings.reveal_animation | default: 'none' }}`;
 }
 
-// 2026-10-07 — GERÇEK KULLANICI TALİMATI: "var olan section'ların
-// düzenlenebilir alanlarını arttır". Denetimde bulunan EVRENSEL boşluk:
-// 45 section'ın HİÇBİRİNDE üst/alt boşluk (padding) veya mobil/masaüstü
-// gizleme ayarı yoktu — `imageEffectSchemaFields()`/`revealAnimationSchemaField()`
-// ile AYNI "tek kaynaktan üret, her schema'ya interpolasyonla ekle" deseni.
-function sectionSpacingSchemaFields(): string {
-  return `
-    { "type": "range", "id": "padding_top", "label": "Üst Boşluk (px)", "min": 0, "max": 160, "step": 4, "default": 64 },
-    { "type": "range", "id": "padding_bottom", "label": "Alt Boşluk (px)", "min": 0, "max": 160, "step": 4, "default": 64 },
-    { "type": "checkbox", "id": "hide_on_mobile", "label": "Mobilde Gizle", "default": false },
-    { "type": "checkbox", "id": "hide_on_desktop", "label": "Masaüstünde Gizle", "default": false }`;
-}
-
-/** `sectionSpacingSchemaFields()`'in ürettiği padding ayarlarını GERÇEK inline
- * style'a çeviren fragman — section'ın kök `<section>` etiketindeki `style`
- * attribute'una EKLENİR (var olan `style` içeriğini EZMEZ, sona eklenir). */
-function sectionSpacingStyle(): string {
-  return `padding-top:{{ section.settings.padding_top | default: 64 }}px;padding-bottom:{{ section.settings.padding_bottom | default: 64 }}px;`;
-}
-
-/** `sectionSpacingSchemaFields()`'in ürettiği gizleme ayarlarını GERÇEK CSS
- * class'ına çeviren fragman — section'ın kök `<section>` etiketindeki
- * `class` attribute'una EKLENİR. Global `.formula-hide-mobile`/`.formula-
- * hide-desktop` kuralları FORMULA_THEME_CSS'te TEK yerde tanımlı. */
-function sectionVisibilityClass(): string {
-  return `{% if section.settings.hide_on_mobile %} formula-hide-mobile{% endif %}{% if section.settings.hide_on_desktop %} formula-hide-desktop{% endif %}`;
-}
+// 2026-10-07 — GERÇEK KULLANICI TALİMATI: "diğer temaları da aynı şekilde
+// geliştir" denetiminde bu 3 fonksiyon TAMAMEN tema-bağımsız olduğu
+// anlaşıldığı için sectionSpacing.ts'e TAŞINDI (her temada ayrı ayrı
+// yeniden yazmak yerine TEK yerden import ediliyor) — bkz. o dosyanın
+// kendi yorumu.
 
 /**
  * 2026-08-19 — kullanıcı raporu: "ara, hesap, sepet gibi öğeler icon olmalı"
@@ -1298,7 +1278,7 @@ export const FORMULA_ANNOUNCEMENT_BAR = `<section class="formula-announcement">
 }
 {% endschema %}`;
 
-export const FORMULA_MARQUEE = `<section class="formula-marquee${revealAnimationClass()}" style="{% if section.settings.bg_color != blank %}background:{{ section.settings.bg_color }};{% endif %}{% if section.settings.text_color != blank %}--color-text:{{ section.settings.text_color }};{% endif %}">
+export const FORMULA_MARQUEE = `<section class="formula-marquee${revealAnimationClass()}${sectionVisibilityClass()}" style="{% if section.settings.bg_color != blank %}background:{{ section.settings.bg_color }};{% endif %}{% if section.settings.text_color != blank %}--color-text:{{ section.settings.text_color }};{% endif %}${sectionSpacingStyle()}">
   <div class="formula-marquee__track" style="animation-duration: {{ section.settings.speed | default: 28 }}s;">
     <div class="formula-marquee__group">
       {% for block in section.blocks %}{% if block.type == "phrase" %}<span class="formula-marquee__item">{{ block.settings.text | default: "Şeffaf Formüller" | escape }}</span><span class="formula-marquee__dot" aria-hidden="true">✦</span>{% endif %}{% endfor %}
@@ -2839,7 +2819,7 @@ export const FORMULA_BEFORE_AFTER = `<section class="formula-before-after${revea
  * gerçek gezinme sonrası dolar; aynı cart-badge/checkout gibi "sadece
  * published'ta çalışır" sınıfı (bkz. formulaPages.ts'in cart runtime notu).
  */
-export const FORMULA_RECENTLY_VIEWED = `<section class="formula-recently-viewed{% if section.settings.layout_style == 'carousel' %} formula-recently-viewed--carousel{% elsif section.settings.layout_style == 'compact' %} formula-recently-viewed--compact{% endif %}${revealAnimationClass()}" style="--formula-recently-viewed-cols: {{ section.settings.columns | default: 4 }}; --formula-recently-viewed-cols-mobile: {{ section.settings.columns_mobile | default: 2 }}">
+export const FORMULA_RECENTLY_VIEWED = `<section class="formula-recently-viewed{% if section.settings.layout_style == 'carousel' %} formula-recently-viewed--carousel{% elsif section.settings.layout_style == 'compact' %} formula-recently-viewed--compact{% endif %}${revealAnimationClass()}${sectionVisibilityClass()}" style="--formula-recently-viewed-cols: {{ section.settings.columns | default: 4 }}; --formula-recently-viewed-cols-mobile: {{ section.settings.columns_mobile | default: 2 }}${sectionSpacingStyle()}">
   <div class="formula-section-head">
     {% if section.settings.title != blank %}<h2>{{ section.settings.title | escape }}</h2>{% endif %}
   </div>
@@ -3213,7 +3193,7 @@ export const FORMULA_COUNTDOWN_PROMOTION = `<section class="formula-countdown${r
  * 2026-09-28'de eklendi) — hotspot bloğu artık ProductRefPicker'a geçirildi,
  * fiyat/görsel/başlık gerçek üründen geliyor. `badge` pazarlama metni
  * olarak manuel kaldı. */
-export const FORMULA_SHOPPABLE_IMAGE = `<section class="formula-shoppable-image{% if section.settings.image_ratio == 'portrait' %} formula-shoppable-image--portrait{% elsif section.settings.image_ratio == 'landscape' %} formula-shoppable-image--landscape{% endif %}${revealAnimationClass()}" style="{% if section.settings.bg_color != blank %}background:{{ section.settings.bg_color }};{% endif %}{% if section.settings.text_color != blank %}color:{{ section.settings.text_color }};{% endif %}">
+export const FORMULA_SHOPPABLE_IMAGE = `<section class="formula-shoppable-image{% if section.settings.image_ratio == 'portrait' %} formula-shoppable-image--portrait{% elsif section.settings.image_ratio == 'landscape' %} formula-shoppable-image--landscape{% endif %}${revealAnimationClass()}${sectionVisibilityClass()}" style="{% if section.settings.bg_color != blank %}background:{{ section.settings.bg_color }};{% endif %}{% if section.settings.text_color != blank %}color:{{ section.settings.text_color }};{% endif %}${sectionSpacingStyle()}">
   {% if section.settings.title != blank %}<h2 class="formula-shoppable-image__title">{{ section.settings.title | escape }}</h2>{% endif %}
   <div class="formula-shoppable-image__stage">
     {% if section.settings.image != blank %}
@@ -4239,20 +4219,6 @@ export const FORMULA_LIBRARY_SECTIONS_CSS = `
 
 export const FORMULA_THEME_CSS = `
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
-/* 2026-10-07 — GERÇEK KULLANICI TALİMATI: "var olan section'ların
- * düzenlenebilir alanlarını arttır". sectionSpacingSchemaFields()/
- * sectionVisibilityClass() (formulaTheme.ts) ÇOK SAYIDA section'a
- * padding + mobil/masaüstü gizleme ayarı ekledi — bu iki class TEK
- * yerde tanımlı, her section kendi CSS'inde TEKRARLAMIYOR. Breakpoint
- * (749px) dosyadaki image_tag "sizes" argümanlarıyla AYNI (ör.
- * '(max-width: 749px) 60vw, 25vw') — tutarlı tek bir mobil eşik. */
-@media (max-width: 749px) {
-  .formula-hide-mobile { display: none !important; }
-}
-@media (min-width: 750px) {
-  .formula-hide-desktop { display: none !important; }
-}
 
 :root {
   --color-primary: #4b5d46;
