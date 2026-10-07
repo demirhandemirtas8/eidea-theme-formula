@@ -11,7 +11,7 @@ import { resolveSectionInstanceRole } from "@eidea/ei-engine/browser";
 import type { EiPage, EiSection } from "@eidea/studio-core";
 import type { ThemePageSpec, ThemeSectionInstance } from "@eidea/theme-kit";
 import { sectionSlot } from "@eidea/theme-kit";
-import { getSectionDesigns } from "./sectionDesigns.js";
+import { FORMULA_SECTION_DESIGNS } from "./formulaDesigns.js";
 import { buildThemeBlogPages, themeBlogSectionFiles } from "@eidea/theme-kit";
 import {
   FORMULA_NAV_HEADER,
@@ -369,7 +369,7 @@ export function patchStaleFormulaSectionContent(
       // düzeltme (ör. CSS class eklenmesi) bu section'a otomatik yansımaz —
       // kullanıcı tasarımı yeniden seçmeli; bu, sessiz-varsayılana-dönmekten
       // çok daha küçük bir kapsam.
-      const knownVariants = new Set([canonical, ...getSectionDesigns(section.type, templateId).map((d) => d.content)]);
+      const knownVariants = new Set([canonical, ...(FORMULA_SECTION_DESIGNS[section.type] ?? []).map((d) => d.content)]);
       if (knownVariants.has(current)) continue;
       next[section.sourcePath] = canonical;
       changed = true;
