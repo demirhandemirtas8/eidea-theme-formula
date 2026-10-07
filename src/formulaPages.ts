@@ -25,6 +25,7 @@ import {
   FORMULA_CHECKOUT_SUCCESS,
   FORMULA_THEME_CSS,
   FORMULA_LIBRARY_SECTIONS,
+  FORMULA_PRODUCT_CARD_SNIPPET,
 } from "./formulaTheme.js";
 import {
   MAIN_PRODUCT_CONTENT,
@@ -274,6 +275,9 @@ export function buildFormulaPages(): ThemePageSpec[] {
 export function formulaSectionFiles(): Record<string, string> {
   return {
     ...themeBlogSectionFiles("formula"),
+    // 2026-10-07 — bkz. FORMULA_PRODUCT_CARD_SNIPPET'in kendi yorumu —
+    // ei-engine'in Shopify-tarzı `{% render %}` desenine ilk gerçek örnek.
+    "snippets/product-card.ei": FORMULA_PRODUCT_CARD_SNIPPET,
     "sections/nav-header.ei": FORMULA_NAV_HEADER,
     "sections/hero.ei": FORMULA_HERO,
     "sections/quiz-banner.ei": FORMULA_QUIZ_BANNER,
