@@ -9,10 +9,10 @@
 import type { EipgBlock } from "@eidea/ei-engine/browser";
 import { resolveSectionInstanceRole } from "@eidea/ei-engine/browser";
 import type { EiPage, EiSection } from "@eidea/studio-core";
-import type { ThemePageSpec, ThemeSectionInstance } from "./multiPageScaffold.js";
-import { sectionSlot } from "./sectionSlot.js";
+import type { ThemePageSpec, ThemeSectionInstance } from "@eidea/theme-kit";
+import { sectionSlot } from "@eidea/theme-kit";
 import { getSectionDesigns } from "./sectionDesigns.js";
-import { buildThemeBlogPages, themeBlogSectionFiles } from "./themeBlogSections.js";
+import { buildThemeBlogPages, themeBlogSectionFiles } from "@eidea/theme-kit";
 import {
   FORMULA_NAV_HEADER,
   FORMULA_HERO,
@@ -39,7 +39,7 @@ import {
   AUTH_REGISTER_CONTENT,
   ACCOUNT_DASHBOARD_CONTENT,
   ACCOUNT_ORDERS_CONTENT,
-} from "./universalPages.js";
+} from "@eidea/theme-kit";
 
 function block(id: string, type: string, name: string, settings: Record<string, unknown>, blocks: EipgBlock[] = []): EipgBlock {
   return { id, type, name, settings, blocks };

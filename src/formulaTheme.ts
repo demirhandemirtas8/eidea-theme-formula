@@ -12,7 +12,7 @@
  * — içerik Formula'ya özgü, ama section `type` hâlâ "nav-header"/"footer-menu".
  */
 
-import { sectionSpacingSchemaFields, sectionSpacingStyle, sectionVisibilityClass } from "./sectionSpacing.js";
+import { sectionSpacingSchemaFields, sectionSpacingStyle, sectionVisibilityClass } from "@eidea/theme-kit";
 
 /**
  * 2026-08-18 — "görsel ekleyebildiğimiz alanlara daha fazla özellik getir"
