@@ -1,0 +1,16 @@
+{
+  "name": "@eidea/theme-formula",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "dependencies": {
+    "@eidea/ei-engine": "file:../../../../eidea-ei-engine",
+    "@eidea/studio-core": "workspace:*",
+    "@eidea/theme-kit": "workspace:*",
+    "@eidea/theme-registry": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  }
+}
