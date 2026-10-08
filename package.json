@@ -6,9 +6,9 @@
   "main": "./src/index.ts",
   "dependencies": {
     "@eidea/ei-engine": "file:../../../../eidea-ei-engine",
-    "@eidea/studio-core": "workspace:*",
-    "@eidea/theme-kit": "workspace:*",
-    "@eidea/theme-registry": "workspace:*"
+    "@eidea/studio-core": "file:../../studio-core",
+    "@eidea/theme-kit": "file:../../theme-kit",
+    "@eidea/theme-registry": "file:../../theme-registry"
   },
   "devDependencies": {
     "typescript": "^5.8.3"
