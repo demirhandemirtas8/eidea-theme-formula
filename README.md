@@ -2,35 +2,34 @@
 
 Eidea Studio'nun "Formula" teması — platformun en olgun ve en kapsamlı
 temalarından biri. **Bu repo açık kaynak ve public** — amacı EI şablon
-dilini (Shopify Liquid'e çok benzer bir sözdizimi) öğrenmek isteyen
-geliştiriciler için gerçek, çalışan bir referans olmak.
+dilini öğrenmek isteyen geliştiriciler için gerçek, çalışan bir referans
+olmak.
 
 > Not: bu, Eidea'nın ücretli/kapalı kaynak diğer temalarının (Aura,
 > Basalt, Foundry, ...) aksine, bilinçli olarak public bırakılmış bir
-> öğrenme kaynağıdır — Shopify'ın `Dawn` temasının buradaki karşılığı.
+> öğrenme kaynağıdır.
 
 > **GitHub dil etiketi hakkında**: GitHub bu repoyu "TypeScript" olarak
 > gösterir — bu TEKNİK OLARAK doğru (dosyalar gerçekten `.ts`, import/
 > export/fonksiyon tanımları içerir), ama asıl öğretici içerik (section
 > markup'ı, `{% schema %}` blokları) bu dosyaların İÇİNDEKİ büyük template
-> literal string'lerde EI/Liquid-benzeri sözdizimiyle yazılı. GitHub'ın
-> Linguist aracı "EI"yi tanımadığı için (henüz kayıtlı bir dil değil) bu
-> etiketi değiştiremiyoruz — okurken bunu bilerek yaklaşın: TypeScript
-> kısmı sadece "hangi string'i hangi fonksiyon hangi koşulda üretiyor"
-> mantığı, asıl aradığınız EI sözdizimi string'lerin İÇİNDE.
+> literal string'lerde EI sözdizimiyle yazılı. GitHub'ın Linguist aracı
+> "EI"yi tanımadığı için (henüz kayıtlı bir dil değil) bu etiketi
+> değiştiremiyoruz — okurken bunu bilerek yaklaşın: TypeScript kısmı
+> sadece "hangi string'i hangi fonksiyon hangi koşulda üretiyor" mantığı,
+> asıl aradığınız EI sözdizimi string'lerin İÇİNDE.
 
 ## EI dilini bu repodan öğrenmek
 
-Her section şablonu üç şeyi birlikte tanımlar: HTML/Liquid-benzeri
-markup, inline CSS, ve bir `{% schema %}` JSON bloğu (hangi ayarların
-Studio panelinde düzenlenebilir olduğunu tanımlar). Örnek desenler için:
+Her section şablonu üç şeyi birlikte tanımlar: HTML/EI-sözdizimli markup,
+inline CSS, ve bir `{% schema %}` JSON bloğu (hangi ayarların Studio
+panelinde düzenlenebilir olduğunu tanımlar). Örnek desenler için:
 
 - **Settings-driven içerik**: hiçbir section'da sabit (hardcoded) metin/
   renk yok — hepsi `{{ section.settings.xxx | default: "..." }}` ile
   okunur. `src/formulaTheme.ts` içinde `section.settings.` için grep
   yapın, 240+ kullanım göreceksiniz.
-- **`{% render %}` ile paylaşılan snippet** (Shopify'daki `{% render %}`
-  tag'inin karşılığı) — `src/formulaTheme.ts:157`'deki
+- **`{% render %}` ile paylaşılan snippet** — `src/formulaTheme.ts:157`'deki
   `FORMULA_PRODUCT_CARD_SNIPPET`'e bakın: ürün kartı markup'ı TEK yerde
   tanımlı, `src/formulaTheme.ts:968` ve `:2879`'da
   `{% render 'product-card', url: ..., image: ... %}` ile birden fazla
