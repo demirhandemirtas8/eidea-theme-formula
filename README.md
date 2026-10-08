@@ -9,6 +9,16 @@ geliştiriciler için gerçek, çalışan bir referans olmak.
 > Basalt, Foundry, ...) aksine, bilinçli olarak public bırakılmış bir
 > öğrenme kaynağıdır — Shopify'ın `Dawn` temasının buradaki karşılığı.
 
+> **GitHub dil etiketi hakkında**: GitHub bu repoyu "TypeScript" olarak
+> gösterir — bu TEKNİK OLARAK doğru (dosyalar gerçekten `.ts`, import/
+> export/fonksiyon tanımları içerir), ama asıl öğretici içerik (section
+> markup'ı, `{% schema %}` blokları) bu dosyaların İÇİNDEKİ büyük template
+> literal string'lerde EI/Liquid-benzeri sözdizimiyle yazılı. GitHub'ın
+> Linguist aracı "EI"yi tanımadığı için (henüz kayıtlı bir dil değil) bu
+> etiketi değiştiremiyoruz — okurken bunu bilerek yaklaşın: TypeScript
+> kısmı sadece "hangi string'i hangi fonksiyon hangi koşulda üretiyor"
+> mantığı, asıl aradığınız EI sözdizimi string'lerin İÇİNDE.
+
 ## EI dilini bu repodan öğrenmek
 
 Her section şablonu üç şeyi birlikte tanımlar: HTML/Liquid-benzeri
