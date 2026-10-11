@@ -1167,13 +1167,14 @@ export const FORMULA_FOOTER_MENU = `<section class="formula-footer">
       {% endif %}
     {% endfor %}
   </div>
-  <p class="formula-footer__copy">&copy; {{ "now" | date: "%Y" }} {{ shop.name | escape }}. {{ section.settings.copyright_text | default: "Tüm hakları saklıdır." | escape }}</p>
+  <p class="formula-footer__copy">&copy; {{ "now" | date: "%Y" }} {{ section.settings.footer_brand_name | default: shop.name | escape }}. {{ section.settings.copyright_text | default: "Tüm hakları saklıdır." | escape }}</p>
 </section>
 
 {% schema %}
 {
   "name": "Formula Footer",
   "settings": [
+    { "type": "text", "id": "footer_brand_name", "label": "Footer Marka Adı (boşsa mağaza adı kullanılır)", "default": "" },
     { "type": "checkbox", "id": "show_logo", "label": "Logoyu Göster", "default": true,
       "info": "Tema Ayarları'ndaki Logo görselini kullanır (varsa) — burada ayrı bir logo metni/görseli YOK, sadece aç/kapat." },
     { "type": "textarea", "id": "blurb", "label": "Marka Açıklaması", "default": "Az bileşen, yüksek standart. Cilt bakımını şeffaf ve anlaşılır yapıyoruz." },
