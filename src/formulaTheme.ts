@@ -1272,7 +1272,9 @@ export const FORMULA_ANNOUNCEMENT_BAR = `<section class="formula-announcement">
   "settings": [
     { "type": "text", "id": "text", "label": "Metin", "default": "Tüm siparişlerde ücretsiz kargo" },
     { "type": "url", "id": "link", "label": "Bağlantı (ops.)", "default": "" },
-    { "type": "checkbox", "id": "dismissible", "label": "Kapatılabilir", "default": true }
+    { "type": "checkbox", "id": "dismissible", "label": "Kapatılabilir", "default": true },
+    { "type": "checkbox", "id": "sync_all_pages", "label": "Tüm sayfalarda aynı duyuru", "default": false,
+      "info": "Açıksa, bu duyuruyu değiştirdiğinizde TÜM sayfalardaki duyuru çubuğu otomatik aynı şekilde güncellenir (header/footer gibi)." }
   ],
   "presets": [{ "name": "Formula Duyuru Çubuğu" }]
 }
