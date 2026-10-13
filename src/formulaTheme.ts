@@ -3086,9 +3086,8 @@ export const FORMULA_BRANDS_SLIDER = `<section class="formula-brands-slider${rev
 }
 {% endschema %}`;
 
-// 2026-08-24 — Formula tema genişletmesi, Codex'in önerdiği yeni section
-// tiplerinden ilki (bkz. 24.08-formula-genisletme-codex-fikirleri.md madde 4,
-// "en basit/izole — yeni veri modeli gerektirmiyor" notu). Geri sayım
+// 2026-08-24 — Formula tema genişletmesi, yeni section tiplerinden ilki
+// ("en basit/izole — yeni veri modeli gerektirmiyor" notu). Geri sayım
 // istemci tarafında saniye başı güncelleniyor (SSR sadece bitiş zamanını
 // data-attribute olarak taşır) — diğer section'lardaki inline <script>
 // deseniyle (ör. FORMULA_BRANDS_SLIDER'ın onclick'i, reviews'ün star-picker'ı)
@@ -3184,8 +3183,7 @@ export const FORMULA_COUNTDOWN_PROMOTION = `<section class="formula-countdown${r
 }
 {% endschema %}`;
 
-/** Alışveriş Yapılabilir Görsel (2026-08-24, Codex'in `shoppable-image`
- * önerisi) — büyük bir görsel üzerinde ürün noktaları (hotspot), tıklanınca
+/** Alışveriş Yapılabilir Görsel (2026-08-24, `shoppable-image`) — büyük bir görsel üzerinde ürün noktaları (hotspot), tıklanınca
  * küçük bir kart (görsel/ad/fiyat/rozet/link) açılır. Kart açma/kapama TEK
  * self-contained script (`document.currentScript.closest`, FAQ/countdown'la
  * aynı desen), dışarı tıklayınca kapanır.
@@ -3524,8 +3522,8 @@ export const FORMULA_DELIVERY_AVAILABILITY = `<section class="formula-delivery${
 }
 {% endschema %}`;
 
-/** Kullanıcı İçerikleri / Sosyal Kanıt Galerisi (2026-08-24, Codex'in
- * `ugc-gallery` önerisi) — müşteri fotoğrafı + isim + alıntı + puan +
+/** Kullanıcı İçerikleri / Sosyal Kanıt Galerisi (2026-08-24, `ugc-gallery`)
+ * — müşteri fotoğrafı + isim + alıntı + puan +
  * opsiyonel ürün linki. `shoppable-image` ile AYNI mimari karar: gerçek
  * connector ürün bağlantısı yok, manuel ad/URL. Puan (rating) `{% for i in
  * (1..5) %}` gibi bir range-literal döngüsü GEREKTİRMİYOR — bilinçli tercih,
