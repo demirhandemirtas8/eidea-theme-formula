@@ -2462,18 +2462,18 @@ export const FORMULA_COMPARISON_TABLE = `<section class="formula-compare{% if se
   </div>
   {% if section.settings.layout_style == 'cards' %}
     <div class="formula-compare__cards">
-      {% for block in section.blocks %}
-        {% if block.type == "product" %}
-          <a class="formula-compare-card" href="{{ block.settings.url | default: '#' | escape }}">
-            {% if block.settings.image != blank %}
-              <div class="formula-compare-card__media">{{ block.settings.image | image_tag: block.settings.name, '(max-width: 749px) 45vw, 22vw', false, '250,375,500' }}</div>
+      {% for eiblk in section.blocks %}
+        {% if eiblk.type == "product" %}
+          <a class="formula-compare-card" href="{{ eiblk.settings.url | default: '#' | escape }}">
+            {% if eiblk.settings.image != blank %}
+              <div class="formula-compare-card__media">{{ eiblk.settings.image | image_tag: eiblk.settings.name, '(max-width: 749px) 45vw, 22vw', false, '250,375,500' }}</div>
             {% endif %}
-            <p class="formula-compare-card__name">{{ block.settings.name | default: "Ürün" | escape }}</p>
+            <p class="formula-compare-card__name">{{ eiblk.settings.name | default: "Ürün" | escape }}</p>
             <dl class="formula-compare-card__specs">
-              {% if section.settings.feature1_label != blank %}<div><dt>{{ section.settings.feature1_label | escape }}</dt><dd>{{ block.settings.feature1_value | default: "—" | escape }}</dd></div>{% endif %}
-              {% if section.settings.feature2_label != blank %}<div><dt>{{ section.settings.feature2_label | escape }}</dt><dd>{{ block.settings.feature2_value | default: "—" | escape }}</dd></div>{% endif %}
-              {% if section.settings.feature3_label != blank %}<div><dt>{{ section.settings.feature3_label | escape }}</dt><dd>{{ block.settings.feature3_value | default: "—" | escape }}</dd></div>{% endif %}
-              {% if section.settings.feature4_label != blank %}<div><dt>{{ section.settings.feature4_label | escape }}</dt><dd>{{ block.settings.feature4_value | default: "—" | escape }}</dd></div>{% endif %}
+              {% if section.settings.feature1_label != blank %}<div><dt>{{ section.settings.feature1_label | escape }}</dt><dd>{{ eiblk.settings.feature1_value | default: "—" | escape }}</dd></div>{% endif %}
+              {% if section.settings.feature2_label != blank %}<div><dt>{{ section.settings.feature2_label | escape }}</dt><dd>{{ eiblk.settings.feature2_value | default: "—" | escape }}</dd></div>{% endif %}
+              {% if section.settings.feature3_label != blank %}<div><dt>{{ section.settings.feature3_label | escape }}</dt><dd>{{ eiblk.settings.feature3_value | default: "—" | escape }}</dd></div>{% endif %}
+              {% if section.settings.feature4_label != blank %}<div><dt>{{ section.settings.feature4_label | escape }}</dt><dd>{{ eiblk.settings.feature4_value | default: "—" | escape }}</dd></div>{% endif %}
             </dl>
           </a>
         {% endif %}
@@ -2484,13 +2484,13 @@ export const FORMULA_COMPARISON_TABLE = `<section class="formula-compare{% if se
       <div class="formula-compare__table" style="--formula-compare-cols: {{ section.blocks.size }}">
         <div class="formula-compare__row formula-compare__row--head">
           <div class="formula-compare__cell formula-compare__cell--label"></div>
-          {% for block in section.blocks %}
-            {% if block.type == "product" %}
-              <a class="formula-compare__cell formula-compare__cell--product" href="{{ block.settings.url | default: '#' | escape }}">
-                {% if block.settings.image != blank %}
-                  {{ block.settings.image | image_tag: block.settings.name, '(max-width: 749px) 30vw, 15vw', false, '150,225,300' }}
+          {% for eiblk in section.blocks %}
+            {% if eiblk.type == "product" %}
+              <a class="formula-compare__cell formula-compare__cell--product" href="{{ eiblk.settings.url | default: '#' | escape }}">
+                {% if eiblk.settings.image != blank %}
+                  {{ eiblk.settings.image | image_tag: eiblk.settings.name, '(max-width: 749px) 30vw, 15vw', false, '150,225,300' }}
                 {% endif %}
-                <p>{{ block.settings.name | default: "Ürün" | escape }}</p>
+                <p>{{ eiblk.settings.name | default: "Ürün" | escape }}</p>
               </a>
             {% endif %}
           {% endfor %}
@@ -2498,25 +2498,25 @@ export const FORMULA_COMPARISON_TABLE = `<section class="formula-compare{% if se
         {% if section.settings.feature1_label != blank %}
           <div class="formula-compare__row">
             <div class="formula-compare__cell formula-compare__cell--label">{{ section.settings.feature1_label | escape }}</div>
-            {% for block in section.blocks %}{% if block.type == "product" %}<div class="formula-compare__cell">{{ block.settings.feature1_value | default: "—" | escape }}</div>{% endif %}{% endfor %}
+            {% for eiblk in section.blocks %}{% if eiblk.type == "product" %}<div class="formula-compare__cell">{{ eiblk.settings.feature1_value | default: "—" | escape }}</div>{% endif %}{% endfor %}
           </div>
         {% endif %}
         {% if section.settings.feature2_label != blank %}
           <div class="formula-compare__row">
             <div class="formula-compare__cell formula-compare__cell--label">{{ section.settings.feature2_label | escape }}</div>
-            {% for block in section.blocks %}{% if block.type == "product" %}<div class="formula-compare__cell">{{ block.settings.feature2_value | default: "—" | escape }}</div>{% endif %}{% endfor %}
+            {% for eiblk in section.blocks %}{% if eiblk.type == "product" %}<div class="formula-compare__cell">{{ eiblk.settings.feature2_value | default: "—" | escape }}</div>{% endif %}{% endfor %}
           </div>
         {% endif %}
         {% if section.settings.feature3_label != blank %}
           <div class="formula-compare__row">
             <div class="formula-compare__cell formula-compare__cell--label">{{ section.settings.feature3_label | escape }}</div>
-            {% for block in section.blocks %}{% if block.type == "product" %}<div class="formula-compare__cell">{{ block.settings.feature3_value | default: "—" | escape }}</div>{% endif %}{% endfor %}
+            {% for eiblk in section.blocks %}{% if eiblk.type == "product" %}<div class="formula-compare__cell">{{ eiblk.settings.feature3_value | default: "—" | escape }}</div>{% endif %}{% endfor %}
           </div>
         {% endif %}
         {% if section.settings.feature4_label != blank %}
           <div class="formula-compare__row">
             <div class="formula-compare__cell formula-compare__cell--label">{{ section.settings.feature4_label | escape }}</div>
-            {% for block in section.blocks %}{% if block.type == "product" %}<div class="formula-compare__cell">{{ block.settings.feature4_value | default: "—" | escape }}</div>{% endif %}{% endfor %}
+            {% for eiblk in section.blocks %}{% if eiblk.type == "product" %}<div class="formula-compare__cell">{{ eiblk.settings.feature4_value | default: "—" | escape }}</div>{% endif %}{% endfor %}
           </div>
         {% endif %}
       </div>
