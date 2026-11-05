@@ -4498,7 +4498,15 @@ export function patchMissingFormulaLibraryCss(files: Record<string, string>, tem
   if (templateId !== "formula") return files;
   let next = files;
   const css = files["assets/theme.css"];
-  if (css !== undefined && css !== FORMULA_THEME_CSS) next = { ...next, "assets/theme.css": FORMULA_THEME_CSS };
+  // 2026-11-05 — GERÇEK CANLI OLAY (foundry temasında bulundu, AYNI bug
+  // Formula DAHİL TÜM temalarda vardı): bu satır ÖNCEDEN "css VAR ama
+  // FORMULA_THEME_CSS'le BİREBİR AYNI DEĞİLSE" (yani herhangi bir
+  // özelleştirme varsa) dosyayı SESSİZCE kanonik/vanilla içerikle
+  // EZİYORDU — Studio'nun her açılışında tetiklenip özelleştirilmiş
+  // theme.css'i geri alıyordu (bkz. foundryPages.ts'teki aynı düzeltmenin
+  // yorumu, gerçek canlı kesintiye yol açtı). "undefined ise EKLE, VARSA
+  // DOKUNMA" olarak düzeltildi.
+  if (css === undefined) next = { ...next, "assets/theme.css": FORMULA_THEME_CSS };
   // 2026-10-07 — GERÇEK KULLANICI TALİMATI: FORMULA_PRODUCT_CARD_SNIPPET
   // eklendiğinde ZATEN KURULU projelerin theme.files'ında "snippets/
   // product-card.ei" HİÇ YOK — patchStaleFormulaSectionContent bunu
